@@ -785,7 +785,7 @@ Acceptance criteria:
 ### PAY-005 Confirm on-chain
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: solana, rewards
 - Description: `paid` increases only after the transaction reaches `confirmed` and the execution and detail checks pass.
 
@@ -799,7 +799,7 @@ Acceptance criteria:
 ### PAY-006 Retry safely
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: rewards, solana
 - Description: Failures retry the same payout row.
 
@@ -839,7 +839,7 @@ Acceptance criteria:
 ### PAY-009 Idempotent payout send
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: rewards, solana
 - Description: The send operation keys off the payout idempotency key.
 

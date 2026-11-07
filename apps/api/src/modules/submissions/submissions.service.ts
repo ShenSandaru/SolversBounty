@@ -6,6 +6,7 @@ import { decryptAnswer, parseAnswerKey } from "../bounties/answer-cipher";
 import { BountyFlowError } from "../bounties/bounty.errors";
 import type { ResearchAggregates, StoredSession } from "../bounties/bounty.persistence";
 import { PrismaBountyRepository } from "../bounties/prisma-bounty.repository";
+import { PayoutWorker } from "../rewards/payout-worker";
 import { answersMatch } from "../verification/compare-answer";
 
 export type SessionView = {
@@ -38,6 +39,7 @@ export class SubmissionsService {
     @Optional() @Inject(PrismaBountyRepository) private readonly store?: PrismaBountyRepository,
     @Optional() private readonly config?: ConfigService,
     @Optional() private readonly limits?: InMemoryRateLimit,
+    @Optional() private readonly payouts?: PayoutWorker,
   ) {}
 
   async consent(userId: string, bountyId: string): Promise<{ policyVersion: string; acceptedAt: string }> {
@@ -90,6 +92,9 @@ export class SubmissionsService {
     }
     if (saved.kind === "limit" || saved.kind === "completed") {
       throw new BountyFlowError(409, "CONFLICT", "This solving session is complete.");
+    }
+    if (saved.session.attempts.at(-1)?.rewardReserved) {
+      void this.payouts?.nudge();
     }
     return view(saved.session);
   }

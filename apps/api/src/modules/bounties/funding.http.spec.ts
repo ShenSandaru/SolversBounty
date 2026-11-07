@@ -23,6 +23,14 @@ class ScriptedGateway implements SolanaTransferGateway {
   lookup(): Promise<TransferLookup> {
     return Promise.resolve(this.steps.shift() ?? { outcome: "unavailable" });
   }
+
+  recentBlockhash(): Promise<string | null> {
+    return Promise.resolve(null);
+  }
+
+  submit(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
 }
 
 function draftBody(overrides: Record<string, unknown> = {}) {
