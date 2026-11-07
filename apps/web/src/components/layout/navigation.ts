@@ -14,7 +14,10 @@ export function isNavActive(pathname: string, href: string): boolean {
 
 export function pageContext(pathname: string): { section: string; detail: string } {
   if (pathname === "/") {
-    return { section: "Home", detail: "Research marketplace" };
+    return { section: "Home", detail: "Product overview" };
+  }
+  if (pathname === "/get-started") {
+    return { section: "Get Started", detail: "Choose a path" };
   }
   if (pathname === "/bounties") {
     return { section: "Marketplace", detail: "Open challenges" };

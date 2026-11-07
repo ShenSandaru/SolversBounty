@@ -1,10 +1,11 @@
 "use client";
 
-import { APP_NAME } from "@solversbounty/shared";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { WalletAuth } from "@/features/auth/wallet-auth";
+import { readOnboardingJourney } from "@/features/marketing/journey-preference";
+import { Brand } from "./brand";
 import { isNavActive, navItems, pageContext } from "./navigation";
 import { SiteFooter } from "./site-footer";
 
@@ -14,6 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const menuOpen = openOnPath === pathname;
   const menuId = useId();
   const context = pageContext(pathname);
+  const journey = useSyncExternalStore(subscribeJourney, readOnboardingJourney, () => null);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -31,7 +33,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-full lg:grid lg:grid-cols-[18rem_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-border bg-card/80 px-4 py-6 backdrop-blur lg:flex">
-        <Brand />
+        <Brand className="mb-8" />
+        {journey ? (
+          <p className="mb-4 px-3 text-xs text-muted-foreground">
+            {journey === "creator" ? "Creator tools" : "Solver journey"}
+          </p>
+        ) : null}
         <Navigation pathname={pathname} />
       </aside>
       <div className="flex min-h-full min-w-0 flex-col">
@@ -64,7 +71,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => setOpenOnPath(null)}
             />
             <div className="relative flex h-full w-72 flex-col bg-card px-4 py-6 shadow-xl" role="dialog" aria-modal="true" aria-label="Navigation">
-              <Brand />
+              <Brand className="mb-8" />
+              {journey ? (
+                <p className="mb-4 px-3 text-xs text-muted-foreground">
+                  {journey === "creator" ? "Creator tools" : "Solver journey"}
+                </p>
+              ) : null}
               <Navigation pathname={pathname} />
             </div>
           </div>
@@ -78,18 +90,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Brand() {
-  return (
-    <Link href="/" className="mb-8 flex items-center gap-3 rounded-lg">
-      <span className="grid size-9 place-items-center rounded-lg bg-brand-gradient font-mono text-sm font-bold text-[#111116]">
-        Sb
-      </span>
-      <span>
-        <span className="block text-sm font-semibold">{APP_NAME}</span>
-        <span className="block text-xs text-brand-green">Devnet research preview</span>
-      </span>
-    </Link>
-  );
+function subscribeJourney(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
 }
 
 function Navigation({ pathname }: { pathname: string }) {

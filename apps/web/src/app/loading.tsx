@@ -1,10 +1,3 @@
-import { LoadingState } from "@/components/loading-state";
-import { PageContainer } from "@/components/page-container";
-
 export default function Loading() {
-  return (
-    <PageContainer>
-      <LoadingState label="Loading this page." />
-    </PageContainer>
-  );
+  return <p className="px-6 py-16 text-sm text-muted-foreground">Loading SolversBounty.</p>;
 }

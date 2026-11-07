@@ -9,11 +9,14 @@ export function SiteFooter() {
           {APP_NAME} uses a custodial Devnet treasury. Wallet addresses are pseudonymous. Solana
           transfers are public.
         </p>
-        <p>
+        <nav className="flex flex-wrap gap-x-4 gap-y-1" aria-label="Footer">
+          <Link href="/get-started" className="text-brand-green underline-offset-4 hover:underline">
+            Get started
+          </Link>
           <Link href="/bounties" className="text-brand-green underline-offset-4 hover:underline">
             Browse challenges
           </Link>
-        </p>
+        </nav>
       </div>
     </footer>
   );
