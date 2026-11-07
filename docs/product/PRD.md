@@ -228,7 +228,7 @@ Rules:
 - Confirmed chain status updates the ledger.
 - A failed send is retried on the same payout record.
 - Creators can see distribution status.
-- After the deadline or the maximum rewarded participant limit, unallocated reward-pool principal is retained by SolversBounty as platform revenue ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)). Creators are not refunded that balance. It is not added to `paid`.
+- After the deadline or the maximum rewarded participant limit, unallocated reward-pool principal is retained by SolversBounty as platform revenue ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)). Creators are not refunded that balance. It is not added to `paid`. `refundable` names that unallocated balance and does not by itself promise a creator refund. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed, not accepted. It does not yet specify a posting that removes the retained amount from `refundable` without breaking `funded = reserved + paid + refundable + refunded`.
 - Cancelled bounties, bounties that never become active, failed or incomplete funding, and other exceptional endings, including creator close and admin close, are not covered by that retention rule.
 
 Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): pay each eligible solver immediately after reservation, not in a creator-triggered batch. The submission response does not wait for chain confirmation. This does not implement payouts. Confirmation commitment is [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md).

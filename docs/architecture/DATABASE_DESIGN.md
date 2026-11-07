@@ -159,7 +159,7 @@ Identity after every committed posting:
 funded = reserved + paid + refundable + refunded
 ```
 
-`refunded` is the sum of `refund` entries and remains part of the identity. [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) does not post retained unused principal as `paid` or as `refunded`. After the deadline or the participant cap, that unallocated remainder is platform revenue. The ledger representation of that revenue is an implementation-planning item. No new entry type is added here. Cancelled, never-activated, failed-funding, creator-close, and admin-close balances remain unspecified.
+`refunded` is the sum of `refund` entries and remains part of the identity. `refundable` is the unallocated balance. The name does not entitle the creator to a refund. [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) does not post retained unused principal as `paid` or as `refunded`. After the deadline or the participant cap, that unallocated remainder is platform revenue. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is **proposed — pending review**. It would recognize commission and that remainder as separate revenue records. It does not approve a posting that removes the remainder from `refundable`, because the identity would then be short. No new entry type is added here. Cancelled, never-activated, failed-funding, creator-close, and admin-close balances remain unspecified.
 
 ### ConsentRecord
 

@@ -852,7 +852,7 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: rewards, bounties
-- Description: The unallocated reward-pool balance stays in the ledger through close, expiry, and full allocation. ADR-008 retains that balance as platform revenue after the deadline or the participant cap. The retention posting is not specified and is not implemented. No creator refund is sent for that balance.
+- Description: The unallocated reward-pool balance stays in the ledger through close, expiry, and full allocation. `refundable` is that balance. It does not by itself entitle the creator to a refund. ADR-008 retains the remainder as platform revenue after the deadline or the participant cap. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed and does not approve a posting that removes that remainder from `refundable`. The retention posting is not specified and is not implemented. No creator refund is sent for that balance. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -871,9 +871,9 @@ Acceptance criteria:
 Acceptance criteria:
 
 - Deadline or `fully_allocated` closure does not transfer unused principal to the creator.
-- The retained amount is not posted as `paid`.
+- The retained amount is not posted as `paid` or as `refunded`.
 - The reward-pool identity remains `funded = reserved + paid + refundable + refunded`.
-- The ledger representation of retained platform revenue is not specified.
+- Subtracting the retained amount from `refundable` without another identity term is not specified. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed and does not approve that posting.
 - Cancelled, never-activated, failed or incomplete funding, creator close, and admin close do not use this rule.
 - Solvers pay no participation fee.
 

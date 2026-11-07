@@ -47,7 +47,7 @@ Network fees are paid from a fee buffer that is treasury SOL outside bounty prin
 
 1 SOL = 1_000_000_000 lamports. The example bounty is 0.01 SOL per solver and 100 solvers, so the solver reward pool is 1 SOL = 1_000_000_000 lamports. All comparisons use integers.
 
-[ADR-007](../decisions/ADR-007-company-platform-commission.md) adds a 5% commission on that pool: 50_000_000 lamports. The creator's total payment is 1_050_000_000 lamports. The confirmed reward-pool deposit is bounty principal. Commission is not principal and is not included in `funded`. CD-12's 0% fee is superseded. The on-chain split and the commission receiving address are not specified. Commission handling is not implemented. Network fees remain the separate PD-07 fee buffer.
+[ADR-007](../decisions/ADR-007-company-platform-commission.md) adds a 5% commission on that pool: 50_000_000 lamports. The creator's total payment is 1_050_000_000 lamports. The confirmed reward-pool deposit is bounty principal. Commission is not principal and is not included in `funded`. CD-12's 0% fee is superseded. The on-chain split and the commission receiving address are not specified. Commission handling is not implemented. Network fees remain the separate PD-07 fee buffer. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed, not accepted. It would record that commission, and principal retained under ADR-008, outside the reward-pool identity. It does not approve a schema or a posting that drops the retained amount out of `refundable`.
 
 ## Deposits
 
