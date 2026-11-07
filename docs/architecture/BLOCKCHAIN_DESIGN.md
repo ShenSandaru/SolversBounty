@@ -111,8 +111,8 @@ A reward allocation is created only inside one database transaction when the sub
 After commit:
 
 1. Load the `pending` payout by its idempotency key `payout:<bountyId>:<walletAddress>` (PAY-009).
-2. If status is `submitted` or `confirmed`, do not sign another transfer.
-3. If status is `pending` or `retryable`, build a system transfer from the treasury to the solver for `amountLamports`, with memo `sb:payout:<payoutId>` (PD-18).
+2. If status is `submitted` or `confirmed`, do not sign another transfer. A missing transaction stays `submitted`.
+3. If status is `pending` or `retryable`, and `PAYOUT_BROADCAST_ENABLED` is true, build a system transfer from the treasury to the solver for `amountLamports`, with memo `sb:payout:<payoutId>` (PD-18). The default is false, so reconciliation can run without a new broadcast. The configured treasury public key must match the key derived from the treasury secret.
 4. Persist the signature and status `submitted` before considering the send complete.
 5. On a later tick, require `confirmed` commitment, successful execution, the treasury as source, the solver as destination, the reserved amount, and the payout reference ([ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md)).
 6. Then post `settle` once and set the payout to `confirmed`.
@@ -161,7 +161,7 @@ PD-08 is superseded for deadline and full allocation. The excluded endings remai
 | State | Meaning | Next step |
 | --- | --- | --- |
 | `pending` | Reserved in the database, no signature | Sign once |
-| `submitted` | Signature stored, not confirmed | Poll. Do not sign again |
+| `submitted` | Signature stored, not confirmed | Poll. A transaction that is still missing stays here. Do not sign again |
 | `confirmed` | Chain checks passed and ledger settled | Stop |
 | `failed` | Signature known dead, or preflight rejected | Record the signature, then mark `retryable` |
 | `retryable` | Safe to sign a new transfer for the same payout row | Sign once, store the new signature, return to `submitted` |
@@ -171,7 +171,7 @@ stateDiagram-v2
   [*] --> pending
   pending --> submitted: Signature stored
   submitted --> confirmed: Commitment and amount checks
-  submitted --> failed: Expired or failed signature
+  submitted --> retryable: Confirmed execution failure
   pending --> failed: Preflight rejected
   failed --> retryable: Same payout row
   retryable --> submitted: New signature stored

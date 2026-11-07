@@ -74,6 +74,22 @@ const envSchema = z.object({
   ANSWER_ENCRYPTION_KEY: optionalText,
   TREASURY_SECRET_KEY: optionalText,
   TREASURY_PUBLIC_KEY: optionalText,
+  PAYOUT_BROADCAST_ENABLED: z.preprocess((value: unknown) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed.length === 0) {
+      return undefined;
+    }
+    if (trimmed === "true") {
+      return true;
+    }
+    if (trimmed === "false") {
+      return false;
+    }
+    return value;
+  }, z.boolean({ error: "PAYOUT_BROADCAST_ENABLED must be true or false." }).default(false)),
   ADMIN_WALLET_ALLOWLIST: optionalText,
 });
 

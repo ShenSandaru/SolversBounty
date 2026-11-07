@@ -7,7 +7,14 @@ describe("validateEnv", () => {
     expect(env.DATABASE_URL).toBeUndefined();
     expect(env.AUTH_TOKEN_SECRET).toBeUndefined();
     expect(env.TREASURY_SECRET_KEY).toBeUndefined();
+    expect(env.PAYOUT_BROADCAST_ENABLED).toBe(false);
     expect(env.CORS_ORIGIN).toBe("http://localhost:3000");
+  });
+
+  it("keeps payout broadcasts off unless the switch is exactly true", () => {
+    expect(validateEnv({ PAYOUT_BROADCAST_ENABLED: "false" }).PAYOUT_BROADCAST_ENABLED).toBe(false);
+    expect(validateEnv({ PAYOUT_BROADCAST_ENABLED: "true" }).PAYOUT_BROADCAST_ENABLED).toBe(true);
+    expect(() => validateEnv({ PAYOUT_BROADCAST_ENABLED: "yes" })).toThrow("PAYOUT_BROADCAST_ENABLED must be true or false.");
   });
 
   it("requires a database URL in production", () => {

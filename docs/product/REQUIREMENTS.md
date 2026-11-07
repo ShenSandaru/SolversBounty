@@ -806,8 +806,9 @@ Acceptance criteria:
 Acceptance criteria:
 
 - Status `submitted` with an unresolved signature does not trigger a second send.
-- A signature known to have failed or expired may move the row to `retryable` and then send once more, keeping the failed signature in history.
-- Status `confirmed` is never resent.
+- A missing transaction stays `submitted`. Age alone does not move it to `retryable`.
+- A confirmed execution failure for that signature may move the row to `retryable` and then send once more, keeping the failed signature in history.
+- Status `confirmed` is never resent, and a later failure observation does not replace a settled row.
 
 ### PAY-007 Creator distribution view
 

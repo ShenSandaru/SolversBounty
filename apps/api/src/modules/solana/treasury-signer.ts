@@ -15,14 +15,18 @@ export async function signPayoutTransfer(input: {
   lamports: bigint;
   memo: string;
   recentBlockhash: string;
-  expectedTreasury: string | null;
+  expectedTreasury: string;
 }): Promise<SignedPayout | null> {
+  const expectedTreasury = input.expectedTreasury.trim();
+  if (!expectedTreasury) {
+    return null;
+  }
   const treasury = await treasuryKey(input.secret);
   if (!treasury) {
     return null;
   }
   const treasuryAddress = treasury.publicKey.toBase58();
-  if (input.expectedTreasury && input.expectedTreasury !== treasuryAddress) {
+  if (expectedTreasury !== treasuryAddress) {
     return null;
   }
   let destination: PublicKey;

@@ -57,7 +57,7 @@ export class PrismaPayoutRepository implements PayoutStore {
         return "blocked";
       }
       const current = snapshot(found);
-      const terminal = current.signatures.every((item) => item.commitment === "failed" || item.commitment === "expired");
+      const terminal = current.signatures.length > 0 && current.signatures.every((item) => item.commitment === "failed");
       const open = current.status === "pending" ? current.signatures.length === 0 : current.status === "retryable" && terminal;
       if (!open || current.amountLamports !== input.amountLamports) {
         return "blocked";
@@ -78,13 +78,20 @@ export class PrismaPayoutRepository implements PayoutStore {
     });
   }
 
-  async noteRetryable(id: string, signature: string, commitment: "failed" | "expired"): Promise<void> {
+  async noteRetryable(id: string, signature: string): Promise<void> {
     await this.client().$transaction(async (tx) => {
-      await tx.chainTransaction.update({ where: { signature }, data: { commitment } });
-      await tx.payout.update({
-        where: { id },
-        data: { status: "retryable", lastError: commitment === "failed" ? "The transfer failed on Devnet." : "The transfer expired before confirmation." },
-      });
+      await tx.$queryRawUnsafe("select id from payouts where id = $1::uuid for update", id);
+      const found = await tx.payout.findUnique({ where: { id }, include: payoutInclude() });
+      if (!isRecord(found)) {
+        return;
+      }
+      const current = snapshot(found);
+      const chain = current.signatures.find((item) => item.signature === signature);
+      if (!chain || current.settled || (current.status !== "submitted" && current.status !== "retryable")) {
+        return;
+      }
+      await tx.chainTransaction.update({ where: { signature }, data: { commitment: "failed" } });
+      await tx.payout.update({ where: { id }, data: { status: "retryable", lastError: "The transfer failed on Devnet." } });
     });
   }
 

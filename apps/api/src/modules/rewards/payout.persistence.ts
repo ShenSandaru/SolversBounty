@@ -54,7 +54,7 @@ export interface PayoutStore {
   listActionable(limit: number): Promise<string[]>;
   read(id: string): Promise<PayoutSnapshot | null>;
   recordSend(input: { id: string; signature: string; source: string; destination: string; amountLamports: bigint; now: Date }): Promise<RecordSendResult>;
-  noteRetryable(id: string, signature: string, commitment: "failed" | "expired"): Promise<void>;
+  noteRetryable(id: string, signature: string): Promise<void>;
   settle(input: { id: string; signature: string; commitment: "confirmed" | "finalized"; now: Date }): Promise<SettleResult>;
   note(id: string, message: string): Promise<void>;
   creatorSummary(bountyId: string, creatorId: string): Promise<CreatorPayoutSummary | "missing">;

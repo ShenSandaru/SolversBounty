@@ -21,7 +21,7 @@ export function configureApp(app: NestExpressApplication): void {
   const document = new DocumentBuilder()
     .setTitle("SolversBounty API")
     .setDescription(
-      "Wallet authentication, creator Devnet funding, solver submissions, and the Devnet payout worker are available. A live payout transfer is not part of this process until the treasury key is configured.",
+      "Wallet authentication, creator Devnet funding, solver submissions, and the Devnet payout worker are available. Payout broadcast stays off unless PAYOUT_BROADCAST_ENABLED is true. A live payout transfer is not part of this process until the treasury key is configured.",
     )
     .setVersion("0.0.0")
     .build();

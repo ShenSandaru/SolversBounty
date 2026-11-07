@@ -86,16 +86,17 @@ export class FakePayoutDb implements PayoutStore {
     });
   }
 
-  async noteRetryable(id: string, signature: string, commitment: "failed" | "expired"): Promise<void> {
+  async noteRetryable(id: string, signature: string): Promise<void> {
     await this.exclusive(async () => {
       const row = this.rows.find((item) => item.id === id);
       const chain = row?.chains.find((item) => item.signature === signature);
-      if (!row || !chain || row.status === "confirmed") {
+      const settled = row?.ledger.some((entry) => entry.entryType === "settle") ?? false;
+      if (!row || !chain || settled || (row.status !== "submitted" && row.status !== "retryable")) {
         return;
       }
-      chain.commitment = commitment;
+      chain.commitment = "failed";
       row.status = "retryable";
-      row.lastError = commitment === "failed" ? "The transfer failed on Devnet." : "The transfer expired before confirmation.";
+      row.lastError = "The transfer failed on Devnet.";
     });
   }
 
@@ -159,7 +160,7 @@ function canSign(row: Row): boolean {
   if (row.status !== "retryable") {
     return false;
   }
-  return row.chains.every((chain) => chain.commitment === "failed" || chain.commitment === "expired");
+  return row.chains.length > 0 && row.chains.every((chain) => chain.commitment === "failed");
 }
 
 function snapshot(row: Row): PayoutSnapshot {

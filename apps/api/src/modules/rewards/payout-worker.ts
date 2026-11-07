@@ -8,7 +8,6 @@ import { PrismaPayoutRepository } from "./prisma-payout.repository";
 
 const TICK_MS = 15_000;
 const BATCH = 10;
-const EXPIRY_MS = 180_000;
 
 @Injectable()
 export class PayoutWorker {
@@ -71,14 +70,22 @@ export class PayoutWorker {
     }
     const open = payout.signatures.find((item) => item.commitment === "submitted");
     if (open) {
-      await this.reconcile(payout, open.signature, open.createdAt);
+      await this.reconcile(payout, open.signature);
       return;
     }
     if (payout.status !== "pending" && payout.status !== "retryable") {
       return;
     }
+    if (!this.broadcastEnabled()) {
+      return;
+    }
     if (payout.reservedLamports !== payout.amountLamports || payout.settled) {
       await store.note(id, "The reserved balance does not match the allocation.");
+      return;
+    }
+    const treasuryPublicKey = this.config?.get<string>("solana.treasuryPublicKey") ?? "";
+    if (!treasuryPublicKey) {
+      await store.note(id, "Treasury identity is not configured.");
       return;
     }
     const secret = this.config?.get<string>("secrets.treasurySecretKey") ?? null;
@@ -97,7 +104,7 @@ export class PayoutWorker {
       lamports: payout.amountLamports,
       memo: payoutMemo(payout.id),
       recentBlockhash: blockhash,
-      expectedTreasury: this.config?.get<string>("solana.treasuryPublicKey") ?? null,
+      expectedTreasury: treasuryPublicKey,
     });
     if (!signed) {
       await store.note(id, "The payout could not be signed.");
@@ -117,31 +124,33 @@ export class PayoutWorker {
     await gateway.submit(signed.serialized);
   }
 
-  private async reconcile(payout: PayoutSnapshot, signature: string, createdAt: Date): Promise<void> {
+  private broadcastEnabled(): boolean {
+    return this.config?.get<boolean>("solana.payoutBroadcastEnabled") === true;
+  }
+
+  private async reconcile(payout: PayoutSnapshot, signature: string): Promise<void> {
     const store = this.store;
     const gateway = this.gateway;
     if (!store || !gateway) {
       return;
     }
     const lookup = await gateway.lookup(signature);
-    if (lookup.outcome === "unavailable") {
-      return;
-    }
-    if (lookup.outcome === "not_found") {
-      if (Date.now() - createdAt.getTime() >= EXPIRY_MS) {
-        await store.noteRetryable(payout.id, signature, "expired");
-      }
+    if (lookup.outcome === "unavailable" || lookup.outcome === "not_found") {
       return;
     }
     const transfer = lookup.transfer;
-    if (transfer.commitment === "processed") {
+    if (transfer.commitment !== "confirmed" && transfer.commitment !== "finalized") {
       return;
     }
     if (transfer.failed) {
-      await store.noteRetryable(payout.id, signature, "failed");
+      await store.noteRetryable(payout.id, signature);
       return;
     }
-    const treasury = this.config?.get<string>("solana.treasuryPublicKey") ?? transfer.feePayer;
+    const treasury = this.config?.get<string>("solana.treasuryPublicKey") ?? "";
+    if (!treasury) {
+      await store.note(payout.id, "Treasury identity is not configured.");
+      return;
+    }
     if (!matchesPayout(transfer, payout, treasury)) {
       await store.note(payout.id, "The confirmed transfer does not match this payout.");
       return;
