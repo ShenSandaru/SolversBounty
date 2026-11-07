@@ -10,8 +10,8 @@ Phase 2 scaffold is in place: `apps/web`, `apps/api`, `packages/shared`, and `pa
 
 SolversBounty is a 40-hour Solana Devnet hackathon MVP.
 
-- Creators publish cognitive challenges with protected predefined answers and fund a fixed SOL pool.
-- Solvers authenticate with a wallet, consent to research recording, and submit answers.
+- Creators publish cognitive challenges with protected predefined answers and fund a fixed SOL pool, plus the separate 5% commission in [ADR-007](docs/decisions/ADR-007-company-platform-commission.md).
+- Solvers do not pay participation fees. They authenticate with a wallet, consent to research recording, and submit answers.
 - The backend verifies answers. The browser does not.
 - Every eligible correct solver receives the same configured reward, once, while funds and the max rewarded solvers cap allow it.
 - Creators see aggregated research analytics. Measurement covers observable activity and self-report. It does not claim to read private thoughts.
@@ -129,4 +129,4 @@ A change is done when all of the following hold:
 
 ## Current phase
 
-The Phase 5 security review is written. The Phase 4 backend foundation remains the code: Nest module boundaries, configuration, Prisma models for the proposed schema, health, and API conventions. No migration has been applied. Product requirements remain `not_started`. Do not start Phase 6 or a product workflow unless the user explicitly asks. PD-03 is superseded by [ADR-003](docs/decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](docs/decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](docs/decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](docs/decisions/ADR-006-devnet-treasury-private-key-storage.md). The other open questions in the implementation plan are still unanswered.
+The Phase 5 security review is written. The Phase 4 backend foundation remains the code: Nest module boundaries, configuration, Prisma models for the proposed schema, health, and API conventions. No migration has been applied. Product requirements remain `not_started`. Do not start Phase 6 or a product workflow unless the user explicitly asks. PD-03 is superseded by [ADR-003](docs/decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](docs/decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](docs/decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](docs/decisions/ADR-006-devnet-treasury-private-key-storage.md). CD-12 is superseded by [ADR-007](docs/decisions/ADR-007-company-platform-commission.md). PD-08 is superseded for deadline and full allocation by [ADR-008](docs/decisions/ADR-008-unused-reward-pool-retention.md). Cancelled, never-activated, failed-funding, and other exceptional endings remain unspecified. PD-10 and PD-14 remain open.

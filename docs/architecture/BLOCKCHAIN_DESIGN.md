@@ -15,7 +15,7 @@ In scope:
 - Deposit verification.
 - Solver payouts.
 - Confirmation and idempotent retry.
-- P1 creator refund of the refundable balance.
+- After the deadline or the participant cap, unallocated principal is platform revenue ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)). Retention is not implemented.
 
 Out of scope: custom programs, program-derived escrow, USDC, mainnet, and multisig. Those need a new ADR.
 
@@ -25,7 +25,7 @@ Out of scope: custom programs, program-derived escrow, USDC, mainnet, and multis
 | --- | --- | --- |
 | Creator | User, in Phantom | Signs login and the deposit |
 | Solver | User, in Phantom | Signs login. Receives SOL. Does not sign the payout |
-| Treasury | API process | Receives deposits and signs payouts and refunds |
+| Treasury | API process | Receives deposits and signs solver payouts. ADR-008 does not refund unused principal after deadline or the participant cap |
 
 [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md): `TREASURY_SECRET_KEY` is an environment variable on the API host for the Devnet MVP. It is never committed, logged, stored in PostgreSQL, or sent to the browser. PD-02's `ANSWER_ENCRYPTION_KEY` is a different variable. This is not the Mainnet custody strategy. Signing is not implemented.
 
@@ -45,9 +45,9 @@ Network fees are paid from a fee buffer that is treasury SOL outside bounty prin
 
 ## Amounts
 
-1 SOL = 1_000_000_000 lamports. The example bounty is 0.01 SOL per solver and 100 solvers, so the principal is 1 SOL = 1_000_000_000 lamports. All comparisons use integers.
+1 SOL = 1_000_000_000 lamports. The example bounty is 0.01 SOL per solver and 100 solvers, so the solver reward pool is 1 SOL = 1_000_000_000 lamports. All comparisons use integers.
 
-Platform fee is 0% (CD-12). The full confirmed deposit is bounty principal.
+[ADR-007](../decisions/ADR-007-company-platform-commission.md) adds a 5% commission on that pool: 50_000_000 lamports. The creator's total payment is 1_050_000_000 lamports. The confirmed reward-pool deposit is bounty principal. Commission is not principal and is not included in `funded`. CD-12's 0% fee is superseded. The on-chain split and the commission receiving address are not specified. Commission handling is not implemented. Network fees remain the separate PD-07 fee buffer.
 
 ## Deposits
 
@@ -93,10 +93,10 @@ funded = reserved + paid + refundable + refunded
 | `funded` | Cumulative confirmed deposits. Does not decrease |
 | `reserved` | Allocated to a solver whose payout is not confirmed |
 | `paid` | Confirmed solver payouts |
-| `refundable` | Still available to reserve or, after close, to refund |
-| `refunded` | Confirmed transfers back to the creator |
+| `refundable` | Unallocated reward-pool principal. After the deadline or the participant cap, [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) retains the remainder as platform revenue. It is not `paid` |
+| `refunded` | Stays in the identity. ADR-008 does not use it for that retained remainder |
 
-`refunded` is included so the identity survives PAY-011. Product UI still leads with funded, reserved, paid, and refundable (PD-06).
+`refunded` stays in the identity. Product UI still leads with funded, reserved, paid, and the unallocated remainder (PD-06). ADR-008 does not move the retained remainder into `paid`.
 
 Reservation and settlement rules are in the database design. The chain send never happens inside the database transaction that moves funds to `reserved`.
 
@@ -143,18 +143,18 @@ Until the worker records that commitment:
 
 Ordinary marketplace and submission reads do not wait on this poll (PD-16).
 
-## Refund policy
+## Unused reward principal
 
-PD-08 (**proposed — pending confirmation**):
+[ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md):
 
-- Creator close, admin close, deadline, or reaching max rewarded solvers stops new solving sessions.
-- P0 keeps the unused principal in `refundable` and shows it to the owner.
-- P0 does not send a refund and does not run an automatic refund worker.
-- P1 PAY-011 lets the owner of a `closed` bounty refund the current `refundable` balance to the creator wallet.
-- The amount is the balance inside the refund transaction, not a client amount.
-- The refund uses the same confirmation and idempotency rules, with memo `sb:refund:<bountyId>`.
-- Unconfirmed solver payouts stay `reserved` and are not included in the refund.
-- A reservation is released back to `refundable` only when its signature is known failed and the operator or worker marks that payout permanently failed. Ordinary retries keep the funds reserved.
+- Deadline or reaching max rewarded solvers stops new solving sessions.
+- The remaining unallocated reward-pool principal is platform revenue. Creators are not refunded that balance.
+- That amount is not posted as `paid`. The identity stays `funded = reserved + paid + refundable + refunded`.
+- The ledger representation of the retained revenue is not specified. Retention is not implemented.
+- In-flight reserved payouts stay reserved until ADR-004 confirmation or a definitive failure.
+- Cancelled bounties, bounties that never become active, failed or incomplete funding, creator close, and admin close are not this policy.
+
+PD-08 is superseded for deadline and full allocation. The excluded endings remain unspecified.
 
 ## Failure handling
 

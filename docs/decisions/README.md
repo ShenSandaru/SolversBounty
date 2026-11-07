@@ -24,7 +24,7 @@ Write an ADR before implementing a change that:
 
 Do not write an ADR for a bug fix that follows an existing decision, a copy change, or a visual tweak.
 
-A `PD-*` item that the user accepts without changing its meaning can be marked accepted in the implementation plan. Write an ADR if acceptance changes the consequences or if the decision is one of the bullets above. PD-03 is superseded by ADR-003. PD-05 is superseded by ADR-004. PD-13 is superseded by ADR-005. PD-15 is superseded by ADR-006. PD-14 is the proposal most likely to need that update.
+A `PD-*` item that the user accepts without changing its meaning can be marked accepted in the implementation plan. Write an ADR if acceptance changes the consequences or if the decision is one of the bullets above. PD-03 is superseded by ADR-003. PD-05 is superseded by ADR-004. PD-13 is superseded by ADR-005. PD-15 is superseded by ADR-006. PD-08 is superseded by ADR-008 for deadline and full-allocation closure. PD-14 is the proposal most likely to need that update.
 
 ## Required sections
 
@@ -62,6 +62,8 @@ Status meanings:
 | [ADR-004 Immediate individual solver payouts](ADR-004-immediate-individual-solver-payouts.md) | accepted | Pay each eligible solver after reservation. No batch. E1 unchanged |
 | [ADR-005 Solana confirmed commitment](ADR-005-solana-confirmed-commitment.md) | accepted | Funding and payouts complete at `confirmed`, plus detail checks. Not `processed` or `finalized` |
 | [ADR-006 Devnet treasury private-key storage](ADR-006-devnet-treasury-private-key-storage.md) | accepted | `TREASURY_SECRET_KEY` stays in the API environment. Devnet only. Not a Mainnet custody strategy |
+| [ADR-007 Company platform commission](ADR-007-company-platform-commission.md) | accepted | 5% of the solver reward pool, paid on top. Not deducted from solver rewards. Supersedes CD-12 |
+| [ADR-008 Unused reward pool retention](ADR-008-unused-reward-pool-retention.md) | accepted | After deadline or the participant cap, unallocated principal is platform revenue. Not a creator refund. E1 unchanged |
 
 ## How to supersede
 

@@ -76,7 +76,7 @@ Impact: The retry signs a second transfer for the same allocation. The ledger ca
 
 Attack scenario: The worker calls `send`, the RPC times out, the process dies, and the next tick sees `pending` with no signature.
 
-Mitigation: Before every signature, look up recent treasury transactions for memo `sb:payout:<payoutId>`. If one exists, store that signature and poll it. Sign only when that lookup is empty and status is `pending` or `retryable`. Keep every failed signature on `ChainTransaction`. The same rule applies to deposits and to the P1 refund memo.
+Mitigation: Before every signature, look up recent treasury transactions for memo `sb:payout:<payoutId>`. If one exists, store that signature and poll it. Sign only when that lookup is empty and status is `pending` or `retryable`. Keep every failed signature on `ChainTransaction`. The same rule applies to deposits. ADR-008 does not create a creator refund for unused principal after deadline or the participant cap.
 
 ### SEC-H3 Chain fields must be read again before a posting
 
@@ -478,7 +478,7 @@ The identity to preserve is:
 funded = reserved + paid + refundable + refunded
 ```
 
-`funded` only increases, by confirmed deposits. `reserved` is an unconfirmed solver payout. `paid` is a confirmed solver payout. `refundable` is what E1 may still reserve and what P0 shows the creator after close. `refunded` moves only when the P1 refund transfer is confirmed. P0 must not send that transfer.
+`funded` only increases, by confirmed reward-pool deposits. `reserved` is an unconfirmed solver payout. `paid` is a confirmed solver payout. `refundable` is what E1 may still reserve. After the deadline or the participant cap, [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) retains the unallocated remainder as platform revenue. That remainder is not `paid`. The retention posting is not specified. Cancelled and never-activated balances remain unspecified.
 
 The schema can support the identity. It does not enforce it. Enforcement is the E1 transaction, the confirmation transactions, and NFR-016 tests.
 
@@ -490,7 +490,7 @@ The schema can support the identity. It does not enforce it. Enforcement is the 
 | Incorrect attempt | Attempt with `isCorrect` false, no allocation | Same |
 | Payout confirmed | Chain row, one `settle`, allocation `paid`, payout `confirmed`, audit | Signature and entry type |
 | Payout permanently failed | One `release`, allocation `released`, audit. Only after the signature is known dead | Payout status, not a second payout row |
-| P1 refund confirmed | Chain row, one `refund`, audit. Amount is the locked `refundable` total, not a client number | Signature and entry type |
+| ADR-008 retention | Representation is not specified. The unallocated remainder is not `paid` and is not a creator refund | Not implemented |
 
 Idempotency key shape `payout:<bountyId>:<walletAddress>` is still PD-06's proposal. The unique column is already there.
 
@@ -545,13 +545,9 @@ Superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md)
 
 Superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). Each eligible solver is paid individually after the reward is reserved. There is no batch and no creator release. The submission response does not wait for chain confirmation. E1 is unchanged. Confirmation commitment is [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). ADR-004 does not implement transfers or the payout worker.
 
-### PD-08 Refunds
+### PD-08 Unused reward principal
 
-Options: P0 only tracks `refundable` and stops new sessions. P1 sends the refund. Or P0 sends it automatically.
-
-Implications: Automatic refund spends principal while payouts can still be in flight. The design already keeps in-flight payouts in `reserved`.
-
-Recommendation, not a decision: leave the transfer as P1. Do not build it in the next implementation phase.
+Superseded for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). The unallocated remainder is platform revenue and is not refunded to the creator. `paid` is not redefined. Cancelled, never-activated, failed-funding, creator-close, and admin-close outcomes remain unspecified. ADR-008 does not implement the retention posting.
 
 ### PD-10 Strategies
 
@@ -618,6 +614,6 @@ Recommendation, not a decision: one initial migration against local Postgres, in
 5. Deposit verification on a fake gateway, then one Devnet deposit in a demo. Activation stays in the worker.
 6. Consent, server clock, submit, E1 transaction, concurrent last-slot test.
 7. Payout worker with memo lookup before sign, confirmation, and the fee-buffer check.
-8. Owner analytics aggregates. P1 items, including refund transfer and strategies, stay out.
+8. Owner analytics aggregates. P1 items, including strategies, stay out. ADR-008 retention is not a creator refund and is not implemented here.
 
 Phase 6 is not started by this review.

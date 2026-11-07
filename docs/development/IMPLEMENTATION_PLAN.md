@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). The other open questions below are unchanged.
+Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). CD-12 is superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). The other open questions below are unchanged.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -79,7 +79,7 @@ Run the payment-safety list in the testing strategy against the API. Check empty
 
 Two solver wallets, one incorrect attempt, one confirmed payout, analytics visible, duplicate reward refused. Record the evidence in [PROGRESS.md](PROGRESS.md). Deployment is a documented Devnet target, not a production custody design.
 
-P1 items wait until M7 and M8 are evidenced: strategies, explanations, answer-change metric, CSV, refund transfer, richer charts, admin list and admin close, Playwright.
+P1 items wait until M7 and M8 are evidenced: strategies, explanations, answer-change metric, CSV, richer charts, admin list and admin close, Playwright. Creator refund of unused principal after deadline or full allocation is not a P1 feature ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)).
 
 ## Requirement coverage
 
@@ -91,7 +91,7 @@ NFR IDs are satisfied by the milestone that introduces the behavior they name, a
 
 When time is short, stop in this order:
 
-1. Playwright, charts, CSV, strategy, explanation, admin screens, refund transfer.
+1. Playwright, charts, CSV, strategy, explanation, admin screens.
 2. Visual polish that does not affect the demo story.
 3. Do not drop signature checks, answer secrecy, deposit checks, E1, idempotent payout, or P0 analytics.
 
@@ -110,7 +110,7 @@ When time is short, stop in this order:
 | CD-09 | Public APIs never return the expected answer |
 | CD-10 | One equal reward per wallet per bounty, inside funds and cap |
 | CD-11 | Custodial Devnet treasury |
-| CD-12 | Platform fee 0% |
+| CD-12 | Superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). The 0% platform fee is not the MVP rule. |
 | CD-13 | Swagger / OpenAPI |
 | CD-14 | P0 / P1 / P2 split in the PRD |
 | CD-15 | Analytics are observed activity and self-report only |
@@ -128,7 +128,7 @@ Each item is **proposed — pending confirmation**, except a row marked supersed
 | PD-05 | Superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). The first E1 success reserves and sends that solver's reward immediately. No ranking and no creator batch. E1 is unchanged. |
 | PD-06 | Ledger buckets are `funded`, `reserved`, `paid`, and `refundable`, plus `refunded` so `funded = reserved + paid + refundable + refunded`. One allocation per bounty and solver. One payout row per allocation, retried in place. |
 | PD-07 | Network fees come from a treasury fee buffer, not from bounty principal. |
-| PD-08 | Close, deadline, or full allocation stops new sessions. P0 records `refundable`. Reserved lamports stay reserved while a payout is in flight and return to `refundable` only after that payout is permanently failed. The creator refund transfer is P1 and is not automatic. |
+| PD-08 | Superseded for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). Unallocated principal is platform revenue and is not refunded to the creator. `paid` is not redefined. Cancelled, never-activated, failed-funding, creator-close, and admin-close outcomes remain unspecified. In-flight reserved payouts still follow ADR-004. |
 | PD-09 | Store research consent before a solving session. Policy version `research-consent-v1`. |
 | PD-10 | P1 strategies: `logical_deduction`, `calculation`, `pattern_recognition`, `trial_and_error`, `external_knowledge`, `other`, plus an optional explanation. |
 | PD-11 | P0 verification methods are `exact`, `case_insensitive`, `normalized_text`, and `numeric_exact`. No fuzzy or AI grading. `numeric_exact` has no tolerance. |
@@ -157,11 +157,11 @@ Full allocation: the E1 transaction that takes the last slot also sets `closed` 
 
 ## Open questions
 
-PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is answered by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). The remaining three need an explicit answer before funding or payout work treats the matching PD as accepted. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. None of these decisions authorizes implementation. Until then the remaining items stay proposed.
+PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is answered by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). PD-08 is answered for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). The remaining two need an explicit answer before the matching work treats them as accepted. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. The platform commission must follow ADR-007. Unused reward principal after deadline or the participant cap must follow ADR-008. None of these decisions authorizes implementation. Until then the remaining items stay proposed.
 
 1. PD-03. Answered. Server-side PostgreSQL sessions in an HttpOnly cookie. JWT access and refresh tokens are not used.
 2. PD-05. Answered. Immediate individual payout after reservation. No batch. The submission response does not wait for chain confirmation.
-3. PD-08. Confirm that the refund transfer is a P1 manual creator action while P0 only tracks `refundable`.
+3. PD-08. Answered for deadline and the maximum rewarded participant limit. Unallocated principal is retained as platform revenue and is not refunded. Other endings remain unspecified.
 4. PD-13. Answered. Funding and payout completion require `confirmed`, plus execution and detail checks. `finalized` is not required. `processed` is not sufficient.
 5. PD-10. Confirm the strategy list before any P1 strategy work. P0 does not need this answer.
 6. PD-14. Confirm that the private creator dashboard may show wallet-linked rows while exports and public views stay aggregated and wallet-free.
@@ -179,9 +179,9 @@ Solana is the payment rail. The MVP treasury is custodial. Copy and docs say wal
 
 Success metrics need completion time and attempt summaries, so those are P0. Answer changes, strategy comparisons, and richer charts stay P1.
 
-### C3. Refund story and P1 implementation
+### C3. Unused reward principal
 
-The creator journey includes recovering unused funds. P0 accounts for `refundable` and stops new sessions. The transfer is P1. There is no automatic refund worker.
+[ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) retains unallocated principal after the deadline or the participant cap. There is no creator refund for that balance. Exceptional endings remain unspecified. Retention is not implemented.
 
 ### C4. Notifications module
 
@@ -193,4 +193,4 @@ Administrators remain a stakeholder. The hackathon does not add a separate admin
 
 ## Next phase
 
-Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. The seven open questions are still unanswered.
+Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. PD-10 and PD-14 remain open. ADR-008 does not implement retention.

@@ -10,7 +10,7 @@ The ledger identity used here is the canonical one:
 funded = reserved + paid + refundable + refunded
 ```
 
-`refundable` is the unallocated principal. `refunded` is principal already sent back to the creator under the P1 refund action. There is no `unused` bucket. Replacing the right-hand side with `unused` would drop `refunded` and make the identity false after PAY-011.
+`refundable` is the unallocated principal. `paid` is confirmed solver payouts only. [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) retains the unallocated remainder after the deadline or the participant cap as platform revenue and does not add it to `paid`. There is no `unused` bucket. Replacing the right-hand side with `unused` would drop `refunded` and make the identity false. The ledger representation of retained revenue is not specified. Cancelled and never-activated balances remain unspecified.
 
 ## Assets
 
@@ -125,7 +125,7 @@ There is no login, bounty, submission, funding, or payout route to attack.
 - Consent, session start, and answer submit.
 - Reservation, payout send, and confirmation.
 - Owner analytics and, under PD-14, a private wallet-linked view.
-- P1 refund and admin close.
+- Admin close. That close is not ADR-008 retention.
 
 ## Abuse scenarios
 
@@ -153,10 +153,10 @@ The chain holds one SOL balance. The ledger is the only split between bounties a
 | E1 reservation | `refundable` decreases, `reserved` increases, one `pending` payout | No transfer yet |
 | Confirmed payout | `reserved` decreases, `paid` increases | Treasury pays the solver `rewardLamports`. The fee comes from the buffer |
 | Permanent payout failure | `reserved` decreases, `refundable` increases | No successful transfer. The failed signature stays in history |
-| P1 refund | `refundable` decreases, `refunded` increases | Treasury pays the creator. P0 does not send this |
+| ADR-008 retention | Not specified. Do not post the remainder as `paid` | No creator refund after deadline or the participant cap. Not implemented |
 | Leaked treasury key | Ledger can still say the lamports exist | The wallet is empty. The ledger and the chain disagree until an operator writes an exception |
 
-P0 does not refund. Unused principal stays `refundable` in the custodial wallet. A creator who expects an automatic return does not get one. That is PD-08, still proposed. It is also why a leaked key takes unused principal as well as reserved principal.
+A leaked key can take unallocated principal as well as reserved principal. ADR-008 keeps the unallocated remainder with the platform after deadline or the participant cap. A creator does not receive that balance. Cancelled and never-activated balances are not decided.
 
 A reservation that is not yet confirmed must not be counted as `refundable`. Otherwise a refund and a payout can spend the same lamports. The blockchain design already says unconfirmed payouts stay `reserved`.
 

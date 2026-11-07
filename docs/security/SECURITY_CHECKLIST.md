@@ -60,7 +60,7 @@ The identity under test is `funded = reserved + paid + refundable + refunded`.
 - [ ] **Gate, SEC-H2.** A `submitted` or `confirmed` payout is not signed again. Before a new signature, the worker looks up memo `sb:payout:<payoutId>`.
 - [ ] **Gate, PAY-006.** A known-dead signature stays on `ChainTransaction`, and the same payout row moves to `retryable`.
 - [ ] **Gate, SEC-H7.** The worker does not sign when the treasury balance is below the sum of `reserved + refundable` plus the fee. Principal ledger rows do not pay fees.
-- [ ] **Gate, PD-08.** P0 does not send a creator refund. Close leaves `refundable` in place. In-flight payouts stay `reserved`.
+- [ ] **Gate, ADR-008.** Deadline or full allocation does not refund unallocated principal to the creator and does not add it to `paid`. Creator close and admin close do not apply that retention. In-flight payouts stay `reserved`. Retention is not implemented.
 - [ ] **Gate, SEC-C1.** The treasury key is absent from the client bundle, logs, fixtures, and Postgres. The answer key is a different secret. Evidence: PAY-014 review of a payout test run.
 - [ ] **Gate, SEC-I4.** No balance cache column is added unless a later ADR says why the ledger sum is insufficient.
 

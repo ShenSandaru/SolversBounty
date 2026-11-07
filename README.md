@@ -2,7 +2,7 @@
 
 **Solve Problems. Earn Rewards. Unlock Human Insights.**
 
-SolversBounty is a wallet-authenticated cognitive micro-task marketplace and human reasoning research platform. Creators publish predefined challenges, fund a fixed SOL reward pool on Solana Devnet, and study how people attempt those challenges. Solvers connect a wallet, submit answers, and receive the same micro-reward when the backend judges them eligible.
+SolversBounty is a wallet-authenticated cognitive micro-task marketplace and human reasoning research platform. Creators publish predefined challenges, fund a fixed SOL reward pool on Solana Devnet, pay a separate 5% commission on that pool, and study how people attempt those challenges. Solvers connect a wallet, submit answers, and receive the same micro-reward when the backend judges them eligible. Solvers do not pay a participation fee.
 
 **Document status:** Phase 5 security review, Phase 4 backend foundation, and a static frontend preview. Product workflows are not implemented.
 
@@ -136,7 +136,7 @@ Use these terms in copy, code, and docs.
 | Reward allocation | The single reserved reward for one solver on one bounty. |
 | Payout | The on-chain transfer attempt for one allocation. |
 | Treasury | Backend-managed custodial Devnet wallet that holds reward SOL. |
-| Refundable balance | Deposited lamports not reserved, paid, or refunded. |
+| Refundable balance | Unallocated reward-pool lamports not reserved, paid, or refunded. After the deadline or the participant cap, [ADR-008](docs/decisions/ADR-008-unused-reward-pool-retention.md) retains this remainder as platform revenue. It is not added to `paid`. |
 | Max rewarded solvers | Maximum number of wallets that may receive the reward. |
 | Pseudonymous | Identified by wallet address, without a claim of real-world uniqueness or anonymity. |
 
@@ -146,7 +146,7 @@ Ledger identity used throughout the design:
 funded = reserved + paid + refundable + refunded
 ```
 
-`funded` is cumulative deposits. `reserved` is held for an unconfirmed payout. `paid` is confirmed solver payouts. `refundable` can still be reserved or later refunded. `refunded` is confirmed creator refunds. See [Blockchain design](docs/architecture/BLOCKCHAIN_DESIGN.md).
+`funded` is cumulative reward-pool deposits. It does not include the platform commission ([ADR-007](docs/decisions/ADR-007-company-platform-commission.md)). `reserved` is held for an unconfirmed payout. `paid` is confirmed solver payouts only. `refundable` can still be reserved while the bounty can pay solvers. After the deadline or the maximum rewarded solvers, the unallocated remainder is retained by SolversBounty ([ADR-008](docs/decisions/ADR-008-unused-reward-pool-retention.md)) and is not a creator refund. `refunded` remains in the identity. Cancelled, never-activated, and failed-funding balances are not decided. See [Blockchain design](docs/architecture/BLOCKCHAIN_DESIGN.md).
 
 ## Eligibility rule E1
 

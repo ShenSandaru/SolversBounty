@@ -22,7 +22,7 @@ The MVP uses one backend-managed custodial treasury on Solana Devnet (CD-11).
 - The API signs solver payouts and, in P1, creator refunds from the same key.
 - PostgreSQL ledger entries are the bounty balance. Chain transactions are evidence used to post those entries once.
 - There is no custom Solana program in this MVP (CD-05).
-- Platform fee is 0% (CD-12). Network fees come from a fee buffer, not from principal (PD-07).
+- Platform commission is 5% of the solver reward pool, paid in addition to that pool ([ADR-007](ADR-007-company-platform-commission.md)). It is not part of reward-pool principal. CD-12's 0% fee is superseded. Network fees come from a fee buffer, not from principal (PD-07).
 - The treasury secret stays in API environment configuration ([ADR-006](ADR-006-devnet-treasury-private-key-storage.md)). It is not a frontend key, a database column, or a committed file. That storage decision is Devnet-only and is not a Mainnet custody strategy.
 - UI and docs say custodial Devnet treasury. They do not say trustless, non-custodial, or smart-contract escrow.
 - Mainnet, USDC, and program escrow require a new ADR. This decision does not authorize them.

@@ -198,13 +198,13 @@ A bounty at the cap uses `closed` plus `fully_allocated`. It is not a fifth stat
 funded = reserved + paid + refundable + refunded
 ```
 
-`funded` is cumulative confirmed deposits. `reserved` is held for an unconfirmed solver payout. `paid` is confirmed solver payouts. `refundable` is unallocated principal. `refunded` is confirmed creator refunds. The four product-facing buckets in the plan are `funded`, `reserved`, `paid`, and `refundable`. `refunded` exists so the identity still balances after the P1 refund transfer. Details: [blockchain design](BLOCKCHAIN_DESIGN.md) and PD-06.
+`funded` is cumulative confirmed reward-pool deposits. It does not include the ADR-007 commission. `reserved` is held for an unconfirmed solver payout. `paid` is confirmed solver payouts. `refundable` is unallocated principal. After the deadline or the participant cap, [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) retains that remainder as platform revenue and does not add it to `paid`. `refunded` stays in the identity. The retention posting is not specified. Details: [blockchain design](BLOCKCHAIN_DESIGN.md).
 
 ## Security boundaries
 
 - Public routes: marketplace reads and health. They return no private research rows.
 - Authenticated routes: session required.
-- Owner routes: bounty private detail, analytics, distribution, close, refund.
+- Owner routes: bounty private detail, analytics, distribution, and close. A creator close does not apply ADR-008 retention.
 - Admin routes: P1 operational reads and admin close. Role comes from the server allowlist (PD-04).
 - Worker routes: none. The confirmation loop is in-process, not a public webhook, unless a later ADR adds one.
 

@@ -98,7 +98,7 @@ For the hackathon, administration is an allowlisted wallet and protected API ope
 | CD-09 | Public APIs never return the expected answer. |
 | CD-10 | One reward per wallet per bounty. Equal amount for every eligible correct solver, capped by funds and max rewarded solvers. |
 | CD-11 | Custodial Devnet treasury. [ADR-002](../decisions/ADR-002-custodial-devnet-treasury.md). |
-| CD-12 | Platform fee is 0% in the MVP. |
+| CD-12 | Superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). Creators pay 5% of the solver reward pool in addition to the pool. Solver rewards are not reduced. |
 | CD-13 | HTTP API is documented with Swagger / OpenAPI. |
 | CD-14 | Priority split in section 11 is binding for the hackathon. |
 | CD-15 | Analytics describe observed activity and self-report only. |
@@ -159,9 +159,9 @@ Required fields:
 | Instructions | Extra solver guidance |
 | Reward asset | SOL on Devnet |
 
-Budget is `rewardPerSolver * maxRewardedSolvers`, computed in lamports. Example: 0.01 SOL times 100 solvers is a 1 SOL principal.
+Budget is `rewardPerSolver * maxRewardedSolvers`, computed in lamports. That product is the solver reward pool, not the creator's total payment. Example: 0.01 SOL times 100 solvers is a 1 SOL pool, stored as 1_000_000_000 lamports. [ADR-007](../decisions/ADR-007-company-platform-commission.md) adds a 50_000_000 lamport commission. The total payment is 1_050_000_000 lamports. The commission is not part of the pool.
 
-The bounty becomes `active` only after the backend verifies a sufficient deposit. The creator can read their own expected answer. Public responses cannot.
+The bounty becomes `active` only after the backend verifies both the full reward pool and the commission. The on-chain arrangement and commission receiving address are not specified. Funding is not implemented. The creator can read their own expected answer. Public responses cannot.
 
 PD-01 (**proposed — pending confirmation**): one question per bounty, stored on `BountyQuestion`.
 
@@ -209,23 +209,27 @@ Example:
 
 | Parameter | Value |
 | --- | ---: |
-| Principal | 1 SOL |
+| Solver reward pool | 1 SOL |
+| Platform commission | 0.05 SOL |
+| Total creator payment | 1.05 SOL |
 | Reward per solver | 0.01 SOL |
 | Max rewarded solvers | 100 |
 | Correct eligible solvers | 70 |
 | Paid | 0.70 SOL |
-| Refundable | 0.30 SOL |
+| Unallocated remainder | 0.30 SOL |
 
 Rules:
 
 - Only E1 allocations are paid. E1 is defined in the [README](../../README.md) and repeated in [blockchain design](../architecture/BLOCKCHAIN_DESIGN.md).
 - At most one reward per solver per bounty.
-- Payouts cannot exceed confirmed principal.
+- Payouts cannot exceed confirmed reward-pool principal.
+- The 5% commission is not part of that principal and is not deducted from a solver payout ([ADR-007](../decisions/ADR-007-company-platform-commission.md)).
 - Each payout and its signature are stored.
 - Confirmed chain status updates the ledger.
 - A failed send is retried on the same payout record.
 - Creators can see distribution status.
-- Unallocated principal stays on the bounty until close. The refund transfer is P1 (reconciliation C3, PD-08).
+- After the deadline or the maximum rewarded participant limit, unallocated reward-pool principal is retained by SolversBounty as platform revenue ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)). Creators are not refunded that balance. It is not added to `paid`.
+- Cancelled bounties, bounties that never become active, failed or incomplete funding, and other exceptional endings, including creator close and admin close, are not covered by that retention rule.
 
 Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): pay each eligible solver immediately after reservation, not in a creator-triggered batch. The submission response does not wait for chain confirmation. This does not implement payouts. Confirmation commitment is [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md).
 
@@ -272,7 +276,7 @@ Creators can read analytics only for bounties they own. Default reports aggregat
 8. Wait until the backend confirms the deposit and marks the bounty active.
 9. Watch participation, payouts, and analytics.
 10. Export results when CSV export exists.
-11. Close the bounty. Refund of the refundable balance is P1.
+11. Close the bounty. A creator close is not the ADR-008 retention case. What happens to unused principal after a creator close is not decided.
 
 ### 6.2 Solver
 
@@ -341,7 +345,7 @@ PD-02 (**proposed — pending confirmation**): encrypt the expected answer at re
 - Solver payouts from that treasury.
 - Confirmation before a payout counts as paid.
 - Stored transaction history.
-- Controlled refund of refundable principal when the P1 refund action exists.
+- After the deadline or the participant cap, unused unallocated principal is platform revenue ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)). That policy is not implemented.
 - No custom program (CD-05).
 
 The backend keeps internal allocations and reconciles them to confirmed transactions. Signing keys stay off the frontend.
@@ -408,7 +412,6 @@ If time runs out, keep the critical path and cut from the top of the P1 list dow
 - Self-reported strategies and written explanations.
 - Answer-change metric and richer attempt charts.
 - CSV export without wallet addresses.
-- Creator refund transfer.
 - Richer analytics visuals.
 - Minimal admin read and close operations.
 - Playwright coverage of the demo path if API payment tests already exist.
@@ -422,7 +425,7 @@ If time runs out, keep the critical path and cut from the top of the P1 list dow
 - USDC and other assets.
 - More verification plugins.
 - Public research APIs.
-- Creator subscriptions and a platform fee.
+- Creator subscriptions and revenue products beyond the ADR-007 commission.
 - Production-grade custody.
 
 ## 12. Out of scope
@@ -448,7 +451,7 @@ Unless the critical path is done and the user expands scope:
 | --- | --- |
 | Wrong verification | Deterministic methods only |
 | Double pay | Unique allocation, one payout row, idempotent send |
-| Underfunded bounty | Full principal must confirm before `active` |
+| Underfunded bounty | The full reward pool and the separate 5% commission must confirm before `active` |
 | Failed transactions | Persist state and retry the same payout |
 | Many wallets | Rate limits, attempt limits, unique rewards. This is not Sybil proof |
 | Answer leakage | Server-only expected answer, encrypted at rest under PD-02 |
@@ -459,9 +462,9 @@ Unless the critical path is done and the user expands scope:
 
 ## 14. Future business
 
-Not MVP scope (CD-12 keeps the fee at 0%):
+The MVP commission is [ADR-007](../decisions/ADR-007-company-platform-commission.md): 5% added on top of the solver reward pool. It is not deducted from that pool. Still not MVP scope:
 
-1. A fee on funded principal.
+1. A commission deducted from the solver reward pool.
 2. Paid advanced research reports.
 3. Enterprise campaigns and higher caps.
 4. An external API for creating challenges.
@@ -479,9 +482,9 @@ The vision asks for Solana payments. The approved MVP holds funds in a custodial
 
 Basic attempt counts, failed attempts, and completion time are P0 because the demo success metrics require them. Answer-change detail, strategy breakdowns, and richer charts stay P1.
 
-### C3. Refunds
+### C3. Unused reward principal
 
-The creator journey includes recovering unused funds. P0 maintains `refundable` and stops new sessions on close, deadline, or full allocation. The transfer back to the creator is P1. There is no automatic refund worker in the MVP.
+[ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) retains unallocated reward-pool principal after the deadline or the maximum rewarded participant limit. Creators are not refunded that balance. `paid` stays confirmed solver payouts. Cancelled, never-activated, failed-funding, creator-close, and admin-close balances remain unspecified. Retention is not implemented.
 
 ### C4. Notifications module
 

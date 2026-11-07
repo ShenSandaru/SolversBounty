@@ -102,7 +102,7 @@ Immediate individual payouts remain governed by ADR-004.
 
 No custom Solana program is introduced by this decision.
 
-PD-13 is superseded. Eligibility rule E1 and the ledger identity are unchanged. `ChainTransaction.commitment` stays text until a later schema change. PD-08 remains the proposed refund policy.
+PD-13 is superseded. Eligibility rule E1 and the ledger identity are unchanged. `ChainTransaction.commitment` stays text until a later schema change. Unused reward principal after deadline or the participant cap is [ADR-008](ADR-008-unused-reward-pool-retention.md).
 
 ## Alternatives
 

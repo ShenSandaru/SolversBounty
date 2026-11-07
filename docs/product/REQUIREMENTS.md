@@ -233,8 +233,9 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- 0.01 SOL and 100 solvers display as 1 SOL and store as 1_000_000_000 lamports.
+- 0.01 SOL and 100 solvers display as a 1 SOL reward pool and store as 1_000_000_000 lamports.
 - The computation uses integer lamports, not floating point.
+- [ADR-007](../decisions/ADR-007-company-platform-commission.md) commission is not part of principal. That example commission is 50_000_000 lamports (PAY-018).
 
 ### BOUNTY-004 Hide the expected answer
 
@@ -278,12 +279,13 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: bounties, solana
-- Description: Status becomes `active` only after a sufficient deposit confirms.
+- Description: Status becomes `active` only after the full solver reward pool and the separate 5% commission are verified ([ADR-007](../decisions/ADR-007-company-platform-commission.md), PAY-018). Funding is not implemented.
 
 Acceptance criteria:
 
 - A draft or funding-pending bounty cannot start a solving session.
-- An underfunded transfer does not activate the bounty (PD-21).
+- A missing reward-pool payment or a missing commission does not activate the bounty.
+- An underfunded reward-pool transfer does not activate the bounty (PD-21).
 
 ### BOUNTY-008 Category
 
@@ -374,7 +376,7 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: bounties
-- Description: The owner can close an active bounty. New sessions stop. Refund transfer is PAY-011, not this ID.
+- Description: The owner can close an active bounty. New sessions stop. A creator close is not ADR-008 retention. Unused-principal treatment for that close is not decided.
 
 Acceptance criteria:
 
@@ -830,7 +832,8 @@ Acceptance criteria:
 - Destination, amount, mint (system SOL), and memo reference are checked.
 - A transfer to some other address is rejected.
 - **Proposed** PD-18 memo format is `sb:deposit:<bountyId>:<reference>`.
-- **Proposed** PD-21: extra lamports are funded and refundable. Shortfalls do not activate.
+- **Proposed** PD-21: extra lamports on the reward-pool deposit are funded and refundable. Shortfalls do not activate.
+- The separate commission in PAY-018 must also be verified. It is not extra reward-pool principal.
 
 ### PAY-009 Idempotent payout send
 
@@ -849,27 +852,30 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: rewards, bounties
-- Description: P0 persists refundable lamports through close, expiry, and full allocation. It does not send the refund.
+- Description: The unallocated reward-pool balance stays in the ledger through close, expiry, and full allocation. ADR-008 retains that balance as platform revenue after the deadline or the participant cap. The retention posting is not specified and is not implemented. No creator refund is sent for that balance.
 
 Acceptance criteria:
 
-- Closing a bounty leaves refundable unchanged.
-- Releasing a reservation returns lamports to refundable.
-- The creator can see the refundable figure.
+- Closing a bounty does not by itself transfer unused principal to the creator.
+- Releasing a permanently failed reservation returns lamports to the unallocated balance.
+- The creator can see the unallocated figure.
+- After deadline or full allocation, that unallocated remainder is platform revenue under [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) and is not `paid`.
 
-### PAY-011 Refund the creator
+### PAY-011 Retain unused reward principal
 
-- Priority: P1
+- Priority: P0
 - Status: `not_started`
-- Modules: rewards, solana
-- Description: **Proposed** PD-08. The owner of a closed bounty can request a transfer of the refundable balance to their wallet.
+- Modules: rewards
+- Description: [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). After the deadline or the maximum rewarded participant limit, unallocated reward-pool principal is platform revenue. Creators are not refunded that balance. Retention is not implemented.
 
 Acceptance criteria:
 
-- The transfer amount is the refundable balance at commit time, not a client-supplied amount.
-- The request is idempotent and uses the same confirmation rules as payouts.
-- Active bounties cannot be refunded in full while they can still reserve rewards. The owner closes first.
-- No automatic refund worker exists.
+- Deadline or `fully_allocated` closure does not transfer unused principal to the creator.
+- The retained amount is not posted as `paid`.
+- The reward-pool identity remains `funded = reserved + paid + refundable + refunded`.
+- The ledger representation of retained platform revenue is not specified.
+- Cancelled, never-activated, failed or incomplete funding, creator close, and admin close do not use this rule.
+- Solvers pay no participation fee.
 
 ### PAY-012 Fee buffer
 
@@ -949,6 +955,23 @@ Acceptance criteria:
 
 - The repository contains no Solana program crate in the MVP.
 - Payouts are ordinary SOL transfers.
+
+### PAY-018 Record platform commission
+
+- Priority: P0
+- Status: `not_started`
+- Modules: bounties, solana
+- Description: [ADR-007](../decisions/ADR-007-company-platform-commission.md). The creator pays 5% of the solver reward pool in addition to the pool. Commission processing is not implemented.
+
+Acceptance criteria:
+
+- For a 1_000_000_000 lamport pool, the commission is 50_000_000 lamports and the total payment is 1_050_000_000 lamports.
+- When the pool is divisible by 20, commission lamports equal pool × 5 / 100. A rounding rule for any other pool is not set.
+- Solver reward amounts are unchanged.
+- Commission is not posted into `funded`, `reserved`, `paid`, `refundable`, or `refunded`.
+- The bounty does not become active until both the reward pool and the commission are verified under ADR-005, including network, parties, amounts, and references.
+- The on-chain arrangement and the commission receiving address are not specified.
+- What happens to a paid commission if the bounty is cancelled, never becomes active, or funding fails is not specified. After the deadline or the participant cap, unused reward-pool principal is [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md), not a creator refund.
 
 ## ANALYTICS
 

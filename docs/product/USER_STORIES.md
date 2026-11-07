@@ -31,7 +31,8 @@ Requirements: BOUNTY-001, BOUNTY-002, BOUNTY-003, BOUNTY-008, BOUNTY-009, BOUNTY
 Acceptance criteria:
 
 - Given I am signed in, when I submit title, description, category, question, expected answer, verification method, reward, max rewarded solvers, deadline, attempt limit, and instructions, then the bounty is saved and is not yet active.
-- Given reward is 0.01 SOL and max rewarded solvers is 100, when the bounty is saved, then the displayed principal is 1 SOL and the stored principal is 1_000_000_000 lamports.
+- Given reward is 0.01 SOL and max rewarded solvers is 100, when the bounty is saved, then the displayed reward pool is 1 SOL and the stored principal is 1_000_000_000 lamports.
+- Given that same bounty, the creator also owes a 0.05 SOL commission. That 50_000_000 lamports is not stored as principal.
 - Given a required field is missing or the deadline is in the past, when I submit, then the bounty is not created.
 - Given the MVP question rule PD-01, when I create a bounty, then it has one question.
 
@@ -118,21 +119,20 @@ Requirements: BOUNTY-015, PAY-010, MARKET-006.
 Acceptance criteria:
 
 - Given an active bounty, when I close it, then status is `closed` with reason `creator` and new sessions fail.
-- Given a refundable balance, when I close it, then that balance remains visible and is not sent automatically.
+- Given a refundable balance, when I close it, then that balance is not sent to me, and ADR-008 retention does not apply to a creator close.
 
-### US-C-10 Recover unused funds
+### US-C-10 Unused funds after normal closure
 
-As a creator, I want the refundable balance returned to my wallet after close, so that unused principal does not stay in the treasury.
-
-Priority: P1.
+As a creator, I fund a reward pool knowing that a bounty which reaches its deadline or participant cap does not return the unallocated remainder.
 
 Requirements: PAY-011.
 
 Acceptance criteria:
 
-- Given a closed bounty with refundable lamports, when I request a refund, then the API sends that stored balance, not an amount I type.
-- Given the bounty is still active, when I request a full refund, then the API refuses.
-- Given I submit the refund twice, when the first transfer confirms, then only one refund is posted.
+- Given a bounty closed for deadline or full allocation with unallocated principal, when I look for a refund, then no creator refund is sent.
+- Given that remainder, when it is recognized as platform revenue, then it is not added to solver `paid`.
+- Given I closed the bounty myself, or an admin closed it, or it never became active, when I ask what happens to the balance, then that outcome is not decided.
+- Retention is not implemented.
 
 ## Solver
 
@@ -266,7 +266,7 @@ Acceptance criteria:
 
 ### US-A-03 Take down a bounty
 
-As an administrator, I want to close a bounty that should not stay active, so that new sessions stop without an automatic refund.
+As an administrator, I want to close a bounty that should not stay active, so that new sessions stop. An admin close is not the ADR-008 retention case.
 
 Priority: P1.
 
@@ -275,7 +275,7 @@ Requirements: ADMIN-004, MARKET-006.
 Acceptance criteria:
 
 - Given an active bounty, when I close it as admin, then the close reason is `admin` and new sessions fail.
-- Given a refundable balance, when I close it, then no refund transfer is sent by that action.
+- Given a refundable balance, when I close it, then no refund transfer is sent by that action, and the balance is not retained under ADR-008 by that action.
 
 ## Demo acceptance
 

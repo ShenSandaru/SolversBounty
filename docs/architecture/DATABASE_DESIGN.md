@@ -159,7 +159,7 @@ Identity after every committed posting:
 funded = reserved + paid + refundable + refunded
 ```
 
-`refunded` is the sum of `refund` entries. It is part of PD-06 so a later creator refund does not break the four product buckets `funded`, `reserved`, `paid`, and `refundable`.
+`refunded` is the sum of `refund` entries and remains part of the identity. [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) does not post retained unused principal as `paid` or as `refunded`. After the deadline or the participant cap, that unallocated remainder is platform revenue. The ledger representation of that revenue is an implementation-planning item. No new entry type is added here. Cancelled, never-activated, failed-funding, creator-close, and admin-close balances remain unspecified.
 
 ### ConsentRecord
 
