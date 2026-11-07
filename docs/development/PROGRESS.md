@@ -69,7 +69,7 @@ Security review, written on 2026-11-07. No product workflow was added. Requireme
 
 ## In progress
 
-Wallet login on the API: nonce issuance, local Ed25519 verification, user upsert, and an HttpOnly session cookie. AUTH-002, AUTH-004, AUTH-005, AUTH-006, AUTH-007, AUTH-008, and AUTH-009 are `in_progress`. The tests use a fake database client. PostgreSQL has not executed this path. Phantom connect, CSRF, and the accepted session lifetime are not done.
+Wallet login on the API is proven against a disposable PostgreSQL database. AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-006 and AUTH-007 stay `in_progress`. The project development database has not had the migration applied. Do not apply it to Neon.
 
 ## Not started
 
@@ -107,6 +107,15 @@ Phase 6 wallet-login checks on 2026-11-07:
 - `node --experimental-vm-modules ./node_modules/jest/bin/jest.js` in `apps/api`: 12 suites, 37 tests, all passed.
 - Auth tests sign with a real Ed25519 key and a fake Prisma client. They do not open a database connection.
 - The migration file was not applied. Neon was not contacted.
+
+Disposable PostgreSQL authentication check on 2026-11-07:
+
+- A new container `solversbounty-auth-pg` on `127.0.0.1:55432` received `prisma migrate deploy` for `20261107173154_initial_schema`. The datasource host was `127.0.0.1`. Neon was not contacted.
+- Schema checks: 14 product tables plus `_prisma_migrations`, 13 enums, 21 foreign keys, the partial nonce index, BIGINT lamport columns, and both positive-amount checks. A second funding row with the same purpose was rejected. Two null chain ids were accepted. A zero ledger amount was rejected.
+- `auth.postgres.spec.ts` passed against that database: nonce retirement, valid signature, repeat login, invalid signature, expired nonce, replay, session rotation, cookie lookup, logout, and a closed port returning 503.
+- Full API Jest run with that database: 13 suites, 39 tests, all passed.
+- AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-006 and AUTH-007 stay `in_progress` because CSRF, the session lifetime, and browser disconnect are still open.
+- The disposable container and its volume were removed afterward. No other container was changed.
 
 Phase 4 checks on 2026-11-07:
 

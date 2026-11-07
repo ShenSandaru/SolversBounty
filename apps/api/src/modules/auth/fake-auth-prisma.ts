@@ -65,7 +65,6 @@ export class FakeAuthPrisma implements AuthPrisma {
         retiredAt: null;
         expiresAt?: { gt: Date };
       };
-      orderBy?: { createdAt: "desc" };
     }): Promise<StoredNonce | null> => {
       const matches = this.nonces.filter((row) => {
         if (row.userWallet !== args.where.userWallet || row.usedAt !== null || row.retiredAt !== null) {
@@ -79,7 +78,6 @@ export class FakeAuthPrisma implements AuthPrisma {
         }
         return true;
       });
-      matches.sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
       return matches[0] ?? null;
     },
   };

@@ -38,7 +38,6 @@ export type AuthPrisma = {
         retiredAt: null;
         expiresAt?: { gt: Date };
       };
-      orderBy?: { createdAt: "desc" };
     }): Promise<StoredNonce | null>;
   };
   user: {
@@ -155,6 +154,5 @@ export async function revokeSessionHash(db: AuthPrisma, hash: string, now: Date)
 export async function findActiveNonce(db: AuthPrisma, userWallet: string, now: Date): Promise<StoredNonce | null> {
   return db.authNonce.findFirst({
     where: { userWallet, usedAt: null, retiredAt: null, expiresAt: { gt: now } },
-    orderBy: { createdAt: "desc" },
   });
 }

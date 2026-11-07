@@ -1,4 +1,6 @@
 import { Logger } from "@nestjs/common";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client";
 import { redactSecrets } from "../common/logging/redact";
 
 export type ConnectedClient = {
@@ -8,10 +10,6 @@ export type ConnectedClient = {
 };
 
 export async function openPrismaClient(connectionString: string): Promise<ConnectedClient> {
-  const [{ PrismaClient }, { PrismaPg }] = await Promise.all([
-    import("../generated/prisma/client.js"),
-    import("@prisma/adapter-pg"),
-  ]);
   // Runtime traffic uses the pooled DATABASE_URL. DIRECT_URL is only for Prisma CLI.
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });

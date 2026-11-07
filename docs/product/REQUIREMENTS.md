@@ -26,7 +26,7 @@ Acceptance criteria:
 ### AUTH-002 Issue an authentication nonce
 
 - Priority: P0
-- Status: `in_progress`
+- Status: `implemented`
 - Modules: auth
 - Description: The API creates a single-use nonce bound to the wallet address.
 
@@ -51,7 +51,7 @@ Acceptance criteria:
 ### AUTH-004 Verify the signature on the backend
 
 - Priority: P0
-- Status: `in_progress`
+- Status: `implemented`
 - Modules: auth, solana
 - Description: The API checks the Ed25519 signature locally. This check does not require RPC.
 
@@ -63,7 +63,7 @@ Acceptance criteria:
 ### AUTH-005 Create or load the user
 
 - Priority: P0
-- Status: `in_progress`
+- Status: `implemented`
 - Modules: auth, users
 - Description: The first successful login creates a user for the wallet. Later logins load the same user.
 
@@ -100,7 +100,7 @@ Acceptance criteria:
 ### AUTH-008 Reject invalid signatures
 
 - Priority: P0
-- Status: `in_progress`
+- Status: `implemented`
 - Modules: auth
 - Description: Bad signatures do not create users or sessions.
 
@@ -112,7 +112,7 @@ Acceptance criteria:
 ### AUTH-009 Reject nonce reuse
 
 - Priority: P0
-- Status: `in_progress`
+- Status: `implemented`
 - Modules: auth
 - Description: A nonce works once.
 
