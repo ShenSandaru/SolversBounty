@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. The open questions below are unchanged.
+Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). The other open questions below are unchanged.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -117,13 +117,13 @@ When time is short, stop in this order:
 
 ## Proposal register
 
-Each item is **proposed — pending confirmation**. Phase 2 should follow this register unless a listed open question changes it. Changing a confirmed decision or any item that affects money, privacy, or process shape needs an ADR.
+Each item is **proposed — pending confirmation**, except a row marked superseded. Phase 2 should follow this register unless a listed open question changes it. Changing a confirmed decision or any item that affects money, privacy, or process shape needs an ADR.
 
 | ID | Proposal |
 | --- | --- |
 | PD-01 | One question per bounty. `BountyQuestion` remains the child so more questions can be added later. |
 | PD-02 | Encrypt the expected answer at rest with AES-256-GCM. Decrypt only to verify or to serve the owner. Key is `ANSWER_ENCRYPTION_KEY`. |
-| PD-03 | After a single-use nonce, issue a 15-minute JWT access token and a 7-day refresh token. Store only the refresh hash. |
+| PD-03 | Superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PostgreSQL session, hash stored, raw token in an HttpOnly cookie. The 15-minute JWT and 7-day refresh token are not the session shape. |
 | PD-04 | Admin role comes from `ADMIN_WALLET_ALLOWLIST`. Same signature login. No admin product in P0. |
 | PD-05 | The first E1 success reserves and sends the fixed reward immediately. No ranking and no creator batch. |
 | PD-06 | Ledger buckets are `funded`, `reserved`, `paid`, and `refundable`, plus `refunded` so `funded = reserved + paid + refundable + refunded`. One allocation per bounty and solver. One payout row per allocation, retried in place. |
@@ -145,7 +145,7 @@ Each item is **proposed — pending confirmation**. Phase 2 should follow this r
 
 Proposed parameters tied to those IDs:
 
-- Nonce lifetime: 10 minutes (PD-03).
+- Nonce lifetime: 10 minutes remains proposed. ADR-003 does not set the nonce lifetime or the session lifetime.
 - Attempt-limit maximum at creation: 10 (BOUNTY-002).
 - Explanation length cap: 2_000 characters (PD-10).
 - Marketplace page size cap: 50 (NFR-010).
@@ -157,9 +157,9 @@ Full allocation: the E1 transaction that takes the last slot also sets `closed` 
 
 ## Open questions
 
-These seven need an explicit answer before authentication, funding, or payout work treats the matching PD as accepted. Phase 4 did not answer them. Until then they stay proposed.
+PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). The remaining six need an explicit answer before funding or payout work treats the matching PD as accepted. Authentication work must follow ADR-003 and must not treat the other open items as accepted. Until then they stay proposed.
 
-1. PD-03. Confirm JWT access plus refresh token, or replace it with a server session cookie.
+1. PD-03. Answered. Server-side PostgreSQL sessions in an HttpOnly cookie. JWT access and refresh tokens are not used.
 2. PD-05. Confirm immediate per-solver payout, or replace it with a creator-triggered batch.
 3. PD-08. Confirm that the refund transfer is a P1 manual creator action while P0 only tracks `refundable`.
 4. PD-13. Confirm Devnet success at `confirmed`, or require `finalized`. `processed` is not recommended.

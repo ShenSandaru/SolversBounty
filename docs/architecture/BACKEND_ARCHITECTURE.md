@@ -165,7 +165,7 @@ Validation source is Zod (PD-17, **proposed — pending confirmation**). OpenAPI
 
 ## Logging
 
-Use structured logs with `requestId`, `userId`, `bountyId`, `payoutId`, and `action` when those exist. The current request log records `requestId`, method, path without the query string, and status code. It does not log bodies. Redact expected answers, submitted answers, explanations, authorization headers, refresh tokens, signed secret keys, treasury material, and postgres URLs. Unexpected errors return `INTERNAL` and `Internal server error`. The response does not include a stack or the exception message.
+Use structured logs with `requestId`, `userId`, `bountyId`, `payoutId`, and `action` when those exist. The current request log records `requestId`, method, path without the query string, and status code. It does not log bodies. Redact expected answers, submitted answers, explanations, authorization headers, cookies, session tokens, signed secret keys, treasury material, and postgres URLs. Unexpected errors return `INTERNAL` and `Internal server error`. The response does not include a stack or the exception message.
 
 Log chain signatures. They are public.
 
@@ -180,7 +180,7 @@ Proposed environment names, all server-side:
 | `SOLANA_RPC_URL` | Devnet RPC |
 | `TREASURY_SECRET_KEY` | Custodial signer (PD-15) |
 | `ANSWER_ENCRYPTION_KEY` | Expected-answer encryption (PD-02) |
-| `AUTH_TOKEN_SECRET` | Session signing (PD-03) |
+| `AUTH_TOKEN_SECRET` | Still present in configuration. [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md) does not sign session tokens with it |
 | `ADMIN_WALLET_ALLOWLIST` | Comma-separated wallets (PD-04) |
 | `CORS_ORIGIN` | Comma-separated browser origins. Default `http://localhost:3000` |
 | `JSON_BODY_LIMIT` | JSON body limit. Default `64kb` |

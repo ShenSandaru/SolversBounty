@@ -106,7 +106,7 @@ Impact: Two unconsumed nonces can both verify if the application inserts them.
 
 Attack scenario: A client requests two nonces and replays either signature before expiry.
 
-Mitigation: Put the SQL in the initial migration. Issue and retire nonces in one transaction. Consume the nonce in the same transaction that writes the session. Use a CSPRNG of at least 128 bits. Proposed lifetime remains 10 minutes and is not accepted as PD-03.
+Mitigation: Put the SQL in the initial migration. Issue and retire nonces in one transaction. Consume the nonce in the same transaction that writes the session. Use a CSPRNG of at least 128 bits. The proposed nonce lifetime remains 10 minutes. ADR-003 does not set it.
 
 ### SEC-H5 The ciphertext column will store whatever the writer puts in it
 
@@ -427,22 +427,22 @@ Nonce:
 - The server generates the nonce with a CSPRNG, at least 128 bits.
 - The client does not choose the nonce.
 - At most one nonce per wallet is active. Issuing another retires the previous active row.
-- Lifetime is the proposed 10 minutes until PD-03 is accepted or replaced.
+- Lifetime remains the proposed 10 minutes. ADR-003 does not set the nonce lifetime.
 - Expired, used, and retired nonces fail closed.
 - Consumption and session insert commit together. A failed signature does not consume a nonce that the user still needs unless the attempt is clearly finished. A successful login must consume it.
 - SEC-H4 is the database half of this rule.
 
-Session, independent of JWT versus server-side session:
+Session, under [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md):
 
-- A missing or unknown credential is 401 `UNAUTHENTICATED`.
+- A missing, unknown, expired, or revoked cookie is 401 `UNAUTHENTICATED`.
 - Access is bound to the user id and the wallet address.
-- Disconnect revokes the server record. Later calls with the old credential fail. Disconnect sends no transaction.
-- The server can revoke a session without waiting for a token to expire.
-- Stored credential material is a hash. The raw refresh token or raw session secret is not a column.
-- Rotation, if refresh tokens exist: the new secret replaces the hash in the same transaction, and reuse of the previous secret revokes that session.
-- Access lifetime stays short. The proposed 15-minute access token and 7-day refresh lifetime are PD-03, not an accepted decision.
-- Claims and session rows do not contain answers, treasury material, or the encryption key.
-- The auth signing secret is not the treasury key and not the answer key.
+- Logout or disconnect revokes the server record. Later calls with the old cookie fail. Disconnect sends no transaction.
+- The server can revoke one session, or every session for a user, without waiting for expiry.
+- The stored credential is a hash of the session token. The raw token is not a column.
+- After authentication, the session identifier rotates. The new hash replaces the previous hash, and the previous token must not authorize requests.
+- The cookie is `HttpOnly`, `Secure` on HTTPS, `SameSite=Lax` where that fits the deployment, and `Path=/`, with no unnecessary `Domain`. State-changing requests need CSRF protection. Exact lifetime, cookie domain, and the CSRF mechanism are not set.
+- Session rows do not contain answers, treasury material, or the encryption key.
+- Session validity comes from the stored hash. `AUTH_TOKEN_SECRET` is not the session token, the treasury key, or the answer key.
 
 Wallet changes and multiple wallets:
 
@@ -535,15 +535,11 @@ Indexes already present cover the marketplace `(status, deadline)`, the creator 
 
 ## Unresolved decisions
 
-None of these are accepted here.
+PD-03 is no longer unresolved. The items below are not accepted here.
 
 ### PD-03 Session shape
 
-Options: short-lived JWT plus a rotating refresh hash, or an opaque server session id stored as a hash on `AuthSession`.
-
-Implications: Both can revoke if the server stores a record. JWT without storage cannot meet disconnect. The table already stores a hash and a revoke time, so both options fit. A cookie session needs CSRF protection that a bearer token does not.
-
-Recommendation, not a decision: use the server-side `AuthSession` row and a random secret presented as a bearer token. It satisfies revocation with the table that exists. JWT remains acceptable if access tokens stay short and refresh tokens rotate. Do not adopt Privy or Reown as part of either option.
+Superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). The session is a PostgreSQL `AuthSession` row. The browser receives the raw token in an HttpOnly cookie, and PostgreSQL stores only a hash. JWT access and refresh tokens are not used. The earlier bearer-token recommendation is not the decision. Exact lifetime, cookie domain, CSRF mechanism, and the wallet authentication provider remain unset. ADR-003 does not implement authentication.
 
 ### PD-05 When a reward is sent
 

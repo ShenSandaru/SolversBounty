@@ -81,9 +81,9 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- Subsequent creator and solver calls accept that session and reject a missing session.
-- **Proposed** token shape PD-03: short-lived JWT access token and a refresh token.
-- Logout or disconnect revokes the refresh session.
+- Subsequent creator and solver calls accept that session and reject a missing, expired, or revoked session.
+- Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): store a hash of the session token on `AuthSession`, and send the raw token only in an HttpOnly cookie. Exact lifetime, cookie domain, and CSRF mechanism are not set.
+- Logout or disconnect revokes that server session.
 
 ### AUTH-007 Disconnect
 

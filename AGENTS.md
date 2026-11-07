@@ -66,7 +66,7 @@ Follow [CODING_STANDARDS.md](docs/development/CODING_STANDARDS.md).
 - Prefer the simplest design that meets the requirement inside the 40-hour limit.
 - Feature folders on the frontend. One Nest module per backend boundary listed in the backend architecture.
 - Validate external input with Zod at the edge. Share the contract through `packages/shared` when PD-17 is in force.
-- Structured logs. Log identifiers needed to debug a payout. Never log expected answers, submitted answers, authorization headers, refresh tokens, or secret keys.
+- Structured logs. Log identifiers needed to debug a payout. Never log expected answers, submitted answers, authorization headers, cookies, session tokens, or secret keys.
 - Comments explain a non-obvious invariant. Do not narrate the code.
 - Do not add a dependency for a problem the standard library or an existing dependency already solves.
 
@@ -129,4 +129,4 @@ A change is done when all of the following hold:
 
 ## Current phase
 
-The Phase 5 security review is written. The Phase 4 backend foundation remains the code: Nest module boundaries, configuration, Prisma models for the proposed schema, health, and API conventions. No migration has been applied. Product requirements remain `not_started`. Do not start Phase 6 or a product workflow unless the user explicitly asks. Open questions in the implementation plan are still unanswered.
+The Phase 5 security review is written. The Phase 4 backend foundation remains the code: Nest module boundaries, configuration, Prisma models for the proposed schema, health, and API conventions. No migration has been applied. Product requirements remain `not_started`. Do not start Phase 6 or a product workflow unless the user explicitly asks. PD-03 is superseded by [ADR-003](docs/decisions/ADR-003-postgresql-server-side-sessions.md). The other open questions in the implementation plan are still unanswered.

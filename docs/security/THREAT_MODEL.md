@@ -20,7 +20,7 @@ funded = reserved + paid + refundable + refunded
 | Answer-encryption key | Same treatment, as `ANSWER_ENCRYPTION_KEY` | Loss exposes every expected answer. Destruction makes verification and the owner view impossible |
 | Expected answer | Not stored yet. Planned column `expectedAnswerCiphertext` | The product fails if solvers can read it before submitting |
 | Submitted answer and explanation | Not stored yet. Planned plaintext on `SubmissionAttempt` | Research data. Public or cross-creator disclosure breaks PRIV-009's neighbor rules and PD-19 |
-| Session credential | Not issued yet. Planned hash on `AuthSession` | Theft impersonates that wallet inside the app. It is not the wallet private key |
+| Session credential | Not issued yet. [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): random token in an HttpOnly cookie; hash on `AuthSession` | Theft impersonates that wallet inside the app. It is not the wallet private key |
 | Authentication nonce | Table exists. No writer exists | A reusable nonce allows signature replay |
 | Bounty ledger | Tables exist. No writer exists | The chain does not know which bounty owns which lamport. A bad posting pays the wrong wallet or pays twice |
 | Creator and solver wallet addresses | Planned `users.wallet_address` | Pseudonymous identifiers. Solana transfers make them public |
@@ -164,7 +164,7 @@ A reservation that is not yet confirmed must not be counted as `refundable`. Oth
 
 Confidentiality goals:
 
-- Public JSON never contains the expected answer, its ciphertext, a submitted answer, an explanation, or a refresh token.
+- Public JSON never contains the expected answer, its ciphertext, a submitted answer, an explanation, or a session token.
 - Decryption runs only for verification and the owning creator's private read.
 - Analytics default to aggregates. Wallet-linked rows are a private owner view only if PD-14 is later accepted.
 - Logs store ids, status, and public signatures. They do not store answers, authorization headers, or either secret.

@@ -101,7 +101,7 @@ The API must not:
 
 - Accept client `isCorrect`, client timestamps, or client payout amounts as facts.
 - Sign a second payout while an earlier signature for that allocation is unresolved or confirmed.
-- Log answers, refresh tokens, or secret keys.
+- Log answers, session tokens, cookies, or secret keys.
 
 ## Data flow
 
@@ -121,10 +121,10 @@ sequenceDiagram
   Web->>Api: Wallet, message, signature
   Api->>Api: Verify signature locally
   Api->>Db: Upsert user and session
-  Api-->>Web: Session credential
+  Api-->>Web: Set HttpOnly session cookie
 ```
 
-Token shape is PD-03 (**proposed — pending confirmation**): short-lived JWT plus refresh token. A reused or expired nonce stops the sequence before a session is written.
+Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): the API stores a hash of the session token and sets the raw token in an HttpOnly cookie. A reused or expired nonce stops the sequence before a session is written. Login is not implemented.
 
 ### Creator funding
 

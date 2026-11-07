@@ -76,12 +76,12 @@ At most one row per wallet has both `usedAt` and `retiredAt` null. That is the s
 | --- | --- |
 | `id` | UUID |
 | `userId` | Foreign key |
-| `refreshTokenHash` | Hash only, under PD-03 |
-| `expiresAt` | Refresh expiry. Proposed 7 days |
-| `revokedAt` | Set on disconnect |
+| `refreshTokenHash` | Hash of the session token ([ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md)). The raw token is not stored. The column name is unchanged until a later schema change |
+| `expiresAt` | Session expiry. ADR-003 does not set the lifetime |
+| `revokedAt` | Set on logout, disconnect, or account-wide revocation |
 | `createdAt` | Server time |
 
-This table still fits a server session if PD-03 is replaced by a cookie session. Do not store raw JWTs.
+ADR-003 uses this table for the server session. Do not store the raw session token or a JWT.
 
 ### Bounty
 

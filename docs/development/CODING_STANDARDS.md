@@ -80,14 +80,14 @@ apps/api/src/common/             filters, guards, config
 - Validate every write body with Zod before domain work.
 - Reject unknown enums. Do not coerce a verification method by guessing.
 - Return the stable codes in the backend architecture. Include a field-level list for `VALIDATION_ERROR`.
-- Never put the expected answer, ciphertext, treasury key, or refresh token in an error body.
+- Never put the expected answer, ciphertext, treasury key, or session token in an error body.
 
 ## Logging
 
 - Structured JSON logs.
 - Include `requestId` and, when present, `userId`, `bountyId`, `payoutId`, and `action`.
 - Log public chain signatures.
-- Do not log expected answers, submitted answers, explanations, `Authorization` headers, cookies, refresh tokens, or either secret key.
+- Do not log expected answers, submitted answers, explanations, `Authorization` headers, cookies, session tokens, or either secret key.
 - Log a payout state change as a single info event per transition.
 
 ## Data access
