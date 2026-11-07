@@ -166,6 +166,8 @@ sequenceDiagram
   Api->>Db: Move reserved to paid once
 ```
 
+Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): one individual transfer after reservation, with confirmation handled afterward. Payouts are not implemented. Confirmation commitment remains PD-13.
+
 Eligibility rule E1, verbatim:
 
 A reward allocation is created only inside one database transaction when the submission attempt is verified correct, the attempt belongs to the authenticated solver's solving session, a consent record exists, the attempt number is within the bounty attempt limit, the bounty is active, the server time is at or before the deadline, that solver has no allocation on that bounty, the number of allocations is below max rewarded solvers, and refundable lamports are at least the reward. The same transaction moves the reward from refundable to reserved and inserts one payout in `pending`. The chain transfer happens after the transaction commits. A correct attempt that fails only the capacity checks (allocation cap or refundable balance) is stored with an ineligibility reason and creates no payout. Requests that fail consent, ownership, attempt limit, bounty activity, or deadline are rejected and store no attempt.

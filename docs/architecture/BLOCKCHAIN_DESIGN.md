@@ -102,7 +102,7 @@ Reservation and settlement rules are in the database design. The chain send neve
 
 ## Solver payouts
 
-PD-05 (**proposed — pending confirmation**): the first eligible correct attempt pays immediately. There is no ranking and no creator batch.
+Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): the first eligible correct attempt pays that solver immediately. There is no ranking and no creator batch. The HTTP submission returns before chain confirmation. Payouts are not implemented. Confirmation commitment remains PD-13.
 
 Eligibility rule E1, verbatim:
 

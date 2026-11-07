@@ -535,7 +535,7 @@ Indexes already present cover the marketplace `(status, deadline)`, the creator 
 
 ## Unresolved decisions
 
-PD-03 is no longer unresolved. The items below are not accepted here.
+PD-03 and PD-05 are no longer unresolved. The items below are not accepted here.
 
 ### PD-03 Session shape
 
@@ -543,11 +543,7 @@ Superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md)
 
 ### PD-05 When a reward is sent
 
-Options: the first E1 success reserves and sends immediately, or a creator later releases a batch.
-
-Implications: A batch changes E1, the payout timing in the PRD, and the demo. Immediate send matches the current schema and the eligibility text.
-
-Recommendation, not a decision: keep immediate equal rewards for the hackathon. Accepting the other option requires an ADR because it changes E1.
+Superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). Each eligible solver is paid individually after the reward is reserved. There is no batch and no creator release. The submission response does not wait for chain confirmation. E1 is unchanged. PD-13 still governs the confirmation commitment. ADR-004 does not implement transfers or the payout worker.
 
 ### PD-08 Refunds
 

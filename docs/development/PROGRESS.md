@@ -82,7 +82,7 @@ Nothing. The Phase 5 review is ready for the user. Phase 6 is not in progress.
 
 Local PostgreSQL on `127.0.0.1:5432` refused connections on 2026-11-07. The initial migration is deferred until a development database is configured. Do not point that migration at a shared or production database.
 
-PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). Phase 6 should not treat PD-05, PD-08, PD-13, PD-10, PD-14, or PD-15 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other five affect authentication or the money path. Authentication must follow ADR-003 and is not started.
+PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). Phase 6 should not treat PD-08, PD-13, PD-10, PD-14, or PD-15 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other four affect authentication, privacy, or the money path. Authentication must follow ADR-003. Payout timing must follow ADR-004. Neither is started.
 
 ## Next actions
 

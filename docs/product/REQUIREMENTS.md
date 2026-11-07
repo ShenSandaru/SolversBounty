@@ -923,12 +923,14 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: rewards
-- Description: **Proposed** PD-05. The first E1 success reserves and sends the configured reward. There is no ranking batch.
+- Description: [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). The first E1 success reserves and sends that solver's configured reward. There is no ranking batch. Payouts are not implemented.
 
 Acceptance criteria:
 
 - Two eligible solvers receive the same lamport amount.
 - No creator action is required between a correct answer and the payout send.
+- The submission HTTP request returns without waiting for chain confirmation.
+- The reward is marked paid only after the required on-chain confirmation. That commitment remains PD-13.
 
 ### PAY-017 No custom program
 

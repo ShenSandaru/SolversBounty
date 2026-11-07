@@ -24,7 +24,7 @@ Write an ADR before implementing a change that:
 
 Do not write an ADR for a bug fix that follows an existing decision, a copy change, or a visual tweak.
 
-A `PD-*` item that the user accepts without changing its meaning can be marked accepted in the implementation plan. Write an ADR if acceptance changes the consequences or if the decision is one of the bullets above. PD-03 is superseded by ADR-003. PD-05, PD-13, PD-14, and PD-15 are the proposals most likely to need that update.
+A `PD-*` item that the user accepts without changing its meaning can be marked accepted in the implementation plan. Write an ADR if acceptance changes the consequences or if the decision is one of the bullets above. PD-03 is superseded by ADR-003. PD-05 is superseded by ADR-004. PD-13, PD-14, and PD-15 are the proposals most likely to need that update.
 
 ## Required sections
 
@@ -59,6 +59,7 @@ Status meanings:
 | [ADR-001 Modular monolith](ADR-001-modular-monolith.md) | accepted | One NestJS process with module boundaries |
 | [ADR-002 Custodial Devnet treasury](ADR-002-custodial-devnet-treasury.md) | accepted | Backend-managed custodial wallet. Not trustless escrow |
 | [ADR-003 PostgreSQL server-side sessions](ADR-003-postgresql-server-side-sessions.md) | accepted | HttpOnly cookie session. Hash stored on `AuthSession`. Not JWT |
+| [ADR-004 Immediate individual solver payouts](ADR-004-immediate-individual-solver-payouts.md) | accepted | Pay each eligible solver after reservation. No batch. E1 unchanged |
 
 ## How to supersede
 
