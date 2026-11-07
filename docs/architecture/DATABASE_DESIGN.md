@@ -1,17 +1,24 @@
 # Database design
 
-Status: **proposed — pending confirmation**. This is not approved DDL. `apps/api/prisma/schema.prisma` represents the entities below. Nothing here has been migrated. No `prisma/migrations` history exists because local PostgreSQL was not accepting connections when the schema was added.
+Status: **direction approved for the MVP**. This is not applied DDL. `apps/api/prisma/schema.prisma` remains the unmigrated 13-model proposal. No `prisma/migrations` history exists. This document does not change that file.
 
-Implementation notes that stay open:
+Four layers stay separate:
 
-- `StrategyResponse` is specified below as future work and is not a Prisma model. [ADR-009](../decisions/ADR-009-minimal-research-analytics.md) excludes strategy and explanation from the MVP. This decision adds no columns.
-- The `Session` entity is modeled as `AuthSession` and mapped to `auth_sessions`, so the table name stays distinct from `solving_sessions`.
-- Primary keys use UUID. The identifier type is still an open choice.
-- Balances are derived from `BountyLedgerEntry`. There is no cached balance column.
-- Foreign keys use `onDelete: Restrict`. The design does not define cascades.
-- `ChainTransaction.commitment` is text. [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) requires the value `confirmed` before funding or payout completion. The column type is unchanged, and no migration is applied.
-- The one-active-nonce rule cannot be expressed in Prisma. `apps/api/prisma/manual/partial-indexes.sql` holds the partial unique index and has not been applied.
-- `SolvingSession (bountyId, solverId)` unique covers a bounty lookup. `SubmissionAttempt (sessionId, attemptNumber)` unique covers the grading lookup. Separate indexes for those leading columns are not added.
+| Layer | Meaning in this document |
+| --- | --- |
+| Existing Prisma proposal | The 13 models and 11 enums already written in `schema.prisma`. Not migrated |
+| Proposed schema changes | `BountyFunding.purpose`, the two funding uniqueness rules, and the session-hash unique index. Not in `schema.prisma` |
+| Accepted decisions | ADR-001 through ADR-011, including the reward-pool identity and commission outside `funded` |
+| Unresolved details | Listed under Deferred decisions. They block funding or migration only where that section says so |
+
+Approved direction:
+
+- UUID primary keys. PostgreSQL. No extra reward-pool bucket and no platform revenue table.
+- Server-side sessions. The hash column stays `refreshTokenHash`. A unique index on it is a **proposed change**.
+- One active authentication nonce per wallet. The partial unique index in `apps/api/prisma/manual/partial-indexes.sql` must be in the first migration. Prisma cannot declare it.
+- `ConsentRecord.policyVersion` stays a string. The version text is not accepted.
+- Balances stay sums of `BountyLedgerEntry`. Foreign keys stay `onDelete: Restrict`.
+- `ChainTransaction.commitment` stays text. [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) requires the value `confirmed` before funding or payout completion.
 
 Related: [backend architecture](BACKEND_ARCHITECTURE.md), [blockchain design](BLOCKCHAIN_DESIGN.md), [PRD](../product/PRD.md), PD-01, PD-02, PD-06, PD-12, and PD-19 in the [implementation plan](../development/IMPLEMENTATION_PLAN.md).
 
@@ -68,7 +75,9 @@ No email, password, name, or user secret key. Admin is also gated by the server 
 | `usedAt` | Null until consumed |
 | `retiredAt` | Set when a newer nonce is issued |
 
-At most one row per wallet has both `usedAt` and `retiredAt` null. That is the single active authentication nonce. "Authentication challenge" here means the login nonce, not a cognitive bounty.
+At most one row per wallet has both `usedAt` and `retiredAt` null. That row is the single active authentication nonce. "Authentication challenge" here means the login nonce, not a cognitive bounty. No second nonce model is added.
+
+A used, retired, or expired nonce must not permanently block a new nonce. The partial index only forbids two rows that are both unused and not retired. An expired row that is still unused and not retired would block issuance, so the application retires or consumes the previous nonce before it inserts the next one. The 10-minute lifetime remains proposed. The first migration includes `auth_nonces_one_active_per_wallet`.
 
 ### Session
 
@@ -100,7 +109,7 @@ ADR-003 uses this table for the server session. Do not store the raw session tok
 | `publishedAt`, `closedAt` | Nullable |
 | `createdAt`, `updatedAt` | Server time |
 
-Principal is not stored as a float. It is `rewardLamports * maxRewardedSolvers`, checked against confirmed deposits.
+Principal is not stored as a float. Expected reward-pool principal is `rewardLamports * maxRewardedSolvers`, computed in integers. It is not a second column. Expected commission is the separate integer described under BountyFunding. Total creator payment is those two integers added together. That total is not a ledger bucket and is not `funded`.
 
 ### BountyQuestion
 
@@ -117,16 +126,47 @@ The plaintext expected answer is not a column.
 
 ### BountyFunding
 
-| Column | Notes |
-| --- | --- |
-| `id` | UUID |
-| `bountyId` | Foreign key |
-| `depositReference` | Unique. Matches the memo (PD-18) |
-| `expectedLamports` | Principal required |
-| `observedLamports` | Nullable until confirmed |
-| `chainTransactionId` | Nullable until a signature is stored |
-| `status` | `pending`, `confirmed`, `rejected` |
-| `createdAt`, `confirmedAt` | Server time |
+The existing model is one row with one `expectedLamports`. That cannot separate the reward pool from the commission. The approved direction is two logical funding records on this same model, not a new table.
+
+`purpose` is a **proposed schema change**. It is not in `schema.prisma`.
+
+| Column | In the current schema? | Notes |
+| --- | --- | --- |
+| `id` | Yes | UUID |
+| `bountyId` | Yes | Foreign key |
+| `purpose` | No. **Proposed change** | `reward_pool` or `commission` |
+| `depositReference` | Yes | Unique. Memo text is still PD-18 |
+| `expectedLamports` | Yes | Integer obligation for this record |
+| `observedLamports` | Yes | Nullable until that obligation is verified |
+| `chainTransactionId` | Yes | Nullable until a signature is stored |
+| `status` | Yes | `pending`, `confirmed`, `rejected` |
+| `createdAt`, `confirmedAt` | Yes | Server time |
+
+These two records are separate funding obligations. They are not a decision that the creator signs two Solana transactions. One transfer or two remains unresolved. The commission address is unresolved.
+
+| Obligation | `expectedLamports` | Verification | Effect on `funded` |
+| --- | --- | --- | --- |
+| `reward_pool` | `rewardLamports * maxRewardedSolvers` | Its own confirmed observation must cover this integer | One `deposit` increases `funded` and `refundable` |
+| `commission` | `floor(rewardPoolLamports * 5 / 100)` | Its own confirmed observation must cover this integer | None. Confirmation does not increase `funded` |
+
+Both obligations are verified independently. The bounty stays inactive until both records are `confirmed`. Total creator payment is the sum of the two `expectedLamports` values. That sum is not a ledger bucket.
+
+**Proposed constraints**, not in `schema.prisma`:
+
+- Unique `(bountyId, purpose)`, so one pool obligation and one commission obligation.
+- Unique `(chainTransactionId, purpose)` where a signature is present. This replaces unique `chainTransactionId` alone. Two signatures can be stored. One signature can be cited by both records if a later decision uses a single transfer. The constraint does not choose either shape. PostgreSQL still allows several rows whose `chainTransactionId` is null.
+
+#### Commission rounding
+
+Commission is 5% of the original reward pool ([ADR-007](../decisions/ADR-007-company-platform-commission.md)). The obligation is an integer lamport amount:
+
+```text
+commissionLamports = floor(rewardPoolLamports * 5 / 100)
+```
+
+Calculate that with integer arithmetic. Do not use floating-point arithmetic. A fractional lamport is rounded down. The commission is never rounded up. `floor(1_000_000_001 * 5 / 100)` is 50_000_000. The `commission` funding record stores that integer in `expectedLamports`. Confirmation of that record still does not increase `funded`.
+
+The commission address, and whether one Solana transfer or two pays the two obligations, remain unresolved.
 
 ### BountyLedgerEntry
 
@@ -159,7 +199,9 @@ Identity after every committed posting:
 funded = reserved + paid + refundable + refunded
 ```
 
-`refunded` is the sum of `refund` entries and remains part of the identity. `refundable` is the unallocated balance. The name does not entitle the creator to a refund. [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) does not post retained unused principal as `paid` or as `refunded`. After the deadline or the participant cap, that unallocated remainder is platform revenue and stays in `refundable` ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)). Reports must not treat a revenue classification of that balance as a second asset. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is accepted and approves no entry type. Cancelled, never-activated, failed-funding, creator-close, and admin-close balances remain unspecified.
+`refunded` is the sum of `refund` entries and remains part of the identity. `refundable` is the unallocated balance. The name does not entitle the creator to a refund. A `deposit` entry is posted only for a confirmed `reward_pool` funding row. A confirmed `commission` row is not a `deposit`.
+
+[ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) does not post retained unused principal as `paid` or as `refunded`. After the deadline or the participant cap, that unallocated remainder is platform revenue and stays in `refundable`. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) classifies that same balance. Reports must not add the classification on top of `refundable`, `funded`, or the treasury balance. There is no retained bucket and no revenue table. No new entry type is added. Cancelled, never-activated, failed-funding, creator-close, and admin-close balances remain unspecified. The `refund` entry type stays in the enum and is not used for normal closure.
 
 ### ConsentRecord
 
@@ -167,7 +209,7 @@ funded = reserved + paid + refundable + refunded
 | --- | --- |
 | `id` | UUID |
 | `userId`, `bountyId` | Unique together |
-| `policyVersion` | Proposed value `research-consent-v1` |
+| `policyVersion` | String. Not an enum. The version text is not accepted yet |
 | `acceptedAt` | Server time |
 
 No IP address column (PRIV-003).
@@ -266,15 +308,18 @@ Required actions are listed in NFR-017.
 ## Constraints that protect money and secrecy
 
 - One user per wallet address.
-- One active authentication nonce per wallet.
+- One active authentication nonce per wallet, through the partial unique index. Not applied.
+- Unique `AuthSession.refreshTokenHash`. **Proposed change.** Not in the schema.
 - One question per bounty in the MVP (`bountyId` unique on `BountyQuestion`).
-- One consent row per user per bounty.
+- One consent row per user per bounty. A solving session requires that row.
 - One solving session per solver per bounty.
 - Attempt numbers unique inside a session and not above `attemptLimit`.
 - One reward allocation per bounty per solver.
 - One payout per allocation.
+- One pool funding row and one commission funding row per bounty. **Proposed change.**
+- A `deposit` ledger entry comes only from the confirmed pool funding row.
 - One ledger posting per confirmed chain signature and entry type.
-- Public query projections must not select `expectedAnswerCiphertext`.
+- Public and analytics queries must not select `expectedAnswerCiphertext`, `submittedAnswer`, or solver wallet addresses ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
 
 ## Sensitive data
 
@@ -292,21 +337,81 @@ Proposed encryption detail for PD-02: AES-256-GCM via Node `crypto`, with a rand
 
 ## Indexes
 
-Proposed indexes beyond the unique keys above:
+Already declared on the unmigrated schema, or implied by a unique key:
 
 - `Bounty (status, deadline)` for the marketplace.
-- `Bounty (creatorId, createdAt)` for the dashboard.
-- `SolvingSession (bountyId)` for analytics.
-- `SubmissionAttempt (sessionId, attemptNumber)` for grading and metrics.
+- `Bounty (creatorId, createdAt)` for the creator's own bounties.
 - `Payout (status)` for the worker.
 - `ChainTransaction (signature)` unique lookup.
 - `AuditLog (entityType, entityId, createdAt)`.
+- Unique keys listed in the constraints section.
+
+**Proposed change:** unique index on `AuthSession.refreshTokenHash` for session lookup. Not in `schema.prisma`.
+
+Do not add a separate index on `SolvingSession.bountyId` or `SubmissionAttempt.sessionId`. The unique `(bountyId, solverId)` and unique `(sessionId, attemptNumber)` keys already serve those lookups.
+
+The partial nonce index stays in `apps/api/prisma/manual/partial-indexes.sql` until the first migration includes it.
+
+## Transaction boundaries
+
+These are application transactions. They do not add tables.
+
+| Boundary | What commits together |
+| --- | --- |
+| E1 reservation | Lock the bounty row. Insert the attempt, the one allocation, the `reserve` ledger entry, and the `pending` payout, or roll all of them back. Move lamports from `refundable` to `reserved`. Eligibility rule E1 is unchanged |
+| Payout send | After that commit. Sign only when no unconfirmed or confirmed signature already exists for the payout. Do not hold the database transaction open across RPC |
+| Settlement | One `settle` entry moves `reserved` to `paid` after [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) `confirmed` and the detail checks. Repeating the signature does not post a second `settle` |
+| Release | A permanently failed payout posts `release`, moving `reserved` back to `refundable`, on the same payout row |
+| Pool deposit | A confirmed `reward_pool` funding row posts one `deposit`. A confirmed `commission` row posts none |
+
+Normal closure does not post a ledger entry that removes retained principal from `refundable`.
+
+## Analytics queries
+
+ADR-009 metrics are queries, not stored aggregates.
+
+- Participants: count of `SolvingSession` rows for the bounty.
+- Correct and incorrect counts: count of `SubmissionAttempt` rows by `isCorrect`.
+- Attempt count: count of those attempts.
+- Average completion time: mean of first correct `submittedAt` minus session `startedAt`, over sessions that have a correct attempt. Both timestamps are server columns.
+- Accuracy: correct attempts divided by all attempts.
+
+A creator query filters `Bounty.creatorId` to the session user. An administrator query may group the same figures by bounty or creator. Neither query selects solver wallet addresses or `submittedAnswer`. Consent is the `ConsentRecord` row required before the session insert. Wallet login does not write that row.
+
+## Deferred decisions
+
+Unresolved. This document does not decide them:
+
+- Exceptional termination balances: cancelled, never active, failed or incomplete funding, creator close, and admin close.
+- Commission treatment in those endings.
+- Commission receiving address.
+- Whether the creator signs one Solana transfer or two. The two funding records are obligations, not that choice.
+- Fee buffer (PD-07). It is not a ledger bucket.
+- Session lifetime and the CSRF mechanism. No CSRF column. Nonce lifetime of 10 minutes is still proposed.
+- A physical revenue-recognition row. ADR-011 does not require one.
+- Renaming `refreshTokenHash`.
+- The consent policy version string.
+- Submitted-answer encryption (PD-19). The plaintext column stays as proposed.
+
+## Prerequisites
+
+Before the first migration:
+
+- Keep the 13 existing models. Do not add a revenue table or a ledger entry type.
+- Include `auth_nonces_one_active_per_wallet` from `apps/api/prisma/manual/partial-indexes.sql`.
+- Apply the proposed session-hash unique index and the `BountyFunding.purpose` constraints only if that migration is intended to carry those schema changes. They are not in `schema.prisma` today.
+- Do not apply the migration to a shared or production database from this document.
+
+Before funding implementation:
+
+- Do not choose a commission address or a one-transfer versus two-transfer design inside the schema. Verification still treats the pool obligation and the commission obligation independently.
+- Set the commission obligation with `floor(rewardPoolLamports * 5 / 100)` in integer lamports ([ADR-007](../decisions/ADR-007-company-platform-commission.md)). Do not use floating-point arithmetic.
+- Post `deposit` only for the confirmed `reward_pool` record.
 
 ## Unapproved choices
 
-The following stayed open through the Phase 4 schema representation and the Phase 5 security review. None of them is accepted:
+The following are still not accepted as DDL:
 
-- UUID versus another identifier type.
-- Exact Prisma enum names.
-- Whether balances are only derived from `BountyLedgerEntry` or also cached on `Bounty` inside the same transaction. The design prefers derivation plus the bounty row lock. A cache column is optional and must not be writable except by the ledger transaction.
+- Exact Prisma enum names, including the proposed `purpose` values.
+- Applying any of the proposed changes above. `schema.prisma` is unchanged by this document.
 - `StrategyResponse` is not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). It is not a Prisma model and is not part of the first migration.

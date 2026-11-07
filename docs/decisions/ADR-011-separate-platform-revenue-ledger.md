@@ -52,7 +52,7 @@ Three different ideas stay separate:
 
 ### Platform revenue record
 
-**Commission revenue.** 5% of the original solver reward pool, paid separately by the creator under ADR-007, and recorded apart from solver reward principal. The rate applies to the pool, not to the creator's total payment.
+**Commission revenue.** 5% of the original solver reward pool, paid separately by the creator under ADR-007. The integer obligation is `floor(rewardPoolLamports * 5 / 100)` lamports. It is recorded apart from solver reward principal and is not part of `funded`. The rate applies to the pool, not to the creator's total payment.
 
 **Retained reward revenue.** A classification of the unallocated principal that remains in `refundable` after a bounty reaches its deadline or its maximum rewarded participant limit under ADR-008. The record refers to that existing reward-pool amount. It is not a solver payout, not a creator refund, and not an additional financial balance.
 

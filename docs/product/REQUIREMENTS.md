@@ -966,7 +966,7 @@ Acceptance criteria:
 Acceptance criteria:
 
 - For a 1_000_000_000 lamport pool, the commission is 50_000_000 lamports and the total payment is 1_050_000_000 lamports.
-- When the pool is divisible by 20, commission lamports equal pool × 5 / 100. A rounding rule for any other pool is not set.
+- When the pool is 1_000_000_001 lamports, `floor(pool * 5 / 100)` is 50_000_000. The commission is never rounded up. The calculation uses integer lamports, not floating-point arithmetic.
 - Solver reward amounts are unchanged.
 - Commission is not posted into `funded`, `reserved`, `paid`, `refundable`, or `refunded`.
 - The bounty does not become active until both the reward pool and the commission are verified under ADR-005, including network, parties, amounts, and references.

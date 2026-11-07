@@ -464,7 +464,7 @@ Unless the critical path is done and the user expands scope:
 
 ## 14. Future business
 
-The MVP commission is [ADR-007](../decisions/ADR-007-company-platform-commission.md): 5% added on top of the solver reward pool. It is not deducted from that pool. Still not MVP scope:
+The MVP commission is [ADR-007](../decisions/ADR-007-company-platform-commission.md): 5% added on top of the solver reward pool, as `floor(rewardPoolLamports * 5 / 100)` integer lamports. It is not deducted from that pool. Still not MVP scope:
 
 1. A commission deducted from the solver reward pool.
 2. Paid advanced research reports.

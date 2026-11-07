@@ -30,13 +30,19 @@ Therefore:
 
 ### Calculation
 
-Commission = reward pool × 0.05
+The commission is 5% of the original solver reward pool. It is not 5% of the creator's total payment.
 
-Total payment = reward pool + commission
+Amounts are integer lamports. The obligation is:
 
-The commission is calculated on the reward pool, not on the total payment.
+```text
+commissionLamports = floor(rewardPoolLamports * 5 / 100)
+```
 
-Example:
+Use integer arithmetic, or an equivalent exact calculation. Do not use floating-point arithmetic. If the exact 5% is a fractional lamport, round down to the nearest whole lamport. Never round the commission up.
+
+Total payment = reward pool + that integer commission.
+
+Example where 5% is already a whole lamport:
 
 | Component | Amount | Lamports |
 | --- | ---: | ---: |
@@ -44,7 +50,13 @@ Example:
 | Platform commission (5%) | 0.05 SOL | 50_000_000 |
 | Total company payment | 1.05 SOL | 1_050_000_000 |
 
-Amounts are integer lamports. This decision does not choose a rounding rule when 5% of a pool is not a whole number of lamports.
+`floor(1_000_000_000 * 5 / 100)` is 50_000_000.
+
+Example where 5% is not a whole lamport:
+
+`floor(1_000_000_001 * 5 / 100) = 50_000_000`
+
+The fractional 0.05 lamport is dropped. The commission obligation is 50_000_000 lamports, not 50_000_001.
 
 ## Funding and activation requirements
 
