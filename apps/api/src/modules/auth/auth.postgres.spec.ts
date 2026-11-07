@@ -1,7 +1,7 @@
 import { Keypair } from "@solana/web3.js";
 import { InMemoryRateLimit } from "../anti-abuse/in-memory-rate-limit";
 import { DatabaseService } from "../../database/database.service";
-import { NONCE_TTL_MS, SESSION_COOKIE } from "./auth.constants";
+import { NONCE_TTL_MS, CSRF_COOKIE, SESSION_COOKIE } from "./auth.constants";
 import { AuthFlowError } from "./auth.errors";
 import { AuthService } from "./auth.service";
 import { PrismaAuthRepository } from "./prisma-auth.repository";
@@ -60,11 +60,11 @@ describePostgres("AUTH PostgreSQL integration", () => {
     expect(repeated.user.id).toBe(login.user.id);
     expect(repeated.user.walletAddress).toBe(address);
 
-    await expect(auth.sessionFromCookie(`${SESSION_COOKIE}=${encodeURIComponent(cookieToken(login.setCookie))}`)).rejects.toMatchObject({
+    await expect(auth.sessionFromCookie(`${SESSION_COOKIE}=${encodeURIComponent(cookieToken(login.setCookies[0] ?? ""))}`)).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });
     const current = await auth.sessionFromCookie(
-      `${SESSION_COOKIE}=${encodeURIComponent(cookieToken(repeated.setCookie))}`,
+      `${SESSION_COOKIE}=${encodeURIComponent(cookieToken(repeated.setCookies[0] ?? ""))}`,
     );
     expect(current.walletAddress).toBe(address);
 
@@ -86,9 +86,12 @@ describePostgres("AUTH PostgreSQL integration", () => {
     auth.current = new Date("2026-11-07T13:00:00.000Z");
     const fresh = await auth.issueNonce(address);
     const active = await auth.login(address, await sign(wallet, fresh.message));
-    await auth.logout(`${SESSION_COOKIE}=${encodeURIComponent(cookieToken(active.setCookie))}`);
+    await auth.logout(
+      `${SESSION_COOKIE}=${encodeURIComponent(cookieToken(active.setCookies[0] ?? ""))}; ${CSRF_COOKIE}=${encodeURIComponent(active.csrfToken)}`,
+      active.csrfToken,
+    );
     await expect(
-      auth.sessionFromCookie(`${SESSION_COOKIE}=${encodeURIComponent(cookieToken(active.setCookie))}`),
+      auth.sessionFromCookie(`${SESSION_COOKIE}=${encodeURIComponent(cookieToken(active.setCookies[0] ?? ""))}`),
     ).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
   });
 });

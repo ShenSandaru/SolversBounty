@@ -13,7 +13,7 @@ Proposed behavior is marked **proposed** and points at a `PD-*` ID in the [imple
 ### AUTH-001 Connect Phantom
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: web auth, auth
 - Description: A visitor can connect a Phantom wallet in the browser.
 
@@ -39,7 +39,7 @@ Acceptance criteria:
 ### AUTH-003 Sign an authentication message
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: web auth, auth
 - Description: The wallet signs a login message that includes the domain, wallet, nonce, and expiry.
 
@@ -81,21 +81,22 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- Subsequent creator and solver calls accept that session and reject a missing, expired, or revoked session.
-- Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): store a hash of the session token on `AuthSession`, and send the raw token only in an HttpOnly cookie. Exact lifetime, cookie domain, and CSRF mechanism are not set.
-- Logout or disconnect revokes that server session.
+- Subsequent creator and solver calls accept that session and reject a missing, expired, or revoked session. Creator and solver routes are not built yet, so this criterion is not met.
+- Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): store a hash of the session token on `AuthSession`, and send the raw token only in an HttpOnly cookie. The working lifetime is 8 hours. That lifetime is not an accepted ADR decision. The working CSRF mechanism is an HttpOnly `sb_csrf` cookie plus the `X-CSRF-Token` header on logout. That mechanism is not an accepted ADR decision.
+- Logout revokes that server session. Disconnecting the wallet does not.
 
 ### AUTH-007 Disconnect
 
 - Priority: P0
 - Status: `in_progress`
 - Modules: web auth, auth
-- Description: The user can disconnect the wallet and end the app session.
+- Description: The user can disconnect the wallet. Logging out ends the server session. Those are separate actions.
 
 Acceptance criteria:
 
-- After disconnect, protected API calls from that session fail.
-- Disconnect does not send a transaction.
+- Logout revokes the server session. Disconnecting the wallet does not.
+- After logout, a later call with that session cookie is rejected.
+- Neither action sends a transaction.
 
 ### AUTH-008 Reject invalid signatures
 
@@ -124,7 +125,7 @@ Acceptance criteria:
 ### AUTH-010 Keep private keys in the wallet
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: web auth
 - Description: The platform never receives a wallet secret.
 
@@ -136,7 +137,7 @@ Acceptance criteria:
 ### AUTH-011 No email or password
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: auth, web auth
 - Description: MVP authentication is wallet-only.
 

@@ -18,7 +18,7 @@ export function HomePage() {
           <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
             {APP_NAME} is a wallet-authenticated marketplace for cognitive challenges and consented
             research. Creators fund a fixed SOL pool. Eligible solvers share the same reward.
-            This preview does not sign in, verify answers, or move SOL.
+            This preview can sign in with a wallet. It does not verify answers or move SOL.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild>

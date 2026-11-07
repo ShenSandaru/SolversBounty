@@ -9,8 +9,8 @@ import {
   decodeSignature,
   verifyWalletSignature,
 } from "../solana/verify-wallet-signature";
-import { NONCE_RATE_LIMIT, NONCE_RATE_WINDOW_MS, NONCE_TTL_MS, SESSION_TTL_MS } from "./auth.constants";
-import { clearSessionCookie, readSessionCookie, sessionCookie } from "./auth.cookies";
+import { CSRF_COOKIE, NONCE_RATE_LIMIT, NONCE_RATE_WINDOW_MS, NONCE_TTL_MS, SESSION_TTL_MS } from "./auth.constants";
+import { clearCsrfCookie, clearSessionCookie, csrfCookie, csrfTokensMatch, readNamedCookie, readSessionCookie, sessionCookie } from "./auth.cookies";
 import { AuthFlowError } from "./auth.errors";
 import { buildLoginMessage, loginOrigin } from "./login-message";
 import { PrismaAuthRepository } from "./prisma-auth.repository";
@@ -28,7 +28,8 @@ export type IssuedNonce = {
 };
 
 export type LoginResult = {
-  setCookie: string;
+  setCookies: string[];
+  csrfToken: string;
   user: { id: string; walletAddress: string; role: "user" | "admin" };
 };
 
@@ -82,6 +83,7 @@ export class AuthService {
       throw new AuthFlowError(401, "AUTH_REJECTED", "Authentication failed.");
     }
     const token = randomBytes(32).toString("base64url");
+    const csrfToken = randomBytes(32).toString("base64url");
     const hash = hashSessionToken(token);
     const saved = await this.repository.consumeLogin({
       userWallet: wallet,
@@ -95,8 +97,13 @@ export class AuthService {
       throw new AuthFlowError(401, "AUTH_REJECTED", "Authentication failed.");
     }
     const settings = this.settings();
+    const maxAgeSeconds = SESSION_TTL_MS / 1000;
     return {
-      setCookie: sessionCookie(token, SESSION_TTL_MS / 1000, settings.secureCookie),
+      setCookies: [
+        sessionCookie(token, maxAgeSeconds, settings.secureCookie),
+        csrfCookie(csrfToken, maxAgeSeconds, settings.secureCookie),
+      ],
+      csrfToken,
       user: { id: saved.user.id, walletAddress: saved.user.walletAddress, role: saved.user.role },
     };
   }
@@ -110,10 +117,27 @@ export class AuthService {
     return { id: found.user.id, walletAddress: found.user.walletAddress, role: found.user.role };
   }
 
-  async logout(cookieHeader: string | undefined): Promise<string> {
+  async csrfForSession(cookieHeader: string | undefined): Promise<{ csrfToken: string; setCsrfCookie: string | null }> {
+    await this.sessionFromCookie(cookieHeader);
+    const existing = readNamedCookie(cookieHeader, CSRF_COOKIE);
+    if (existing) {
+      return { csrfToken: existing, setCsrfCookie: null };
+    }
+    const csrfToken = randomBytes(32).toString("base64url");
+    return {
+      csrfToken,
+      setCsrfCookie: csrfCookie(csrfToken, SESSION_TTL_MS / 1000, this.settings().secureCookie),
+    };
+  }
+
+  async logout(cookieHeader: string | undefined, csrfHeader: string | undefined): Promise<string[]> {
+    if (!csrfTokensMatch(cookieHeader, csrfHeader)) {
+      throw new AuthFlowError(403, "FORBIDDEN", "Cross-site request blocked.");
+    }
     const token = readToken(cookieHeader);
     await this.repository.revokeSession(hashSessionToken(token), this.now());
-    return clearSessionCookie(this.settings().secureCookie);
+    const settings = this.settings();
+    return [clearSessionCookie(settings.secureCookie), clearCsrfCookie(settings.secureCookie)];
   }
 
   private messageFor(wallet: string, nonce: string, issuedAt: Date, expiresAt: Date): string {

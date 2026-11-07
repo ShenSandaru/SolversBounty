@@ -5,7 +5,7 @@ import request from "supertest";
 import { ApiExceptionFilter } from "../../common/filters/api-exception.filter";
 import { AntiAbuseModule } from "../anti-abuse/anti-abuse.module";
 import { AuthController } from "./auth.controller";
-import { SESSION_COOKIE } from "./auth.constants";
+import { CSRF_COOKIE, CSRF_HEADER, SESSION_COOKIE } from "./auth.constants";
 import { AuthService } from "./auth.service";
 import { FakeAuthPrisma } from "./fake-auth-prisma";
 import { PrismaAuthRepository } from "./prisma-auth.repository";
@@ -54,22 +54,34 @@ describe("auth HTTP", () => {
       signature: Buffer.from(signature).toString("base64url"),
     });
     expect(login.status).toBe(201);
-    const cookie = login.headers["set-cookie"]?.[0] ?? "";
-    expect(cookie).toContain(`${SESSION_COOKIE}=`);
-    expect(cookie).toContain("HttpOnly");
-    expect(cookie).not.toContain("Domain=");
-    expect(login.body).toEqual({ walletAddress: address, role: "user" });
+    const cookies = login.headers["set-cookie"] ?? [];
+    const sessionCookie = cookies.find((value) => value.startsWith(`${SESSION_COOKIE}=`)) ?? "";
+    const csrfCookie = cookies.find((value) => value.startsWith(`${CSRF_COOKIE}=`)) ?? "";
+    expect(sessionCookie).toContain("HttpOnly");
+    expect(sessionCookie).not.toContain("Domain=");
+    expect(csrfCookie).toContain("HttpOnly");
+    expect(login.body).toEqual({ walletAddress: address, role: "user", csrfToken: expect.any(String) });
 
-    const session = await request(app.getHttpServer()).get("/auth/session").set("Cookie", cookie.split(";")[0] ?? "");
+    const cookieHeader = `${sessionCookie.split(";")[0]}; ${csrfCookie.split(";")[0]}`;
+    const session = await request(app.getHttpServer()).get("/auth/session").set("Cookie", cookieHeader);
     expect(session.status).toBe(200);
     expect(session.body.walletAddress).toBe(address);
+    expect(session.body.csrfToken).toBe(login.body.csrfToken);
 
     const missing = await request(app.getHttpServer()).get("/auth/session");
     expect(missing.status).toBe(401);
     expect(missing.body.code).toBe("UNAUTHENTICATED");
 
-    await request(app.getHttpServer()).post("/auth/logout").set("Cookie", cookie.split(";")[0] ?? "").expect(201);
-    const after = await request(app.getHttpServer()).get("/auth/session").set("Cookie", cookie.split(";")[0] ?? "");
+    const blocked = await request(app.getHttpServer()).post("/auth/logout").set("Cookie", cookieHeader);
+    expect(blocked.status).toBe(403);
+    expect(blocked.body.code).toBe("FORBIDDEN");
+
+    await request(app.getHttpServer())
+      .post("/auth/logout")
+      .set("Cookie", cookieHeader)
+      .set(CSRF_HEADER, login.body.csrfToken as string)
+      .expect(201);
+    const after = await request(app.getHttpServer()).get("/auth/session").set("Cookie", cookieHeader);
     expect(after.status).toBe(401);
   });
 });

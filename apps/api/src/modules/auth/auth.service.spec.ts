@@ -1,7 +1,7 @@
 import { Keypair } from "@solana/web3.js";
 import { ConfigService } from "@nestjs/config";
 import { InMemoryRateLimit } from "../anti-abuse/in-memory-rate-limit";
-import { NONCE_TTL_MS, SESSION_COOKIE } from "./auth.constants";
+import { CSRF_COOKIE, NONCE_TTL_MS, SESSION_COOKIE } from "./auth.constants";
 import { AuthFlowError } from "./auth.errors";
 import { AuthService } from "./auth.service";
 import { FakeAuthPrisma } from "./fake-auth-prisma";
@@ -56,14 +56,14 @@ describe("AuthService wallet login", () => {
     const login = await auth.login(address, await sign(wallet, second.message));
     expect(login.user.role).toBe("admin");
     expect(login.user.walletAddress).toBe(address);
-    expect(login.setCookie).toContain("HttpOnly");
-    expect(login.setCookie).toContain("SameSite=Lax");
-    expect(login.setCookie).toContain("Path=/");
-    expect(login.setCookie).not.toContain("Domain=");
-    expect(login.setCookie).not.toContain(second.nonce);
+    expect(login.setCookies[0]).toContain("HttpOnly");
+    expect(login.setCookies[0]).toContain("SameSite=Lax");
+    expect(login.setCookies[0]).toContain("Path=/");
+    expect(login.setCookies[0]).not.toContain("Domain=");
+    expect(login.setCookies.join(" ")).not.toContain(second.nonce);
     expect(store.users).toHaveLength(1);
 
-    const token = decodeURIComponent(login.setCookie.split(";")[0]?.replace(`${SESSION_COOKIE}=`, "") ?? "");
+    const token = decodeURIComponent(login.setCookies[0]?.split(";")[0]?.replace(`${SESSION_COOKIE}=`, "") ?? "");
     const session = await auth.sessionFromCookie(`${SESSION_COOKIE}=${encodeURIComponent(token)}`);
     expect(session.walletAddress).toBe(address);
 
@@ -77,8 +77,10 @@ describe("AuthService wallet login", () => {
     await expect(auth.sessionFromCookie(`${SESSION_COOKIE}=${encodeURIComponent(token)}`)).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });
-    const nextToken = decodeURIComponent(rotated.setCookie.split(";")[0]?.replace(`${SESSION_COOKIE}=`, "") ?? "");
-    await auth.logout(`${SESSION_COOKIE}=${encodeURIComponent(nextToken)}`);
+    const nextToken = decodeURIComponent(rotated.setCookies[0]?.split(";")[0]?.replace(`${SESSION_COOKIE}=`, "") ?? "");
+    const header = `${SESSION_COOKIE}=${encodeURIComponent(nextToken)}; ${CSRF_COOKIE}=${encodeURIComponent(rotated.csrfToken)}`;
+    await expect(auth.logout(header, "wrong")).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await auth.logout(header, rotated.csrfToken);
     await expect(auth.sessionFromCookie(`${SESSION_COOKIE}=${encodeURIComponent(nextToken)}`)).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });

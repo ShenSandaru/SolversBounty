@@ -124,7 +124,7 @@ sequenceDiagram
   Api-->>Web: Set HttpOnly session cookie
 ```
 
-Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): the API stores a hash of the session token and sets the raw token in an HttpOnly cookie. A reused or expired nonce stops the sequence before a session is written. Login is not implemented.
+Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): the API stores a hash of the session token and sets the raw token in an HttpOnly cookie. A reused or expired nonce stops the sequence before a session is written. The browser signs the exact message from `POST /auth/nonce`. Wallet disconnect does not revoke the session. Logout does.
 
 ### Creator funding
 

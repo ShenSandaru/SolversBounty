@@ -387,7 +387,7 @@ Unresolved. This document does not decide them:
 - Commission receiving address.
 - Whether the creator signs one Solana transfer or two. The two funding records are obligations, not that choice.
 - Fee buffer (PD-07). It is not a ledger bucket.
-- Session lifetime and the CSRF mechanism. No CSRF column. Nonce lifetime of 10 minutes is still proposed.
+- Session lifetime and the CSRF mechanism. No CSRF column. The API uses an 8-hour lifetime and a logout CSRF cookie as working defaults. Neither is an accepted ADR decision. Nonce lifetime of 10 minutes is still proposed.
 - A physical revenue-recognition row. ADR-011 does not require one.
 - Renaming `refreshTokenHash`.
 - The consent policy version string.

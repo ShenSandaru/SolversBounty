@@ -3,6 +3,7 @@ import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { z } from "zod";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
+import { CSRF_HEADER } from "./auth.constants";
 import { AuthFlowError } from "./auth.errors";
 import { AuthService } from "./auth.service";
 
@@ -32,20 +33,29 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.run(() => this.auth.login(body.walletAddress, body.signature));
-    response.setHeader("Set-Cookie", result.setCookie);
-    return { walletAddress: result.user.walletAddress, role: result.user.role };
+    response.setHeader("Set-Cookie", result.setCookies);
+    return { walletAddress: result.user.walletAddress, role: result.user.role, csrfToken: result.csrfToken };
   }
 
   @Get("session")
   @ApiOkResponse({ description: "Returns the wallet bound to the session cookie." })
-  session(@Headers("cookie") cookie?: string) {
-    return this.run(() => this.auth.sessionFromCookie(cookie));
+  async session(@Headers("cookie") cookie: string | undefined, @Res({ passthrough: true }) response: Response) {
+    const user = await this.run(() => this.auth.sessionFromCookie(cookie));
+    const csrf = await this.run(() => this.auth.csrfForSession(cookie));
+    if (csrf.setCsrfCookie) {
+      response.setHeader("Set-Cookie", csrf.setCsrfCookie);
+    }
+    return { ...user, csrfToken: csrf.csrfToken };
   }
 
   @Post("logout")
   @ApiOkResponse({ description: "Revokes the server session. This sends no Solana transaction." })
-  async logout(@Headers("cookie") cookie: string | undefined, @Res({ passthrough: true }) response: Response) {
-    const clear = await this.run(() => this.auth.logout(cookie));
+  async logout(
+    @Headers("cookie") cookie: string | undefined,
+    @Headers(CSRF_HEADER) csrf: string | undefined,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const clear = await this.run(() => this.auth.logout(cookie, csrf));
     response.setHeader("Set-Cookie", clear);
     return { revoked: true };
   }

@@ -69,14 +69,14 @@ Security review, written on 2026-11-07. No product workflow was added. Requireme
 
 ## In progress
 
-Wallet login on the API is proven against a disposable PostgreSQL database. AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-006 and AUTH-007 stay `in_progress`. The project development database has not had the migration applied. Do not apply it to Neon.
+Wallet login on the API is proven against a disposable PostgreSQL database. The web client connects Phantom through Solana Wallet Adapter and signs the exact nonce message. AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-001, AUTH-003, AUTH-006, AUTH-007, AUTH-010, and AUTH-011 stay `in_progress` because a real Phantom browser session has not been verified. The 8-hour lifetime and logout CSRF check are working defaults, not accepted ADR decisions. The project development database has not had the migration applied. Do not apply it to Neon.
 
 ## Not started
 
 - Bounty APIs, marketplace data, verification, payouts, analytics calculations
 - Applying the Prisma migration to a development database
 - Devnet treasury, airdrops, and demo transactions
-- Browser wallet connection
+- Browser wallet connection is coded and covered with mocked client tests. A real Phantom session is not verified. The manual procedure is [MANUAL_PHANTOM_AUTH.md](MANUAL_PHANTOM_AUTH.md).
 
 ## Blockers
 
@@ -86,10 +86,9 @@ PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-ses
 
 ## Next actions
 
-1. Apply the initial migration only against a disposable or local development database, then repeat the auth tests against PostgreSQL.
-2. Connect the web client to `/auth/nonce` and `/auth/login` with Phantom.
-3. Decide the session lifetime and CSRF mechanism before calling AUTH-006 implemented.
-4. Do not mark product requirements implemented because module folders or Prisma models exist.
+1. Follow [MANUAL_PHANTOM_AUTH.md](MANUAL_PHANTOM_AUTH.md) with Phantom on Devnet before marking AUTH-001, AUTH-003, AUTH-006, or AUTH-007 implemented.
+2. Apply the initial migration only against a disposable or local development database when a fresh database is available. Do not apply it to Neon.
+3. Do not start bounty creation until the browser authentication check is recorded.
 
 ## Verification
 
@@ -114,8 +113,15 @@ Disposable PostgreSQL authentication check on 2026-11-07:
 - Schema checks: 14 product tables plus `_prisma_migrations`, 13 enums, 21 foreign keys, the partial nonce index, BIGINT lamport columns, and both positive-amount checks. A second funding row with the same purpose was rejected. Two null chain ids were accepted. A zero ledger amount was rejected.
 - `auth.postgres.spec.ts` passed against that database: nonce retirement, valid signature, repeat login, invalid signature, expired nonce, replay, session rotation, cookie lookup, logout, and a closed port returning 503.
 - Full API Jest run with that database: 13 suites, 39 tests, all passed.
-- AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-006 and AUTH-007 stay `in_progress` because CSRF, the session lifetime, and browser disconnect are still open.
+- AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-006 and AUTH-007 stay `in_progress` because the browser session, the 8-hour lifetime, and creator routes are still open. CSRF for logout is now a working default, not an accepted ADR decision.
 - The disposable container and its volume were removed afterward. No other container was changed.
+
+Browser wallet authentication on 2026-11-07:
+
+- The web app uses `@solana/web3.js` 1.99.0 and `@solana/wallet-adapter-phantom`. The API keeps `@solana/web3.js` 3.2.0. `@solana/wallet-adapter-wallets` was not kept because it pulled hardware and mobile wallets and failed the install.
+- Web tests: 4 files, 16 tests, all passed. The auth client tests mock fetch and `signMessage`.
+- API tests: 13 suites, 38 passed, 1 skipped. The skipped test is the disposable PostgreSQL spec. Logout without the CSRF header returns 403.
+- A real Phantom signature in the browser was not exercised. Follow [MANUAL_PHANTOM_AUTH.md](MANUAL_PHANTOM_AUTH.md). AUTH-001, AUTH-003, AUTH-006, AUTH-007, AUTH-010, and AUTH-011 stay `in_progress`.
 
 Phase 4 checks on 2026-11-07:
 

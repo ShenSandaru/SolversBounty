@@ -5,4 +5,6 @@ export const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 export const NONCE_RATE_LIMIT = 10;
 export const NONCE_RATE_WINDOW_MS = 60 * 1000;
 export const SESSION_COOKIE = "sb_session";
+export const CSRF_COOKIE = "sb_csrf";
+export const CSRF_HEADER = "x-csrf-token";
 export const LOGIN_CHAIN = "solana:devnet";

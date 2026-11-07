@@ -123,7 +123,7 @@ Users sign in with a Solana wallet.
 - Keep private keys inside the wallet.
 - Do not ask for email or password.
 
-Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): a PostgreSQL `AuthSession`, a hash of the session token, and the raw token only in an HttpOnly cookie. Exact lifetime, cookie deployment domain, and the CSRF mechanism are not set. This does not implement login.
+Session shape is [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): a PostgreSQL `AuthSession`, a hash of the session token, and the raw token only in an HttpOnly cookie. Exact lifetime, cookie deployment domain, and the CSRF mechanism are not accepted ADR decisions. The API uses an 8-hour lifetime and a logout CSRF check as working defaults.
 
 Wallet authentication does not prove that one human controls only one wallet.
 

@@ -193,4 +193,4 @@ Administrators remain a stakeholder. The hackathon does not add a separate admin
 
 ## Next phase
 
-The user started wallet login. Continue that path against a local database before bounty creation. Do not treat this document alone as approval to apply the migration to Neon. PD-10 is not an MVP analytics requirement. PD-14 is answered for analytics visibility by ADR-010 and is not implemented. ADR-008 does not implement retention. ADR-009 does not implement analytics. ADR-010 does not implement authorization.
+The web client connects Phantom and calls the wallet login API. A real browser session is still unverified. Do not treat this document alone as approval to apply the migration to Neon, and do not start bounty creation from this stage. PD-10 is not an MVP analytics requirement. PD-14 is answered for analytics visibility by ADR-010 and is not implemented. ADR-008 does not implement retention. ADR-009 does not implement analytics. ADR-010 does not implement authorization. The 8-hour session lifetime and the logout CSRF check are working defaults, not accepted ADR decisions.

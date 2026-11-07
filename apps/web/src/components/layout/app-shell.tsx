@@ -4,7 +4,7 @@ import { APP_NAME } from "@solversbounty/shared";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useState } from "react";
-import { WalletConnectPlaceholder } from "@/components/wallet-connect-placeholder";
+import { WalletAuth } from "@/features/auth/wallet-auth";
 import { isNavActive, navItems, pageContext } from "./navigation";
 import { SiteFooter } from "./site-footer";
 
@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="truncate text-xs text-muted-foreground">{context.detail}</p>
               </div>
             </div>
-            <WalletConnectPlaceholder />
+            <WalletAuth />
           </div>
         </header>
         {menuOpen ? (
