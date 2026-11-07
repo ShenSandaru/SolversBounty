@@ -178,7 +178,7 @@ Proposed environment names, all server-side:
 | `DATABASE_URL` | Pooled Postgres connection for the API runtime |
 | `DIRECT_URL` | Direct Postgres connection for Prisma CLI migrations. The API adapter does not use it |
 | `SOLANA_RPC_URL` | Devnet RPC |
-| `TREASURY_SECRET_KEY` | Custodial signer (PD-15) |
+| `TREASURY_SECRET_KEY` | Devnet custodial signer ([ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md)). Backend environment only. Not a Mainnet custody strategy |
 | `ANSWER_ENCRYPTION_KEY` | Expected-answer encryption (PD-02) |
 | `AUTH_TOKEN_SECRET` | Still present in configuration. [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md) does not sign session tokens with it |
 | `ADMIN_WALLET_ALLOWLIST` | Comma-separated wallets (PD-04) |

@@ -27,7 +27,7 @@ Out of scope: custom programs, program-derived escrow, USDC, mainnet, and multis
 | Solver | User, in Phantom | Signs login. Receives SOL. Does not sign the payout |
 | Treasury | API process | Receives deposits and signs payouts and refunds |
 
-PD-15 (**proposed — pending confirmation**): `TREASURY_SECRET_KEY` is an environment variable on the API host, never committed, logged, or sent to the browser. PD-02's `ANSWER_ENCRYPTION_KEY` is a different variable. Neither key is stored in PostgreSQL.
+[ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md): `TREASURY_SECRET_KEY` is an environment variable on the API host for the Devnet MVP. It is never committed, logged, stored in PostgreSQL, or sent to the browser. PD-02's `ANSWER_ENCRYPTION_KEY` is a different variable. This is not the Mainnet custody strategy. Signing is not implemented.
 
 The login message is not a transaction. Proposed message fields: domain, wallet address, nonce, issued-at, expiration, chain `solana:devnet`, and a sentence that the signature does not approve a transfer. Verification is local Ed25519 and must not require RPC.
 

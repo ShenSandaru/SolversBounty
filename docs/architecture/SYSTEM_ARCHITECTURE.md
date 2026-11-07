@@ -69,7 +69,7 @@ flowchart TB
 | Browser | Untrusted | Presentation and wallet signing only. It does not decide correctness, time, eligibility, or payment. |
 | Phantom | Holds the user key | The user key never crosses into the API. Login messages are not SOL transfers. |
 | API | Trusted for the demo | Auth, authorization, validation, ledger, verification, payout orchestration. |
-| Server secrets | Trusted storage | Treasury key (PD-15) and answer-encryption key (PD-02). Neither is a database column. |
+| Server secrets | Trusted storage | Treasury key ([ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md)) and answer-encryption key (PD-02). Neither is a database column. |
 | PostgreSQL | Product source of truth | On-chain transfers do not replace the ledger. They advance it after checks. |
 | Solana Devnet | Public rail | Amounts and addresses are observable. Success commitment is `confirmed` ([ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md)), which is not mainnet finality. |
 

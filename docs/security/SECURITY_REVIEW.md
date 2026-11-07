@@ -535,7 +535,7 @@ Indexes already present cover the marketplace `(status, deadline)`, the creator 
 
 ## Unresolved decisions
 
-PD-03, PD-05, and PD-13 are recorded below and are no longer unresolved. The recommendations after them are not accepted here.
+PD-03, PD-05, PD-13, and PD-15 are recorded in this section and are no longer unresolved. Sections that still say "recommendation, not a decision" are not accepted here.
 
 ### PD-03 Session shape
 
@@ -575,11 +575,7 @@ Recommendation, not a decision: default reports stay aggregated. A private owner
 
 ### PD-15 Treasury key location
 
-Options: API environment variable, or a hosted signer / KMS.
-
-Implications: An environment variable is enough for a small Devnet demo and is still a hot wallet, SEC-C1. A KMS reduces theft from a disk copy and does not fit the 40-hour path.
-
-Recommendation, not a decision: environment variable on the API host only, for Devnet, with the isolation rules in PAY-014. Mainnet still needs a new ADR.
+Superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). The Devnet treasury private key is `TREASURY_SECRET_KEY` in the API environment. It is not in the frontend, the database, git, logs, error messages, or API responses. A missing or invalid key must fail signing safely. Clients cannot submit an arbitrary transaction for the treasury to sign. The accepted hot-wallet risk in SEC-C1 still blocks Mainnet. ADR-006 does not implement signing.
 
 ### Identifier type
 

@@ -284,7 +284,7 @@ Required actions are listed in NFR-017.
 | Submitted answer | Access-controlled plaintext (PD-19). Owner private view and the solver's own history |
 | Explanation | Same audience as the submitted answer. P1 |
 | Refresh token | Hash at rest |
-| Treasury secret | Not a column. Environment only (PD-15) |
+| Treasury secret | Not a column. Backend environment only ([ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md)) |
 | Wallet address | Stored for auth and payment. Omitted from default analytics and CSV |
 | Chain signature | Public. Safe to store and show |
 

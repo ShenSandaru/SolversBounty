@@ -900,12 +900,16 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: solana
-- Description: **Proposed** PD-15. The treasury secret is an API environment variable.
+- Description: [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). The Devnet treasury secret is a backend-only environment variable. Signing is not implemented.
 
 Acceptance criteria:
 
-- The key is absent from the client bundle, database, logs, and git.
+- The key is absent from the client bundle, database, logs, error messages, API responses, and git.
+- Environment files that contain secrets stay gitignored.
+- A missing or invalid key does not sign. Public reads stay available.
+- Clients cannot submit an arbitrary transaction for the treasury to sign.
 - The answer-encryption key is a different secret.
+- This storage decision does not authorize Mainnet custody.
 
 ### PAY-015 Reconcile ledger and chain
 

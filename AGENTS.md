@@ -37,7 +37,7 @@ Processes:
 - `apps/api` is the NestJS modular monolith. It owns authorization, validation, the ledger, verification, and payout orchestration.
 - `packages/shared` is for shared contracts and types. It must not import NestJS or React.
 - PostgreSQL is the source of product state. Chain transactions are evidence used to advance that state.
-- The treasury signing key exists only in API secret storage (PD-15). It is never placed in the frontend, the database, logs, fixtures, or docs.
+- The treasury signing key exists only in API secret storage ([ADR-006](docs/decisions/ADR-006-devnet-treasury-private-key-storage.md)). It is never placed in the frontend, the database, logs, fixtures, or docs.
 
 Module rules for the API:
 
@@ -79,7 +79,7 @@ Follow [CODING_STANDARDS.md](docs/development/CODING_STANDARDS.md).
 - Payout processing is idempotent. Retry the same payout row. Do not sign a second transfer while an earlier signature is unconfirmed or already confirmed.
 - Total solver payouts for a bounty cannot exceed the confirmed funded principal.
 - Network fees come from the treasury fee buffer (PD-07), not from bounty principal.
-- Separate the treasury key from the answer-encryption key (PD-02, PD-15).
+- Separate the treasury key from the answer-encryption key (PD-02, [ADR-006](docs/decisions/ADR-006-devnet-treasury-private-key-storage.md)).
 - Rate-limit authentication and submissions (PD-20).
 - Treat the MVP treasury as a compromised-hot-wallet risk even on Devnet. Keep balances small. Never point this design at mainnet without a new ADR.
 
@@ -129,4 +129,4 @@ A change is done when all of the following hold:
 
 ## Current phase
 
-The Phase 5 security review is written. The Phase 4 backend foundation remains the code: Nest module boundaries, configuration, Prisma models for the proposed schema, health, and API conventions. No migration has been applied. Product requirements remain `not_started`. Do not start Phase 6 or a product workflow unless the user explicitly asks. PD-03 is superseded by [ADR-003](docs/decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](docs/decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](docs/decisions/ADR-005-solana-confirmed-commitment.md). The other open questions in the implementation plan are still unanswered.
+The Phase 5 security review is written. The Phase 4 backend foundation remains the code: Nest module boundaries, configuration, Prisma models for the proposed schema, health, and API conventions. No migration has been applied. Product requirements remain `not_started`. Do not start Phase 6 or a product workflow unless the user explicitly asks. PD-03 is superseded by [ADR-003](docs/decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](docs/decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](docs/decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](docs/decisions/ADR-006-devnet-treasury-private-key-storage.md). The other open questions in the implementation plan are still unanswered.

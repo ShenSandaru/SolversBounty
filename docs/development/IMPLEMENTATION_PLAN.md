@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). The other open questions below are unchanged.
+Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). The other open questions below are unchanged.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -135,7 +135,7 @@ Each item is **proposed — pending confirmation**, except a row marked supersed
 | PD-12 | Local PostgreSQL for development. Neon for the shared hackathon database. The database design is not approved DDL. |
 | PD-13 | Superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). Funding and payouts complete at `confirmed`, after execution and detail checks. `processed` is not sufficient. `finalized` is not required. |
 | PD-14 | The owner may open a private wallet-linked submission list. Default analytics and CSV omit wallet addresses. Public pages never show that list. |
-| PD-15 | `TREASURY_SECRET_KEY` is an API environment variable. It is never committed, logged, or sent to the browser. |
+| PD-15 | Superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). `TREASURY_SECRET_KEY` is a backend-only environment secret for the Devnet MVP. It is never committed, logged, stored in the database, or sent to the browser. This is not the Mainnet custody strategy. |
 | PD-16 | An in-process worker confirms deposits and payouts. HTTP handlers record intent and return. |
 | PD-17 | Zod schemas in `packages/shared` are the request and response contract. OpenAPI is generated from them. |
 | PD-18 | Deposit memo `sb:deposit:<bountyId>:<reference>`. Payout memo `sb:payout:<payoutId>`. Refund memo `sb:refund:<bountyId>`. |
@@ -157,7 +157,7 @@ Full allocation: the E1 transaction that takes the last slot also sets `closed` 
 
 ## Open questions
 
-PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). The remaining four need an explicit answer before funding or payout work treats the matching PD as accepted. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. None of these decisions authorizes implementation. Until then the remaining items stay proposed.
+PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is answered by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). The remaining three need an explicit answer before funding or payout work treats the matching PD as accepted. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. None of these decisions authorizes implementation. Until then the remaining items stay proposed.
 
 1. PD-03. Answered. Server-side PostgreSQL sessions in an HttpOnly cookie. JWT access and refresh tokens are not used.
 2. PD-05. Answered. Immediate individual payout after reservation. No batch. The submission response does not wait for chain confirmation.
@@ -165,7 +165,7 @@ PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessi
 4. PD-13. Answered. Funding and payout completion require `confirmed`, plus execution and detail checks. `finalized` is not required. `processed` is not sufficient.
 5. PD-10. Confirm the strategy list before any P1 strategy work. P0 does not need this answer.
 6. PD-14. Confirm that the private creator dashboard may show wallet-linked rows while exports and public views stay aggregated and wallet-free.
-7. PD-15. Confirm the treasury key lives only in the API environment and is never committed.
+7. PD-15. Answered. The Devnet treasury private key is a backend-only environment secret. It is not a Mainnet custody strategy. Signing is not implemented.
 
 The other PD items are the working defaults. Objecting during the Phase 2 go-ahead is the time to change them.
 

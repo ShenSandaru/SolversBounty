@@ -82,7 +82,7 @@ Nothing. The Phase 5 review is ready for the user. Phase 6 is not in progress.
 
 Local PostgreSQL on `127.0.0.1:5432` refused connections on 2026-11-07. The initial migration is deferred until a development database is configured. Do not point that migration at a shared or production database.
 
-PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). Phase 6 should not treat PD-08, PD-10, PD-14, or PD-15 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other three affect refunds, privacy, or the treasury key. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. None of those workflows are started.
+PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). Phase 6 should not treat PD-08, PD-10, or PD-14 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other two affect refunds or privacy. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. None of those workflows are started.
 
 ## Next actions
 
