@@ -19,7 +19,7 @@ funded = reserved + paid + refundable + refunded
 | Treasury signing key | Not in the repo, database, or client. Reserved as `TREASURY_SECRET_KEY` | Anyone who has it can move every Devnet lamport in the custodial wallet |
 | Answer-encryption key | Same treatment, as `ANSWER_ENCRYPTION_KEY` | Loss exposes every expected answer. Destruction makes verification and the owner view impossible |
 | Expected answer | Not stored yet. Planned column `expectedAnswerCiphertext` | The product fails if solvers can read it before submitting |
-| Submitted answer and explanation | Not stored yet. Planned plaintext on `SubmissionAttempt` | Research data. Public or cross-creator disclosure breaks PRIV-009's neighbor rules and PD-19 |
+| Submitted answer | Not stored yet. Planned plaintext on `SubmissionAttempt` | Research data. Public or cross-creator disclosure breaks PRIV-009's neighbor rules and PD-19. Written explanations are not collected in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)) |
 | Session credential | Not issued yet. [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md): random token in an HttpOnly cookie; hash on `AuthSession` | Theft impersonates that wallet inside the app. It is not the wallet private key |
 | Authentication nonce | Table exists. No writer exists | A reusable nonce allows signature replay |
 | Bounty ledger | Tables exist. No writer exists | The chain does not know which bounty owns which lamport. A bad posting pays the wrong wallet or pays twice |

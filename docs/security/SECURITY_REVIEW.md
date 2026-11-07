@@ -506,7 +506,7 @@ Foreign keys match the design. `AuthNonce` correctly has no user foreign key, be
 
 Enums use the values from the database design and `@@map` to snake_case names. Coding standards already ask for those values. The "exact enum names" question should be closed on purpose when the first migration is created, not by this review.
 
-`StrategyResponse` is absent. That matches the Phase 4 note and should stay absent until PD-10 is accepted.
+`StrategyResponse` is absent. [ADR-009](../decisions/ADR-009-minimal-research-analytics.md) keeps it out of the MVP. It stays absent until a later decision accepts strategy collection.
 
 `ChainTransaction.commitment` stays text. [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) requires the value `confirmed`. This review does not change the column or apply a migration.
 
@@ -551,11 +551,7 @@ Superseded for deadline and full allocation by [ADR-008](../decisions/ADR-008-un
 
 ### PD-10 Strategies
 
-Options: ship `StrategyResponse` with the listed enum, or wait.
-
-Implications: The enum is an open research choice. The parent `SolvingSession` already exists, so a later table does not reshape P0.
-
-Recommendation, not a decision: keep the model out of the first migration.
+[ADR-009](../decisions/ADR-009-minimal-research-analytics.md) excludes strategy surveys and written explanations from the MVP. The strategy list is not accepted. `StrategyResponse` stays out of the schema. A later version may reconsider the feature. This note does not implement collection.
 
 ### PD-13 Commitment
 

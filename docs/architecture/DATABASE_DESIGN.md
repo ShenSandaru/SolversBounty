@@ -4,7 +4,7 @@ Status: **proposed — pending confirmation**. This is not approved DDL. `apps/a
 
 Implementation notes that stay open:
 
-- `StrategyResponse` is specified below and is not a Prisma model. PD-10 is still an open question, so it is omitted from the first schema.
+- `StrategyResponse` is specified below as future work and is not a Prisma model. [ADR-009](../decisions/ADR-009-minimal-research-analytics.md) excludes strategy and explanation from the MVP. This decision adds no columns.
 - The `Session` entity is modeled as `AuthSession` and mapped to `auth_sessions`, so the table name stays distinct from `solving_sessions`.
 - Primary keys use UUID. The identifier type is still an open choice.
 - Balances are derived from `BountyLedgerEntry`. There is no cached balance column.
@@ -40,7 +40,7 @@ erDiagram
   User |o--o{ AuditLog : acts
 ```
 
-`StrategyResponse` is P1. The relationship is drawn now so the P0 schema does not block it.
+`StrategyResponse` is not in the MVP. The relationship is drawn so a later table can attach to `SolvingSession`. No migration adds it now.
 
 `AuthNonce` is not a child of `User`. It is stored by wallet address before a user row exists. A chain transaction belongs to a deposit or to a payout, not both, so those relationships are optional. An audit row may have no actor when the worker posts it.
 
@@ -201,7 +201,7 @@ PD-19 (**proposed — pending confirmation**): submitted answers are stored for 
 
 ### StrategyResponse
 
-P1. One row per solving session.
+Not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). Not a Prisma model. One row per solving session if a later version collects it.
 
 | Column | Notes |
 | --- | --- |
@@ -282,10 +282,10 @@ Required actions are listed in NFR-017.
 | --- | --- |
 | Expected answer | Ciphertext only (PD-02). Key is `ANSWER_ENCRYPTION_KEY`, distinct from the treasury key |
 | Submitted answer | Access-controlled plaintext (PD-19). Owner private view and the solver's own history |
-| Explanation | Same audience as the submitted answer. P1 |
+| Explanation | Not collected in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). A later version would use the same audience as the submitted answer |
 | Refresh token | Hash at rest |
 | Treasury secret | Not a column. Backend environment only ([ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md)) |
-| Wallet address | Stored for auth and payment. Omitted from default analytics and CSV |
+| Wallet address | Stored for auth and payment. Omitted from default analytics. Research export is not in the MVP |
 | Chain signature | Public. Safe to store and show |
 
 Proposed encryption detail for PD-02: AES-256-GCM via Node `crypto`, with a random nonce stored beside the ciphertext and a key id for later rotation. Decryption is allowed only in verification and the owner private read.
@@ -309,4 +309,4 @@ The following stayed open through the Phase 4 schema representation and the Phas
 - UUID versus another identifier type.
 - Exact Prisma enum names.
 - Whether balances are only derived from `BountyLedgerEntry` or also cached on `Bounty` inside the same transaction. The design prefers derivation plus the bounty row lock. A cache column is optional and must not be writable except by the ledger transaction.
-- Whether `StrategyResponse` ships in the first migration or the P1 migration. The table is specified now so the model does not need a new parent later.
+- `StrategyResponse` is not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). It is not a Prisma model and is not part of the first migration.

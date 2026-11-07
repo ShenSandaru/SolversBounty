@@ -25,7 +25,7 @@ Solana Devnet is the payment rail for deposits and rewards. The MVP holds those 
 
 **Human intelligence marketplace.** An organization can distribute small cognitive tasks and pay a fixed reward for each eligible correct solver.
 
-**Human reasoning analytics.** A creator can see completion time, accuracy, attempts, and, when the P1 items exist, answer changes and self-reported strategies.
+**Human reasoning analytics.** With explicit consent, a creator can see participant count, correct and incorrect attempt counts, accuracy, and average completion time ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). Strategy surveys, written explanations, answer-change history, and research export are not in the MVP.
 
 ### 1.3 Tagline
 
@@ -33,7 +33,7 @@ Solve Problems. Earn Rewards. Unlock Human Insights.
 
 ### 1.4 What the platform measures
 
-The platform records observable activity and self-reported reasoning. It does not claim to observe private thoughts (CD-15).
+The platform records the observable activity in ADR-009. It does not claim to observe private thoughts (CD-15). Self-reported reasoning is not collected in the MVP.
 
 ## 2. Problem statement
 
@@ -101,7 +101,7 @@ For the hackathon, administration is an allowlisted wallet and protected API ope
 | CD-12 | Superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). Creators pay 5% of the solver reward pool in addition to the pool. Solver rewards are not reduced. |
 | CD-13 | HTTP API is documented with Swagger / OpenAPI. |
 | CD-14 | Priority split in section 11 is binding for the hackathon. |
-| CD-15 | Analytics describe observed activity and self-report only. |
+| CD-15 | Analytics do not claim to read private thoughts. The MVP records the four observed metrics in [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). Self-report is not in the MVP. |
 
 ## 5. Feature requirements
 
@@ -179,10 +179,10 @@ A solver can connect, read the challenge, accept research consent, start a solvi
 
 The server sets the session start time. Attempt limits are enforced by the API. The same wallet cannot be paid twice for one bounty.
 
-P1, if time allows:
+P1, if a later version adds them. They are not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)):
 
-- Optional written explanation (PD-10).
-- Self-reported strategy from a fixed list (PD-10).
+- Written explanation.
+- Self-reported strategy.
 
 Initial categories are logic puzzles, mathematical reasoning, numerical patterns, and ciphers. Code-documentation hunts and AI reasoning benchmarks are future work.
 
@@ -237,30 +237,29 @@ PD-07 (**proposed — pending confirmation**): network fees are paid from a trea
 
 ### 5.8 Research analytics
 
-P0 summaries, calculated from server-side sessions and attempts:
+MVP collection is [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). Metrics are computed from server-side sessions and attempts. They do not decide E1 or payouts. Analytics are not implemented.
 
 | Metric | Definition |
 | --- | --- |
-| Participants | Solving sessions started |
-| Correct solvers | Participants with at least one correct attempt |
-| Correct attempts | Attempts stored as correct |
-| Incorrect attempts | Attempts stored as incorrect |
-| Overall accuracy | Correct attempts / all attempts |
-| Completion rate | Correct solvers / participants |
-| Average completion time | Mean, over correct solvers, of first-correct time minus session start |
-| Median completion time | Median of that same duration |
-| Average attempts | All attempts / participants |
-| Average attempts before success | Mean attempt number of the first correct attempt, over correct solvers |
+| Participants | Solving sessions started. A view without a session is not counted |
+| Correct attempts | Attempts the backend stored as correct, including correct attempts that fail E1 |
+| Incorrect attempts | Attempts the backend stored as incorrect |
+| Attempt count | Stored submission attempts |
+| Average completion time | Mean, over solvers with a correct attempt, of first-correct server time minus session start |
+| Accuracy | Correct attempts / all attempts |
 
-P1:
+The creator view may show total participants, correct answer count, incorrect answer count, average completion time, and accuracy as simple cards, numbers, or a basic chart.
 
-- Answer-change count: attempts whose text differs from the previous attempt by that solver.
-- Strategy frequency and strategy compared with correctness and completion time.
-- Optional explanation text in the creator's private view.
-- CSV export of aggregated research data.
-- Richer charts. P0 still needs readable summary statistics.
+Not in the MVP. These may be reconsidered later:
 
-Creators can read analytics only for bounties they own. Default reports aggregate participants. PD-14 (**proposed — pending confirmation**): the private creator dashboard may show wallet-linked rows; exports and every public view omit wallet addresses.
+- Mandatory or optional written explanations.
+- Self-reported strategy surveys.
+- Answer-change history.
+- Completion rate, median completion time, average attempts, and attempts before success.
+- Advanced statistics and complex visualizations.
+- Research data export.
+
+Creators can read analytics only for bounties they own. Default reports are aggregates and do not include solver wallet addresses. PD-14 (**proposed — pending confirmation**) remains a separate private-list proposal. This decision does not accept it. Consent is still required before a solving session (PD-09). Wallet sign-in does not grant consent.
 
 ## 6. Workflows
 
@@ -274,8 +273,8 @@ Creators can read analytics only for bounties they own. Default reports aggregat
 6. Set the reward and max rewarded solvers.
 7. Fund the treasury deposit the API specifies.
 8. Wait until the backend confirms the deposit and marks the bounty active.
-9. Watch participation, payouts, and analytics.
-10. Export results when CSV export exists.
+9. Watch participation, payouts, and the ADR-009 analytics.
+10. Research export is not in the MVP.
 11. Close the bounty. A creator close is not the ADR-008 retention case. What happens to unused principal after a creator close is not decided.
 
 ### 6.2 Solver
@@ -287,10 +286,9 @@ Creators can read analytics only for bounties they own. Default reports aggregat
 5. Accept research consent.
 6. Start a solving session.
 7. Submit an answer.
-8. Optionally add a strategy and explanation when those P1 fields exist.
-9. See correct or incorrect, and see eligibility.
-10. If eligible, see payout status and, once confirmed, the transaction signature.
-11. Review participation and reward history.
+8. See correct or incorrect, and see eligibility. Strategy and explanation fields are not in the MVP.
+9. If eligible, see payout status and, once confirmed, the transaction signature.
+10. Review participation and reward history.
 
 ### 6.3 System
 
@@ -316,23 +314,21 @@ Collected for the MVP:
 | Session start | Completion time |
 | Submission time | Response time |
 | Submitted answer | Verification and creator research |
-| Attempt count | Behavior |
-| Answer changes | Revision behavior (P1 metric) |
-| Self-reported strategy | Reported approach (P1) |
-| Optional explanation | Qualitative note (P1) |
+| Attempt count | Correctness and how many answers were stored |
+| Correctness | Backend verification result |
 | Transaction signature | Payment evidence |
-| Consent acceptance | Lawful research recording for the demo |
+| Consent acceptance | Research recording for the four ADR-009 metrics |
 
 Privacy rules:
 
 - No email, password, or KYC.
 - No private keys stored or requested by the platform.
 - No extra personal profile.
-- Explicit consent before a solving session (PD-09).
-- Default research views are aggregated.
-- Wallet addresses are omitted from public research exports (PD-14 covers the private dashboard exception).
-- The consent step states what is collected and why.
+- Explicit consent before a solving session (PD-09). Wallet sign-in does not grant it.
+- Default research views are aggregates and omit solver wallet addresses.
+- The consent step states what is collected and why, including the four ADR-009 metrics.
 - Copy says privacy-conscious, not anonymous.
+- Strategy responses, written explanations, answer-change history, and research export are not MVP collection.
 
 PD-02 (**proposed — pending confirmation**): encrypt the expected answer at rest. PD-19: store submitted answers for the owning creator's private research view, and omit them from public APIs.
 
@@ -409,12 +405,15 @@ If time runs out, keep the critical path and cut from the top of the P1 list dow
 
 ### P1
 
-- Self-reported strategies and written explanations.
-- Answer-change metric and richer attempt charts.
-- CSV export without wallet addresses.
-- Richer analytics visuals.
 - Minimal admin read and close operations.
 - Playwright coverage of the demo path if API payment tests already exist.
+
+Not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). These may be reconsidered later:
+
+- Self-reported strategies and written explanations.
+- Answer-change history.
+- Research data export.
+- Complex analytics visualizations and advanced statistics.
 
 ### P2
 
@@ -478,9 +477,9 @@ These resolutions keep the original requirements and remove contradictions. They
 
 The vision asks for Solana payments. The approved MVP holds funds in a custodial treasury. Public and internal language is: wallet-authenticated Solana payments with a custodial Devnet treasury. Trustless escrow is a P2 alternative, not the current design.
 
-### C2. Attempt data is both a success metric and a P1 item
+### C2. MVP analytics and later research detail
 
-Basic attempt counts, failed attempts, and completion time are P0 because the demo success metrics require them. Answer-change detail, strategy breakdowns, and richer charts stay P1.
+[ADR-009](../decisions/ADR-009-minimal-research-analytics.md) keeps participant count, correctness, attempt count, and completion time in the MVP. Answer-change history, strategy surveys, explanations, complex charts, and research export are not in the MVP.
 
 ### C3. Unused reward principal
 

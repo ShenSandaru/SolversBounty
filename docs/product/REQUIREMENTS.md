@@ -598,7 +598,7 @@ Acceptance criteria:
 - Priority: P1
 - Status: `not_started`
 - Modules: submissions
-- Description: **Proposed** PD-10. The solver may pick one strategy from the fixed list.
+- Description: **Proposed** PD-10. Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). A later version may let the solver pick one strategy from a fixed list. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -611,7 +611,7 @@ Acceptance criteria:
 - Priority: P1
 - Status: `not_started`
 - Modules: submissions
-- Description: **Proposed** PD-10. The solver may send a short explanation.
+- Description: **Proposed** PD-10. Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). A later version may accept a short explanation. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -1013,10 +1013,10 @@ Acceptance criteria:
 
 ### ANALYTICS-004 Completion rate
 
-- Priority: P0
+- Priority: P2
 - Status: `not_started`
 - Modules: analytics
-- Description: Correct solvers divided by participants.
+- Description: Correct solvers divided by participants. Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -1028,31 +1028,33 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: analytics
-- Description: Average and median time from server session start to the first correct attempt, over correct solvers.
+- Description: Average time from server session start to the first correct attempt, over solvers with a correct attempt. Median completion time is not an MVP requirement ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)).
 
 Acceptance criteria:
 
-- Client timestamps do not affect the figures.
-- Solvers who are never correct are excluded from the average and median.
+- Client timestamps do not affect the figure.
+- Solvers who are never correct are excluded from the average.
+- The MVP does not require a median.
 
 ### ANALYTICS-006 Attempt summaries
 
 - Priority: P0
 - Status: `not_started`
 - Modules: analytics
-- Description: Average attempts per participant, failed-attempt count, and average attempts before success.
+- Description: Attempt count is the number of stored submission attempts ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). Average attempts and attempts before success are not MVP requirements.
 
 Acceptance criteria:
 
-- Definitions match PRD section 5.8.
-- This ID does not require the P1 answer-change metric.
+- The count matches stored attempts for the bounty.
+- Average attempts and attempts before success are not required for the MVP.
+- This ID does not require answer-change history.
 
 ### ANALYTICS-007 Answer changes
 
 - Priority: P1
 - Status: `not_started`
 - Modules: analytics
-- Description: Count attempts whose submitted text differs from that solver's previous attempt.
+- Description: Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). A later version may count attempts whose submitted text differs from that solver's previous attempt. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -1064,7 +1066,7 @@ Acceptance criteria:
 - Priority: P1
 - Status: `not_started`
 - Modules: analytics
-- Description: Frequency of PD-10 strategies, plus correctness and median completion time per strategy.
+- Description: Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). A later version may summarize PD-10 strategies. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -1088,19 +1090,20 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: web analytics
-- Description: The creator UI shows the P0 metrics with the PRD names.
+- Description: The creator UI shows the ADR-009 figures: participants, correct count, incorrect count, average completion time, and accuracy. Simple cards, numbers, or a basic chart are enough.
 
 Acceptance criteria:
 
 - Labels match section 5.8.
 - Empty bounties explain that no sessions have started.
+- The view does not require a complex dashboard.
 
 ### ANALYTICS-011 Charts
 
 - Priority: P1
 - Status: `not_started`
 - Modules: web analytics
-- Description: Richer visuals for attempts, time, and strategies.
+- Description: Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). Complex charts are not required. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -1112,7 +1115,7 @@ Acceptance criteria:
 - Priority: P1
 - Status: `not_started`
 - Modules: analytics
-- Description: The owner can download aggregated research CSV.
+- Description: Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). A later export, if built, still omits wallet addresses and the expected answer. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -1129,8 +1132,8 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- The P0 summary payload has counts and durations, not a dump of every answer.
-- **Proposed** PD-14 allows a separate private submission list that includes wallet addresses. That list is not the default analytics payload and is not the CSV.
+- The MVP summary payload has participant, correctness, attempt, and completion-time figures, not a dump of every answer.
+- **Proposed** PD-14 allows a separate private submission list that includes wallet addresses. ADR-009 does not accept that list. It is not the default analytics payload. Research export is not in the MVP.
 
 ### ANALYTICS-014 Server-side events only
 
@@ -1149,7 +1152,7 @@ Acceptance criteria:
 - Priority: P1
 - Status: `not_started`
 - Modules: analytics, submissions
-- Description: **Proposed** PD-14. The owner may open a private list of attempts with wallet, answer, result, and times.
+- Description: **Proposed** PD-14. Excluded from the default MVP analytics by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). The owner may later open a private list of attempts with wallet, answer, result, and times. PD-14 is not accepted. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -1215,7 +1218,7 @@ Acceptance criteria: Same behavior as ANALYTICS-013.
 - Priority: P1
 - Status: `not_started`
 - Modules: analytics
-- Description: The default CSV omits wallet addresses.
+- Description: Research export is not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). If a later export is built, the default file omits wallet addresses. Status stays `not_started`.
 
 Acceptance criteria: Same behavior as ANALYTICS-012.
 
@@ -1228,8 +1231,9 @@ Acceptance criteria: Same behavior as ANALYTICS-012.
 
 Acceptance criteria:
 
-- The notice mentions wallet address, attempts, times, submitted answers, and public Solana transfers.
+- The notice mentions wallet address, attempts, times, submitted answers, correctness, and public Solana transfers.
 - It does not claim anonymity or that thoughts are observed directly.
+- It does not say that a strategy survey or a written explanation is collected in the MVP.
 
 ### PRIV-008 Pseudonymous copy
 

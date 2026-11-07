@@ -86,20 +86,21 @@ Acceptance criteria:
 
 ### US-C-07 Read research analytics
 
-As a creator, I want participation, accuracy, completion time, and attempt summaries, so that I can see how people approached the challenge.
+As a creator, I want participant count, correct and incorrect counts, accuracy, and average completion time, so that I can see basic problem-solving activity.
 
-Requirements: ANALYTICS-001, ANALYTICS-002, ANALYTICS-003, ANALYTICS-004, ANALYTICS-005, ANALYTICS-006, ANALYTICS-009, ANALYTICS-010, ANALYTICS-013, ANALYTICS-014.
+Requirements: ANALYTICS-001, ANALYTICS-002, ANALYTICS-003, ANALYTICS-005, ANALYTICS-006, ANALYTICS-009, ANALYTICS-010, ANALYTICS-013, ANALYTICS-014.
 
 Acceptance criteria:
 
-- Given two sessions, one of which becomes correct on the second attempt, when I open analytics, then participants, accuracy, completion rate, completion time, and attempt summaries match the PRD definitions.
+- Given two sessions, one of which becomes correct on the second attempt, when I open analytics, then participants, correct count, incorrect count, accuracy, average completion time, and attempt count match section 5.8.
 - Given no sessions, when I open analytics, then I see an empty state rather than an error.
 - Given I do not own the bounty, when I request analytics, then I receive no private counts.
 - Given a solver sends a client clock, when metrics are computed, then only server timestamps are used.
+- Given a correct attempt that fails E1, when analytics are shown, then it counts as correct and creates no payout.
 
 ### US-C-08 Export aggregated results
 
-As a creator, I want a CSV of aggregated research data, so that I can study it outside the app.
+As a creator, I might later want a research export. That export is not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)).
 
 Priority: P1.
 
@@ -107,8 +108,9 @@ Requirements: ANALYTICS-012, PRIV-006.
 
 Acceptance criteria:
 
-- Given I own the bounty, when I export, then the default CSV has aggregate columns and no wallet-address column and no expected answer.
-- Given I do not own the bounty, when I export, then the download is refused.
+- The MVP does not provide research export.
+- If a later export is built, the default file has no wallet-address column and no expected answer.
+- Given I do not own the bounty, when I request an export, then the download is refused.
 
 ### US-C-09 Close the bounty
 
@@ -170,7 +172,7 @@ Acceptance criteria:
 
 - Given I have not accepted consent, when I start, then no solving session is created.
 - Given I accept, when the session starts, then `startedAt` is the server time and a second start does not create another session.
-- Given the consent step, when I read it, then it lists wallet address, attempts, times, submitted answers, and public chain transfers.
+- Given the consent step, when I read it, then it lists the ADR-009 metrics that are collected, and it does not say that a strategy survey or written explanation is required. Wallet sign-in is not consent.
 
 ### US-S-04 Submit within the attempt limit
 
@@ -223,7 +225,7 @@ Acceptance criteria:
 
 ### US-S-08 Describe how I solved it
 
-As a solver, I want to optionally report a strategy and a short explanation, so that the creator can compare approaches.
+As a solver, a later version may let me report a strategy and a short explanation. Those fields are not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)).
 
 Priority: P1.
 
@@ -231,9 +233,9 @@ Requirements: SOLVE-010, SOLVE-011, ANALYTICS-008.
 
 Acceptance criteria:
 
-- Given the strategy list, when I skip it, then my submission still grades.
-- Given I enter a strategy outside the list or an explanation over the length cap, when I submit that field, then it is rejected.
-- Given I saved an explanation, when another solver fetches the bounty, then they do not see my explanation.
+- The MVP does not ask for a strategy or an explanation.
+- Grading and E1 do not depend on either field.
+- If a later version stores an explanation, another solver cannot read it from the public bounty.
 
 ## Administrator
 

@@ -69,7 +69,7 @@ Cover PAY-001 through PAY-007, PAY-009, PAY-010, PAY-012, and PAY-016, plus SOLV
 
 ### M8 — Analytics
 
-Cover ANALYTICS-001 through ANALYTICS-006, ANALYTICS-009, ANALYTICS-010, ANALYTICS-013, and ANALYTICS-014. Use the PRD metric definitions.
+Cover the [ADR-009](../decisions/ADR-009-minimal-research-analytics.md) metrics: ANALYTICS-001, ANALYTICS-002, ANALYTICS-003, ANALYTICS-005 (average only), ANALYTICS-006 (attempt count), ANALYTICS-009, ANALYTICS-010, ANALYTICS-013, and ANALYTICS-014. Completion rate, median time, strategy summaries, answer-change history, complex charts, and research export are not MVP work.
 
 ### M9 — Hardening
 
@@ -79,7 +79,7 @@ Run the payment-safety list in the testing strategy against the API. Check empty
 
 Two solver wallets, one incorrect attempt, one confirmed payout, analytics visible, duplicate reward refused. Record the evidence in [PROGRESS.md](PROGRESS.md). Deployment is a documented Devnet target, not a production custody design.
 
-P1 items wait until M7 and M8 are evidenced: strategies, explanations, answer-change metric, CSV, richer charts, admin list and admin close, Playwright. Creator refund of unused principal after deadline or full allocation is not a P1 feature ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)).
+Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md): strategies, explanations, answer-change history, research export, and complex charts. They may be reconsidered later. Admin list, admin close, and Playwright remain later work. Creator refund of unused principal after deadline or full allocation is not a feature ([ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md)).
 
 ## Requirement coverage
 
@@ -113,7 +113,7 @@ When time is short, stop in this order:
 | CD-12 | Superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). The 0% platform fee is not the MVP rule. |
 | CD-13 | Swagger / OpenAPI |
 | CD-14 | P0 / P1 / P2 split in the PRD |
-| CD-15 | Analytics are observed activity and self-report only |
+| CD-15 | Analytics do not claim to read private thoughts. The MVP records the four observed metrics in [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). Self-report is not in the MVP. |
 
 ## Proposal register
 
@@ -130,7 +130,7 @@ Each item is **proposed — pending confirmation**, except a row marked supersed
 | PD-07 | Network fees come from a treasury fee buffer, not from bounty principal. |
 | PD-08 | Superseded for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). Unallocated principal is platform revenue and is not refunded to the creator. `paid` is not redefined. Cancelled, never-activated, failed-funding, creator-close, and admin-close outcomes remain unspecified. In-flight reserved payouts still follow ADR-004. |
 | PD-09 | Store research consent before a solving session. Policy version `research-consent-v1`. |
-| PD-10 | P1 strategies: `logical_deduction`, `calculation`, `pattern_recognition`, `trial_and_error`, `external_knowledge`, `other`, plus an optional explanation. |
+| PD-10 | Not an MVP requirement ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). Strategies and explanations are not collected. A later version may reconsider them. The strategy list is not accepted. |
 | PD-11 | P0 verification methods are `exact`, `case_insensitive`, `normalized_text`, and `numeric_exact`. No fuzzy or AI grading. `numeric_exact` has no tolerance. |
 | PD-12 | Local PostgreSQL for development. Neon for the shared hackathon database. The database design is not approved DDL. |
 | PD-13 | Superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). Funding and payouts complete at `confirmed`, after execution and detail checks. `processed` is not sufficient. `finalized` is not required. |
@@ -157,13 +157,13 @@ Full allocation: the E1 transaction that takes the last slot also sets `closed` 
 
 ## Open questions
 
-PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is answered by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). PD-08 is answered for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). The remaining two need an explicit answer before the matching work treats them as accepted. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. The platform commission must follow ADR-007. Unused reward principal after deadline or the participant cap must follow ADR-008. None of these decisions authorizes implementation. Until then the remaining items stay proposed.
+PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is answered by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). PD-08 is answered for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). PD-10 is answered for the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md): strategies and explanations are not collected. PD-14 still needs an explicit answer before private wallet-linked rows are treated as accepted. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. The platform commission must follow ADR-007. Unused reward principal after deadline or the participant cap must follow ADR-008. MVP analytics must follow ADR-009. None of these decisions authorizes implementation.
 
 1. PD-03. Answered. Server-side PostgreSQL sessions in an HttpOnly cookie. JWT access and refresh tokens are not used.
 2. PD-05. Answered. Immediate individual payout after reservation. No batch. The submission response does not wait for chain confirmation.
 3. PD-08. Answered for deadline and the maximum rewarded participant limit. Unallocated principal is retained as platform revenue and is not refunded. Other endings remain unspecified.
 4. PD-13. Answered. Funding and payout completion require `confirmed`, plus execution and detail checks. `finalized` is not required. `processed` is not sufficient.
-5. PD-10. Confirm the strategy list before any P1 strategy work. P0 does not need this answer.
+5. PD-10. Answered for the MVP. Strategies and explanations are not collected. A future version may reconsider them. The strategy list is not accepted.
 6. PD-14. Confirm that the private creator dashboard may show wallet-linked rows while exports and public views stay aggregated and wallet-free.
 7. PD-15. Answered. The Devnet treasury private key is a backend-only environment secret. It is not a Mainnet custody strategy. Signing is not implemented.
 
@@ -177,7 +177,7 @@ Solana is the payment rail. The MVP treasury is custodial. Copy and docs say wal
 
 ### C2. Attempt detail split across P0 and P1
 
-Success metrics need completion time and attempt summaries, so those are P0. Answer changes, strategy comparisons, and richer charts stay P1.
+[ADR-009](../decisions/ADR-009-minimal-research-analytics.md) keeps participant count, correctness, attempt count, and completion time in the MVP. Answer-change history, strategy surveys, explanations, complex charts, and research export are not in the MVP.
 
 ### C3. Unused reward principal
 
@@ -193,4 +193,4 @@ Administrators remain a stakeholder. The hackathon does not add a separate admin
 
 ## Next phase
 
-Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. PD-10 and PD-14 remain open. ADR-008 does not implement retention.
+Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. PD-10 is not an MVP analytics requirement. PD-14 remains open. ADR-008 does not implement retention. ADR-009 does not implement analytics.

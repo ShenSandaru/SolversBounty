@@ -64,6 +64,7 @@ Status meanings:
 | [ADR-006 Devnet treasury private-key storage](ADR-006-devnet-treasury-private-key-storage.md) | accepted | `TREASURY_SECRET_KEY` stays in the API environment. Devnet only. Not a Mainnet custody strategy |
 | [ADR-007 Company platform commission](ADR-007-company-platform-commission.md) | accepted | 5% of the solver reward pool, paid on top. Not deducted from solver rewards. Supersedes CD-12 |
 | [ADR-008 Unused reward pool retention](ADR-008-unused-reward-pool-retention.md) | accepted | After deadline or the participant cap, unallocated principal is platform revenue. Not a creator refund. E1 unchanged |
+| [ADR-009 Minimal research analytics](ADR-009-minimal-research-analytics.md) | accepted | MVP records correctness, attempt count, completion time, and participant count. Strategies, explanations, answer changes, and export are later |
 
 ## How to supersede
 

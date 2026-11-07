@@ -13,7 +13,7 @@ The hackathon MVP uses a **backend-managed custodial Devnet treasury**. Wallet l
 SolversBounty has two equal purposes:
 
 1. **Human intelligence marketplace.** Creators publish cognitive challenges and fund rewards. Eligible correct solvers receive a fixed micro-payment, one reward per wallet per bounty.
-2. **Human reasoning research.** With explicit consent, the platform records observable solving activity and optional self-reports so creators can study correctness, attempts, completion time, answer changes, and strategies.
+2. **Human reasoning research.** With explicit consent, the MVP records four observed metrics: correctness, attempt count, completion time, and participant count ([ADR-009](docs/decisions/ADR-009-minimal-research-analytics.md)). Strategy surveys, written explanations, answer-change history, and research export are not in the MVP.
 
 The product is privacy-conscious. It does not promise anonymity. A wallet address is a pseudonym, and Solana transactions are public. The MVP does not collect email addresses, passwords, or KYC data.
 

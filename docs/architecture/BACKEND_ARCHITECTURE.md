@@ -22,7 +22,7 @@ The original sketch listed a notifications module. It is not part of this monoli
 | `submissions` | Consent, solving sessions, attempts, orchestration of grade-then-maybe-reserve | Treasury signing |
 | `verification` | Pure compare of expected answer, method, and submitted text | HTTP, database writes, payouts |
 | `rewards` | Ledger postings, allocations, payout rows, refund requests | Grading text |
-| `analytics` | Read-model aggregates and P1 export | Writes to payouts or attempts |
+| `analytics` | Read-model aggregates for the four ADR-009 metrics | Writes to payouts or attempts |
 | `solana` | Local signature verify, RPC reads, treasury transfers, confirmation polling | Product authorization |
 | `anti-abuse` | Rate limits | Business rules for rewards |
 | `audit` | Append-only audit rows | Decisions about whether an action is allowed |
@@ -104,7 +104,7 @@ After commit, `rewards` asks `solana` to send if a payout is `pending`. The HTTP
 
 ### Analytics
 
-`analytics` checks the owner, then runs aggregates for the metric definitions in the PRD. CSV export is a P1 method on the same module.
+`analytics` checks the owner, then aggregates the four [ADR-009](../decisions/ADR-009-minimal-research-analytics.md) metrics from stored sessions and attempts. Research export is not an MVP method. Default aggregates omit solver wallet addresses. Analytics do not decide eligibility.
 
 ## Transaction boundaries
 
