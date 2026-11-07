@@ -2,9 +2,9 @@
 
 | | |
 | --- | --- |
-| Phase | 2, monorepo scaffold |
-| Milestone | M1 complete |
-| Application | Shells only. No product features. |
+| Phase | Frontend preview after the Phase 2 scaffold |
+| Milestone | M1 complete. Preview pages exist. Product milestones are not started. |
+| Application | Static web preview. No product APIs. |
 | Updated | 2026-11-07 |
 
 No requirement is `implemented`. The catalogue in [REQUIREMENTS.md](../product/REQUIREMENTS.md) stays `not_started` until acceptance criteria pass. This file must not be updated to claim a demo, a test run of a product flow, or a deployed API unless that work actually happened.
@@ -42,9 +42,18 @@ M1 scaffold, checked on 2026-11-07:
 - `GET http://localhost:3001/health` returns `{ "status": "ok", "service": "SolversBounty" }`.
 - The web home page reads that health response.
 
+Frontend preview, checked on 2026-11-07. Requirement statuses stay `not_started` because these pages use sample data and do not meet API acceptance criteria.
+
+- Shared public bounty schema rejects an `expectedAnswer` field. Lamport helpers cover the 0.01 SOL by 100 solvers example.
+- Web routes: `/`, `/bounties`, `/bounties/create`, `/bounties/[id]`, `/dashboard`, `/research`.
+- Marketplace search, category filter, sort, empty state, and unknown-id error state were exercised in the browser.
+- The create form validates in the browser and shows a receipt that omits the expected answer. It does not save or fund a bounty.
+- Research analytics are labeled demonstration data, including an empty-session sample.
+- `pnpm --filter @solversbounty/web lint`, `test`, and `build` passed.
+
 ## In progress
 
-Nothing. Phase 2 is finished. Phase 3 is not in progress.
+Nothing. The frontend preview is ready for review. Phase 4 is not in progress.
 
 ## Not started
 
@@ -61,9 +70,9 @@ Phase 3 should not treat PD-03, PD-05, PD-08, PD-13, PD-10, PD-14, or PD-15 as a
 
 ## Next actions
 
-1. User confirms or replaces the open questions.
-2. User explicitly asks for Phase 3.
-3. Do not mark product requirements implemented during later scaffolds.
+1. Review the frontend preview before any Phase 4 work.
+2. User confirms or replaces the open questions before authentication, funding, or payout work treats those proposals as accepted.
+3. Do not mark product requirements implemented because a preview page exists.
 
 ## Verification
 

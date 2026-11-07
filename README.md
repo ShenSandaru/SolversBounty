@@ -4,7 +4,7 @@
 
 SolversBounty is a wallet-authenticated cognitive micro-task marketplace and human reasoning research platform. Creators publish predefined challenges, fund a fixed SOL reward pool on Solana Devnet, and study how people attempt those challenges. Solvers connect a wallet, submit answers, and receive the same micro-reward when the backend judges them eligible.
 
-**Document status:** Phase 2 scaffold. The web and API shells run. Product features are not implemented.
+**Document status:** Phase 2 scaffold plus a static frontend preview. Product features are not implemented.
 
 The hackathon MVP uses a **backend-managed custodial Devnet treasury**. Wallet login and SOL transfers are on Solana. Custody of reward funds is not trustless escrow. See [ADR-002](docs/decisions/ADR-002-custodial-devnet-treasury.md).
 
@@ -78,7 +78,18 @@ pnpm test
 pnpm typecheck
 ```
 
-`pnpm dev` starts the web app on port 3000 and the API on port 3001. Swagger is at `http://localhost:3001/docs`. `GET /health` is the only product-shaped route. Copy [.env.example](.env.example) when you need local environment files. Postgres is optional: the API starts without `DATABASE_URL`.
+`pnpm dev` starts the web app on port 3000 and the API on port 3001. Swagger is at `http://localhost:3001/docs`. `GET /health` is the only product-shaped API route. Copy [.env.example](.env.example) when you need local environment files. Postgres is optional: the API starts without `DATABASE_URL`.
+
+Preview routes in the web app use sample data. They do not authenticate, save a bounty, verify an answer, or move SOL.
+
+| Route | Preview |
+| --- | --- |
+| `/` | Home |
+| `/bounties` | Marketplace |
+| `/bounties/create` | Create form, validated only in the browser |
+| `/bounties/[id]` | Challenge details |
+| `/dashboard` | Creator and solver overview |
+| `/research` | Demonstration analytics |
 
 Read [AGENTS.md](AGENTS.md) before changing product behavior. Update [progress](docs/development/PROGRESS.md) when a milestone actually changes. Do not mark a requirement `implemented` until its acceptance criteria pass.
 
