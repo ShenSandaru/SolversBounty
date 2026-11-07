@@ -66,6 +66,24 @@ describe("credentialed CORS", () => {
     expect(String(response.headers["access-control-allow-methods"]).toUpperCase()).toContain("POST");
   });
 
+  it("answers a credentialed bounty PATCH preflight", async () => {
+    const response = await request(app.getHttpServer())
+      .options("/bounties/00000000-0000-4000-8000-000000000001")
+      .set("Origin", "http://localhost:3000")
+      .set("Access-Control-Request-Method", "PATCH")
+      .set("Access-Control-Request-Headers", "content-type,x-csrf-token");
+    expect(response.status).toBe(204);
+    expect(response.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
+    expect(response.headers["access-control-allow-credentials"]).toBe("true");
+    const methods = String(response.headers["access-control-allow-methods"]).toUpperCase();
+    for (const method of ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]) {
+      expect(methods).toContain(method);
+    }
+    const headers = String(response.headers["access-control-allow-headers"]).toLowerCase();
+    expect(headers).toContain("content-type");
+    expect(headers).toContain("x-csrf-token");
+  });
+
   it("does not reflect an unknown origin", async () => {
     const response = await request(app.getHttpServer()).get("/auth/session").set("Origin", "https://evil.example");
     expect(response.headers["access-control-allow-origin"]).toBeUndefined();
