@@ -12,8 +12,9 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ConfigService);
   const port = config.getOrThrow<number>("app.port");
   const rpcUrl = config.getOrThrow<string>("solana.rpcUrl");
+  const origins = config.getOrThrow<string[]>("app.corsOrigins");
   await app.listen(port);
-  Logger.log(`Listening on ${port}. Devnet RPC ${rpcUrl}`, "Bootstrap");
+  Logger.log(`Listening on ${port}. Devnet RPC ${rpcUrl}. CORS ${origins.join(", ")}`, "Bootstrap");
 }
 
 void bootstrap();

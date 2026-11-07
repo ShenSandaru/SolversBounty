@@ -12,7 +12,9 @@ export function configureApp(app: NestExpressApplication): void {
   app.enableCors({
     origin: origins,
     credentials: true,
+    methods: ["GET", "HEAD", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "X-CSRF-Token"],
+    optionsSuccessStatus: 204,
   });
   app.useBodyParser("json", { limit: bodyLimit });
 

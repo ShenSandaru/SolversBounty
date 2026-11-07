@@ -1,6 +1,6 @@
 # Database design
 
-Status: **direction approved for the MVP**. This is not applied DDL. `apps/api/prisma/schema.prisma` is the proposal: 14 models. The initial migration SQL is `apps/api/prisma/migrations/20261107173154_initial_schema/migration.sql`. It has not been applied.
+Status: **direction approved for the MVP**. `apps/api/prisma/schema.prisma` has 14 models. The initial migration `20261107173154_initial_schema` is applied on the Neon development database `neondb` in `ap-southeast-1`. It is not a production migration.
 
 Four layers stay separate:
 

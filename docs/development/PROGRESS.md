@@ -69,7 +69,7 @@ Security review, written on 2026-11-07. No product workflow was added. Requireme
 
 ## In progress
 
-Wallet login on the API is proven against a disposable PostgreSQL database. The web client connects Phantom through Solana Wallet Adapter and signs the exact nonce message. AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-001, AUTH-003, AUTH-006, AUTH-007, AUTH-010, and AUTH-011 stay `in_progress` because a real Phantom browser session has not been verified. The 8-hour lifetime and logout CSRF check are working defaults, not accepted ADR decisions. The project development database has not had the migration applied. Do not apply it to Neon.
+Wallet login on the API is proven against the Neon development database and, earlier, a disposable PostgreSQL database. The web client connects Phantom through Solana Wallet Adapter and signs the exact nonce message. AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-001, AUTH-003, AUTH-006, AUTH-007, AUTH-010, and AUTH-011 stay `in_progress` because a real Phantom browser session has not been verified. The 8-hour lifetime and logout CSRF check are working defaults, not accepted ADR decisions. The initial migration is applied to the development database `neondb`. Do not apply it to a production database.
 
 ## Not started
 
@@ -87,7 +87,7 @@ PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-ses
 ## Next actions
 
 1. Follow [MANUAL_PHANTOM_AUTH.md](MANUAL_PHANTOM_AUTH.md) with Phantom on Devnet before marking AUTH-001, AUTH-003, AUTH-006, or AUTH-007 implemented.
-2. Apply the initial migration only against a disposable or local development database when a fresh database is available. Do not apply it to Neon.
+2. Retry the Phantom sign-in against the API. The development database now has the initial schema.
 3. Do not start bounty creation until the browser authentication check is recorded.
 
 ## Verification
