@@ -27,7 +27,7 @@ The MVP uses one backend-managed custodial treasury on Solana Devnet (CD-11).
 - UI and docs say custodial Devnet treasury. They do not say trustless, non-custodial, or smart-contract escrow.
 - Mainnet, USDC, and program escrow require a new ADR. This decision does not authorize them.
 
-Eligibility, idempotency, and refund timing are specified in [blockchain design](../architecture/BLOCKCHAIN_DESIGN.md). Payout timing is [ADR-004](ADR-004-immediate-individual-solver-payouts.md). This ADR does not by itself accept PD-08 or PD-13. Those remain proposed.
+Eligibility, idempotency, and refund timing are specified in [blockchain design](../architecture/BLOCKCHAIN_DESIGN.md). Payout timing is [ADR-004](ADR-004-immediate-individual-solver-payouts.md). Confirmation commitment is [ADR-005](ADR-005-solana-confirmed-commitment.md). This ADR does not by itself accept PD-08. That remains proposed.
 
 ## Consequences
 

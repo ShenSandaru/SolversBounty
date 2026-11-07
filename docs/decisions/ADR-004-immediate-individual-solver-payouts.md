@@ -118,7 +118,7 @@ The implementation must include:
 - Tests for concurrent final-slot allocation.
 - Tests for lost RPC responses and duplicate-payment prevention.
 
-The exact Solana confirmation commitment remains governed by the separate PD-13 decision.
+The Solana confirmation commitment is [ADR-005](ADR-005-solana-confirmed-commitment.md): `confirmed`, plus the execution and detail checks in that decision.
 
 ## Scope
 
@@ -130,7 +130,7 @@ The existing custodial Devnet treasury architecture remains governed by ADR-002.
 
 No custom Solana program is introduced by this decision.
 
-Eligibility rule E1 is unchanged. PD-05 is superseded. PD-08 remains the proposed refund policy, and PD-13 remains the proposed confirmation commitment.
+Eligibility rule E1 is unchanged. PD-05 is superseded. PD-08 remains the proposed refund policy. Confirmation commitment is [ADR-005](ADR-005-solana-confirmed-commitment.md).
 
 ## Alternatives
 

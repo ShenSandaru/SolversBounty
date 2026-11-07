@@ -508,7 +508,7 @@ Enums use the values from the database design and `@@map` to snake_case names. C
 
 `StrategyResponse` is absent. That matches the Phase 4 note and should stay absent until PD-10 is accepted.
 
-`ChainTransaction.commitment` is text. PD-13 is open, so an enum would freeze `confirmed` or `finalized` too early.
+`ChainTransaction.commitment` stays text. [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) requires the value `confirmed`. This review does not change the column or apply a migration.
 
 The partial nonce index is the one constraint the schema cannot apply by itself. See SEC-H4.
 
@@ -535,7 +535,7 @@ Indexes already present cover the marketplace `(status, deadline)`, the creator 
 
 ## Unresolved decisions
 
-PD-03 and PD-05 are no longer unresolved. The items below are not accepted here.
+PD-03, PD-05, and PD-13 are recorded below and are no longer unresolved. The recommendations after them are not accepted here.
 
 ### PD-03 Session shape
 
@@ -543,7 +543,7 @@ Superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md)
 
 ### PD-05 When a reward is sent
 
-Superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). Each eligible solver is paid individually after the reward is reserved. There is no batch and no creator release. The submission response does not wait for chain confirmation. E1 is unchanged. PD-13 still governs the confirmation commitment. ADR-004 does not implement transfers or the payout worker.
+Superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). Each eligible solver is paid individually after the reward is reserved. There is no batch and no creator release. The submission response does not wait for chain confirmation. E1 is unchanged. Confirmation commitment is [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). ADR-004 does not implement transfers or the payout worker.
 
 ### PD-08 Refunds
 
@@ -563,11 +563,7 @@ Recommendation, not a decision: keep the model out of the first migration.
 
 ### PD-13 Commitment
 
-Options: `processed`, `confirmed`, or `finalized`.
-
-Implications: `processed` can mark `paid` for a transaction a fork drops. `confirmed` matches the usual Devnet demo. `finalized` waits longer and reduces that risk further.
-
-Recommendation, not a decision: do not use `processed`. Prefer `confirmed` for the demo unless the operator explicitly wants to wait for `finalized`.
+Superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). Funding and payouts are complete only at `confirmed`, and only after execution succeeds and the sender, recipient, amount, and reference match. `processed` is not sufficient. `finalized` is not required. A lost RPC response is not a failed transfer. ADR-005 does not implement chain confirmation.
 
 ### PD-14 Wallet-linked research
 

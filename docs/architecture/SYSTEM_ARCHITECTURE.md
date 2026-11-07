@@ -71,7 +71,7 @@ flowchart TB
 | API | Trusted for the demo | Auth, authorization, validation, ledger, verification, payout orchestration. |
 | Server secrets | Trusted storage | Treasury key (PD-15) and answer-encryption key (PD-02). Neither is a database column. |
 | PostgreSQL | Product source of truth | On-chain transfers do not replace the ledger. They advance it after checks. |
-| Solana Devnet | Public rail | Amounts and addresses are observable. Commitment is not finality in the mainnet sense. Proposed success commitment is `confirmed` (PD-13). |
+| Solana Devnet | Public rail | Amounts and addresses are observable. Success commitment is `confirmed` ([ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md)), which is not mainnet finality. |
 
 Creator private fields and solver research fields use different API routes from public bounty DTOs. Public DTOs omit the expected answer, its ciphertext, submitted answers, explanations, and wallet-level research rows.
 
@@ -166,7 +166,7 @@ sequenceDiagram
   Api->>Db: Move reserved to paid once
 ```
 
-Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): one individual transfer after reservation, with confirmation handled afterward. Payouts are not implemented. Confirmation commitment remains PD-13.
+Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): one individual transfer after reservation, with confirmation handled afterward. Payouts are not implemented. Confirmation commitment is [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md).
 
 Eligibility rule E1, verbatim:
 

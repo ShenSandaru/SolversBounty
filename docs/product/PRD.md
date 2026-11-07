@@ -227,7 +227,7 @@ Rules:
 - Creators can see distribution status.
 - Unallocated principal stays on the bounty until close. The refund transfer is P1 (reconciliation C3, PD-08).
 
-Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): pay each eligible solver immediately after reservation, not in a creator-triggered batch. The submission response does not wait for chain confirmation. This does not implement payouts. Confirmation commitment remains PD-13.
+Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): pay each eligible solver immediately after reservation, not in a creator-triggered batch. The submission response does not wait for chain confirmation. This does not implement payouts. Confirmation commitment is [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md).
 
 PD-07 (**proposed — pending confirmation**): network fees are paid from a treasury fee buffer, not from principal.
 

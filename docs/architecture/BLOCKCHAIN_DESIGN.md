@@ -56,7 +56,7 @@ Platform fee is 0% (CD-12). The full confirmed deposit is bounty principal.
 3. The creator signs a system transfer in Phantom.
 4. The client reports the signature. The API stores `BountyFunding` as `pending` and returns.
 5. The worker loads the transaction. It activates the bounty only when all checks pass:
-   - Commitment is at least the PD-13 level. **Proposed — pending confirmation:** `confirmed`.
+   - Commitment is `confirmed` ([ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md)). `processed` is not sufficient. `finalized` is not required. Execution must succeed, and the sender, recipient, amount, and memo must match.
    - Destination is the treasury.
    - Source is the creator wallet that owns the bounty.
    - The transfer is native SOL, not a token.
@@ -102,7 +102,7 @@ Reservation and settlement rules are in the database design. The chain send neve
 
 ## Solver payouts
 
-Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): the first eligible correct attempt pays that solver immediately. There is no ranking and no creator batch. The HTTP submission returns before chain confirmation. Payouts are not implemented. Confirmation commitment remains PD-13.
+Payout timing is [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md): the first eligible correct attempt pays that solver immediately. There is no ranking and no creator batch. The HTTP submission returns before chain confirmation. Payouts are not implemented. Confirmation commitment is [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md).
 
 Eligibility rule E1, verbatim:
 
@@ -114,7 +114,7 @@ After commit:
 2. If status is `submitted` or `confirmed`, do not sign another transfer.
 3. If status is `pending` or `retryable`, build a system transfer from the treasury to the solver for `amountLamports`, with memo `sb:payout:<payoutId>` (PD-18).
 4. Persist the signature and status `submitted` before considering the send complete.
-5. On a later tick, require PD-13 commitment, the treasury as source, the solver as destination, and the reserved amount.
+5. On a later tick, require `confirmed` commitment, successful execution, the treasury as source, the solver as destination, the reserved amount, and the payout reference ([ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md)).
 6. Then post `settle` once and set the payout to `confirmed`.
 
 Every eligible solver gets the same `rewardLamports`. The payer of the network fee is the treasury fee buffer, so the solver's transferred principal matches the configured reward (PD-07).
@@ -133,7 +133,7 @@ The worker may run twice. The second run must see `submitted` or `confirmed` and
 
 ## Confirmation
 
-PD-13 (**proposed — pending confirmation**) treats `confirmed` as the demo success bar. `processed` is too weak for the demo because the API would mark `paid` before a fork could drop the transfer. `finalized` is safer and slower. The open question is whether the demo should wait for `finalized` instead.
+[ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) treats `confirmed` as the success bar, together with execution and detail checks. `processed` is not sufficient, because the API would mark `paid` before a fork could drop the transfer. `finalized` is not required for MVP funding or payout completion. Commitment alone does not prove the correct transfer. Chain confirmation is not implemented.
 
 Until the worker records that commitment:
 

@@ -9,7 +9,7 @@ Implementation notes that stay open:
 - Primary keys use UUID. The identifier type is still an open choice.
 - Balances are derived from `BountyLedgerEntry`. There is no cached balance column.
 - Foreign keys use `onDelete: Restrict`. The design does not define cascades.
-- `ChainTransaction.commitment` is text. PD-13 has not chosen `confirmed` versus `finalized`.
+- `ChainTransaction.commitment` is text. [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) requires the value `confirmed` before funding or payout completion. The column type is unchanged, and no migration is applied.
 - The one-active-nonce rule cannot be expressed in Prisma. `apps/api/prisma/manual/partial-indexes.sql` holds the partial unique index and has not been applied.
 - `SolvingSession (bountyId, solverId)` unique covers a bounty lookup. `SubmissionAttempt (sessionId, attemptNumber)` unique covers the grading lookup. Separate indexes for those leading columns are not added.
 
@@ -244,7 +244,7 @@ One payout row per allocation. Retries update this row. They do not insert a sec
 | `kind` | `deposit`, `payout`, `refund` |
 | `amountLamports` | Observed amount |
 | `sourceAddress`, `destinationAddress` | Base58 |
-| `commitment` | Proposed required value `confirmed` (PD-13) |
+| `commitment` | Required value `confirmed` ([ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md)). Stored as text. No migration in that decision |
 | `confirmedAt` | Nullable |
 | `createdAt` | Server time |
 

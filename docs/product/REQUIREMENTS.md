@@ -784,12 +784,14 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: solana, rewards
-- Description: `paid` increases only after the cluster accepts the signature at the chosen commitment.
+- Description: `paid` increases only after the transaction reaches `confirmed` and the execution and detail checks pass.
 
 Acceptance criteria:
 
-- **Proposed** PD-13 commitment is `confirmed`.
+- [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) commitment is `confirmed`. `processed` is not sufficient. `finalized` is not required.
+- Commitment alone is not proof. Execution must succeed, and the sender, recipient, amount, and payout reference must match.
 - A signature that never confirms does not move reserved funds to paid.
+- A timeout or lost RPC response is not treated as a failed transfer.
 
 ### PAY-006 Retry safely
 
@@ -930,7 +932,7 @@ Acceptance criteria:
 - Two eligible solvers receive the same lamport amount.
 - No creator action is required between a correct answer and the payout send.
 - The submission HTTP request returns without waiting for chain confirmation.
-- The reward is marked paid only after the required on-chain confirmation. That commitment remains PD-13.
+- The reward is marked paid only after `confirmed` and the ADR-005 detail checks. Chain integration is not implemented.
 
 ### PAY-017 No custom program
 

@@ -3,7 +3,7 @@
 // Identifier type remains the UUID written on each entity. That choice is still open for review.
 // Balances are derived from BountyLedgerEntry. There is no cached balance column.
 // onDelete is Restrict because the design does not define cascades.
-// Chain commitment stays text because PD-13 has not chosen confirmed versus finalized.
+// Chain commitment stays text. ADR-005 requires confirmed before funding or payout completion. No migration is applied here.
 
 generator client {
   provider = "prisma-client"
