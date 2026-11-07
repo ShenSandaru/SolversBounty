@@ -624,21 +624,20 @@ function readPublic(value: unknown): PublicBountyRecord {
   if (!isRecord(value) || !isRecord(value.question)) {
     throw new BountyFlowError(500, "INTERNAL", "Internal server error");
   }
-  const bounty = readBounty(value);
   return {
-    id: bounty.id,
-    title: bounty.title,
-    description: bounty.description,
-    instructions: bounty.instructions,
+    id: readString(value.id),
+    title: readString(value.title),
+    description: readString(value.description),
+    instructions: readString(value.instructions),
     prompt: readString(value.question.prompt),
-    category: bounty.category,
+    category: readCategory(value.category),
     verificationMethod: readVerification(value.question.verificationMethod),
-    status: bounty.status,
-    rewardLamports: bounty.rewardLamports,
-    maxRewardedSolvers: bounty.maxRewardedSolvers,
-    attemptLimit: bounty.attemptLimit,
-    deadline: bounty.deadline,
-    closeReason: bounty.closeReason,
+    status: readStatus(value.status),
+    rewardLamports: readBigint(value.rewardLamports),
+    maxRewardedSolvers: readInt(value.maxRewardedSolvers),
+    attemptLimit: readInt(value.attemptLimit),
+    deadline: readDate(value.deadline),
+    closeReason: value.closeReason === null || value.closeReason === undefined ? null : readString(value.closeReason),
     rewardedCount: isRecord(value._count) ? readInt(value._count.allocations) : 0,
   };
 }
