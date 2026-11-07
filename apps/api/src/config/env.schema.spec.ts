@@ -33,6 +33,37 @@ describe("validateEnv", () => {
       "DATABASE_URL must be a postgres connection string.",
     );
   });
+
+  it("requires sslmode=require on Neon URLs and keeps the secret out of the error", () => {
+    const pooled = "postgresql://user:secret@ep-example-pooler.c-1.region.aws.neon.tech/db";
+    expect(() => validateEnv({ DATABASE_URL: pooled })).toThrow(
+      "DATABASE_URL must set sslmode=require for Neon.",
+    );
+    try {
+      validateEnv({ DATABASE_URL: pooled, DIRECT_URL: pooled });
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).not.toContain("secret");
+    }
+  });
+
+  it("accepts a pooled runtime URL and a direct CLI URL when both require SSL", () => {
+    const env = validateEnv({
+      DATABASE_URL: "postgresql://user:secret@ep-example-pooler.c-1.region.aws.neon.tech/db?sslmode=require",
+      DIRECT_URL: "postgresql://user:secret@ep-example.c-1.region.aws.neon.tech/db?sslmode=verify-full",
+    });
+    expect(env.DATABASE_URL).toContain("sslmode=require");
+    expect(env.DIRECT_URL).toContain("sslmode=verify-full");
+  });
+
+  it("still requires the pooled URL in production when only the direct URL is set", () => {
+    expect(() =>
+      validateEnv({
+        NODE_ENV: "production",
+        DIRECT_URL: "postgresql://user:secret@ep-example.c-1.region.aws.neon.tech/db?sslmode=require",
+      }),
+    ).toThrow("DATABASE_URL is required when NODE_ENV is production.");
+  });
 });
 
 describe("parseAllowlist", () => {

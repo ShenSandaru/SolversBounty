@@ -175,7 +175,8 @@ Proposed environment names, all server-side:
 
 | Name | Use |
 | --- | --- |
-| `DATABASE_URL` | Postgres |
+| `DATABASE_URL` | Pooled Postgres connection for the API runtime |
+| `DIRECT_URL` | Direct Postgres connection for Prisma CLI migrations. The API adapter does not use it |
 | `SOLANA_RPC_URL` | Devnet RPC |
 | `TREASURY_SECRET_KEY` | Custodial signer (PD-15) |
 | `ANSWER_ENCRYPTION_KEY` | Expected-answer encryption (PD-02) |

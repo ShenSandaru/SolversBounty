@@ -304,7 +304,7 @@ Proposed indexes beyond the unique keys above:
 
 ## Unapproved choices
 
-The following stay open until Phase 2 schema review, even though the tables above are the working proposal:
+The following stayed open through the Phase 4 schema representation and the Phase 5 security review. None of them is accepted:
 
 - UUID versus another identifier type.
 - Exact Prisma enum names.

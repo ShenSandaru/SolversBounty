@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Phase | Backend and Prisma foundation |
+| Phase | Security and architecture review |
 | Milestone | M1 complete. API infrastructure is in place. Product milestones are not started. |
 | Application | Static web preview. API serves health, readiness, and OpenAPI only. |
 | Updated | 2026-11-07 |
@@ -57,12 +57,19 @@ Backend foundation, checked on 2026-11-07. Requirement statuses stay `not_starte
 - Config validates app, database, Solana, and optional secret settings. Health starts without an auth secret, a treasury key, or `DATABASE_URL`.
 - Prisma models match the proposed database design. `StrategyResponse` is omitted. The partial nonce index is written and not applied.
 - `GET /health` still returns the shared liveness payload. `GET /health/ready` reports `not_configured`, `up`, or `down`.
-- Global validation, exception filter, request id, security headers, redacted request logs, and bigint string serialization are in place.
+- A Zod validation pipe exists and is tested. It is not registered globally. The live routes have no request bodies.
+- Exception filter, request id, security headers, request logs without bodies, and bigint string serialization are in place.
 - API infrastructure tests passed: 8 suites, 27 tests. They do not open a database connection.
+
+Security review, written on 2026-11-07. No product workflow was added. Requirement statuses stay `not_started`.
+
+- [Threat model](../security/THREAT_MODEL.md), [security review](../security/SECURITY_REVIEW.md), and [security checklist](../security/SECURITY_CHECKLIST.md).
+- No verified live exploit. The running surface is health, readiness, and OpenAPI.
+- Open `PD-*` items were not accepted. The ledger identity was not changed.
 
 ## In progress
 
-Nothing. Phase 4 infrastructure is ready for review. Phase 5 is not in progress.
+Nothing. The Phase 5 review is ready for the user. Phase 6 is not in progress.
 
 ## Not started
 
@@ -75,11 +82,11 @@ Nothing. Phase 4 infrastructure is ready for review. Phase 5 is not in progress.
 
 Local PostgreSQL on `127.0.0.1:5432` refused connections on 2026-11-07. The initial migration is deferred until a development database is configured. Do not point that migration at a shared or production database.
 
-Phase 5 should not treat PD-03, PD-05, PD-08, PD-13, PD-10, PD-14, or PD-15 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other six affect authentication or the money path.
+Phase 6 should not treat PD-03, PD-05, PD-08, PD-13, PD-10, PD-14, or PD-15 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other six affect authentication or the money path.
 
 ## Next actions
 
-1. Review the Phase 4 foundation before any product workflow.
+1. Review the Phase 5 security documents before any product workflow.
 2. User confirms or replaces the open questions before authentication, funding, or payout work treats those proposals as accepted.
 3. Apply the initial migration, including `prisma/manual/partial-indexes.sql`, only against a local development database.
 4. Do not mark product requirements implemented because module folders or Prisma models exist.

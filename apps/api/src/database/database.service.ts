@@ -12,6 +12,7 @@ export async function openPrismaClient(connectionString: string): Promise<Connec
     import("../generated/prisma/client.js"),
     import("@prisma/adapter-pg"),
   ]);
+  // Runtime traffic uses the pooled DATABASE_URL. DIRECT_URL is only for Prisma CLI.
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }

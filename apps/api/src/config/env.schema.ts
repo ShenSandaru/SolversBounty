@@ -10,6 +10,36 @@ const blankToUndefined = (value: unknown): unknown => {
 
 const optionalText = z.preprocess(blankToUndefined, z.string().min(1).optional());
 
+const SSL_MODES = new Set(["require", "verify-ca", "verify-full"]);
+
+function isNeonHost(value: string): boolean {
+  try {
+    return new URL(value).hostname.endsWith(".neon.tech");
+  } catch {
+    return value.includes(".neon.tech");
+  }
+}
+
+function sslMode(value: string): string | null {
+  try {
+    return new URL(value).searchParams.get("sslmode");
+  } catch {
+    return null;
+  }
+}
+
+function postgresUrl(name: string) {
+  return z.string().superRefine((value, context) => {
+    if (!value.startsWith("postgres://") && !value.startsWith("postgresql://")) {
+      context.addIssue({ code: "custom", message: `${name} must be a postgres connection string.` });
+      return;
+    }
+    if (isNeonHost(value) && !SSL_MODES.has(sslMode(value) ?? "")) {
+      context.addIssue({ code: "custom", message: `${name} must set sslmode=require for Neon.` });
+    }
+  });
+}
+
 const envSchema = z.object({
   NODE_ENV: z.preprocess(
     blankToUndefined,
@@ -23,16 +53,8 @@ const envSchema = z.object({
       .positive("PORT must be a positive integer.")
       .default(3001),
   ),
-  DATABASE_URL: z.preprocess(
-    blankToUndefined,
-    z
-      .string()
-      .refine(
-        (value) => value.startsWith("postgres://") || value.startsWith("postgresql://"),
-        "DATABASE_URL must be a postgres connection string.",
-      )
-      .optional(),
-  ),
+  DATABASE_URL: z.preprocess(blankToUndefined, postgresUrl("DATABASE_URL").optional()),
+  DIRECT_URL: z.preprocess(blankToUndefined, postgresUrl("DIRECT_URL").optional()),
   SOLANA_RPC_URL: z.preprocess(
     blankToUndefined,
     z

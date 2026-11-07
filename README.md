@@ -4,7 +4,7 @@
 
 SolversBounty is a wallet-authenticated cognitive micro-task marketplace and human reasoning research platform. Creators publish predefined challenges, fund a fixed SOL reward pool on Solana Devnet, and study how people attempt those challenges. Solvers connect a wallet, submit answers, and receive the same micro-reward when the backend judges them eligible.
 
-**Document status:** Phase 4 backend foundation plus a static frontend preview. Product workflows are not implemented.
+**Document status:** Phase 5 security review, Phase 4 backend foundation, and a static frontend preview. Product workflows are not implemented.
 
 The hackathon MVP uses a **backend-managed custodial Devnet treasury**. Wallet login and SOL transfers are on Solana. Custody of reward funds is not trustless escrow. See [ADR-002](docs/decisions/ADR-002-custodial-devnet-treasury.md).
 
@@ -78,7 +78,7 @@ pnpm test
 pnpm typecheck
 ```
 
-`pnpm dev` starts the web app on port 3000 and the API on port 3001. Swagger is at `http://localhost:3001/docs`. `GET /health` reports process liveness. `GET /health/ready` reports whether a configured PostgreSQL connection is up. Copy [.env.example](.env.example) when you need local environment files. Development starts without `DATABASE_URL`. A URL that is set and cannot connect does not stop `/health`. Production requires `DATABASE_URL`. Authentication, bounty, verification, and payout routes are not implemented.
+`pnpm dev` starts the web app on port 3000 and the API on port 3001. Swagger is at `http://localhost:3001/docs`. `GET /health` reports process liveness. `GET /health/ready` reports whether a configured PostgreSQL connection is up. Copy [.env.example](.env.example) when you need local environment files. Development starts without `DATABASE_URL`. A URL that is set and cannot connect does not stop `/health`. Production requires `DATABASE_URL`. `DATABASE_URL` is the pooled Neon connection used by the API. `DIRECT_URL` is the direct Neon connection used by Prisma CLI, and a Neon URL must include `sslmode=require`. Authentication, bounty, verification, and payout routes are not implemented.
 
 Preview routes in the web app use sample data. They do not authenticate, save a bounty, verify an answer, or move SOL.
 
@@ -114,6 +114,9 @@ Local development is planned against PostgreSQL. The shared hackathon database i
 | [ADR index](docs/decisions/README.md) | When and how to record a decision |
 | [ADR-001 Modular monolith](docs/decisions/ADR-001-modular-monolith.md) | Why the backend is one modular process |
 | [ADR-002 Custodial treasury](docs/decisions/ADR-002-custodial-devnet-treasury.md) | Why MVP custody is a Devnet hot wallet |
+| [Threat model](docs/security/THREAT_MODEL.md) | Assets, boundaries, and abuse scenarios |
+| [Security review](docs/security/SECURITY_REVIEW.md) | Findings, auth requirements, and open decisions |
+| [Security checklist](docs/security/SECURITY_CHECKLIST.md) | Gates for later milestones |
 
 ## Glossary
 

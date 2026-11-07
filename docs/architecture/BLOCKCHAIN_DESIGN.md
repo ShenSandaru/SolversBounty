@@ -1,6 +1,6 @@
 # Blockchain design
 
-Status: design intent for Solana Devnet. No client, key, or transaction exists in this repository. The treasury is custodial. It is not trustless escrow. See [ADR-002](../decisions/ADR-002-custodial-devnet-treasury.md).
+Status: design intent for Solana Devnet. The API selects a Devnet RPC URL and does not build, sign, or send a transfer. No treasury key is stored in this repository. The treasury is custodial. It is not trustless escrow. See [ADR-002](../decisions/ADR-002-custodial-devnet-treasury.md).
 
 Related: [system architecture](SYSTEM_ARCHITECTURE.md), [database design](DATABASE_DESIGN.md), [PRD](../product/PRD.md).
 

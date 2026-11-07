@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Phase 4 backend foundation is in place. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. The open questions below are unchanged.
+Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. The open questions below are unchanged.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -193,4 +193,4 @@ Administrators remain a stakeholder. The hackathon does not add a separate admin
 
 ## Next phase
 
-Do not start Phase 5 from this document alone. The next action is a review of the Phase 4 foundation, then an explicit request to implement a product workflow. The seven open questions are still unanswered.
+Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. The seven open questions are still unanswered.

@@ -20,6 +20,7 @@ export const databaseConfig = registerAs("database", () => {
   const env = readEnv();
   return {
     url: env.DATABASE_URL ?? null,
+    directUrl: env.DIRECT_URL ?? null,
   };
 });
 
