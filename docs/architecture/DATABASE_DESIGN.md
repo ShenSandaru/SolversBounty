@@ -1,21 +1,21 @@
 # Database design
 
-Status: **direction approved for the MVP**. This is not applied DDL. `apps/api/prisma/schema.prisma` remains the unmigrated 13-model proposal. No `prisma/migrations` history exists. This document does not change that file.
+Status: **direction approved for the MVP**. This is not applied DDL. `apps/api/prisma/schema.prisma` is the proposal: 14 models. The initial migration SQL is `apps/api/prisma/migrations/20261107173154_initial_schema/migration.sql`. It has not been applied.
 
 Four layers stay separate:
 
 | Layer | Meaning in this document |
 | --- | --- |
-| Existing Prisma proposal | The 13 models and 11 enums already written in `schema.prisma`. Not migrated |
-| Proposed schema changes | `BountyFunding.purpose`, the two funding uniqueness rules, and the session-hash unique index. Not in `schema.prisma` |
+| Prisma schema | 14 models. `FundingPurpose`, the two funding uniqueness rules, and the unique `refreshTokenHash` index are declared in `schema.prisma`. Not migrated |
+| Applied DDL | None. The partial nonce index is in the unapplied initial migration and in `apps/api/prisma/manual/partial-indexes.sql` |
 | Accepted decisions | ADR-001 through ADR-011, including the reward-pool identity and commission outside `funded` |
 | Unresolved details | Listed under Deferred decisions. They block funding or migration only where that section says so |
 
 Approved direction:
 
 - UUID primary keys. PostgreSQL. No extra reward-pool bucket and no platform revenue table.
-- Server-side sessions. The hash column stays `refreshTokenHash`. A unique index on it is a **proposed change**.
-- One active authentication nonce per wallet. The partial unique index in `apps/api/prisma/manual/partial-indexes.sql` must be in the first migration. Prisma cannot declare it.
+- Server-side sessions. The hash column stays `refreshTokenHash`. It is unique in `schema.prisma`. Not migrated.
+- One active authentication nonce per wallet. The partial unique index is in the unapplied initial migration. Prisma cannot declare it, so it is also kept in `apps/api/prisma/manual/partial-indexes.sql`.
 - `ConsentRecord.policyVersion` stays a string. The version text is not accepted.
 - Balances stay sums of `BountyLedgerEntry`. Foreign keys stay `onDelete: Restrict`.
 - `ChainTransaction.commitment` stays text. [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md) requires the value `confirmed` before funding or payout completion.
@@ -43,7 +43,7 @@ erDiagram
   SubmissionAttempt ||--o| RewardAllocation : earns
   RewardAllocation ||--|| Payout : pays
   Payout |o--o{ ChainTransaction : signs
-  BountyFunding |o--o| ChainTransaction : observes
+  ChainTransaction |o--o{ BountyFunding : observes
   User |o--o{ AuditLog : acts
 ```
 
@@ -126,15 +126,15 @@ The plaintext expected answer is not a column.
 
 ### BountyFunding
 
-The existing model is one row with one `expectedLamports`. That cannot separate the reward pool from the commission. The approved direction is two logical funding records on this same model, not a new table.
+The model holds two logical funding records, distinguished by `purpose`, not a new table.
 
-`purpose` is a **proposed schema change**. It is not in `schema.prisma`.
+`purpose` is the `FundingPurpose` enum in `schema.prisma`: `reward_pool` or `commission`. It is not migrated.
 
-| Column | In the current schema? | Notes |
+| Column | In `schema.prisma`? | Notes |
 | --- | --- | --- |
 | `id` | Yes | UUID |
 | `bountyId` | Yes | Foreign key |
-| `purpose` | No. **Proposed change** | `reward_pool` or `commission` |
+| `purpose` | Yes | `FundingPurpose`: `reward_pool` or `commission` |
 | `depositReference` | Yes | Unique. Memo text is still PD-18 |
 | `expectedLamports` | Yes | Integer obligation for this record |
 | `observedLamports` | Yes | Nullable until that obligation is verified |
@@ -151,7 +151,7 @@ These two records are separate funding obligations. They are not a decision that
 
 Both obligations are verified independently. The bounty stays inactive until both records are `confirmed`. Total creator payment is the sum of the two `expectedLamports` values. That sum is not a ledger bucket.
 
-**Proposed constraints**, not in `schema.prisma`:
+Constraints declared in `schema.prisma`, not migrated:
 
 - Unique `(bountyId, purpose)`, so one pool obligation and one commission obligation.
 - Unique `(chainTransactionId, purpose)` where a signature is present. This replaces unique `chainTransactionId` alone. Two signatures can be stored. One signature can be cited by both records if a later decision uses a single transfer. The constraint does not choose either shape. PostgreSQL still allows several rows whose `chainTransactionId` is null.
@@ -177,7 +177,7 @@ Append-only. Balances are sums of entries, computed inside the locked bounty tra
 | `id` | UUID |
 | `bountyId` | Foreign key |
 | `entryType` | `deposit`, `reserve`, `settle`, `release`, `refund` |
-| `amountLamports` | Positive integer |
+| `amountLamports` | Positive integer. The unapplied initial migration checks `amount_lamports > 0`. That check is not in `schema.prisma` |
 | `payoutId` | Nullable |
 | `fundingId` | Nullable |
 | `chainTransactionId` | Nullable |
@@ -259,7 +259,7 @@ Not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). 
 | `id` | UUID |
 | `bountyId`, `solverId` | Unique together |
 | `attemptId` | Unique. The attempt that earned it |
-| `amountLamports` | Copied from the bounty reward |
+| `amountLamports` | Copied from the bounty reward. The unapplied initial migration checks `amount_lamports > 0`. That check is not in `schema.prisma` |
 | `status` | `reserved`, `paid`, `released` |
 | `createdAt` | Server time |
 
@@ -309,14 +309,14 @@ Required actions are listed in NFR-017.
 
 - One user per wallet address.
 - One active authentication nonce per wallet, through the partial unique index. Not applied.
-- Unique `AuthSession.refreshTokenHash`. **Proposed change.** Not in the schema.
+- Unique `AuthSession.refreshTokenHash`. Declared in `schema.prisma`. Not migrated.
 - One question per bounty in the MVP (`bountyId` unique on `BountyQuestion`).
 - One consent row per user per bounty. A solving session requires that row.
 - One solving session per solver per bounty.
 - Attempt numbers unique inside a session and not above `attemptLimit`.
 - One reward allocation per bounty per solver.
 - One payout per allocation.
-- One pool funding row and one commission funding row per bounty. **Proposed change.**
+- One pool funding row and one commission funding row per bounty. Unique `(bountyId, purpose)` in `schema.prisma`. Not migrated.
 - A `deposit` ledger entry comes only from the confirmed pool funding row.
 - One ledger posting per confirmed chain signature and entry type.
 - Public and analytics queries must not select `expectedAnswerCiphertext`, `submittedAnswer`, or solver wallet addresses ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
@@ -346,11 +346,11 @@ Already declared on the unmigrated schema, or implied by a unique key:
 - `AuditLog (entityType, entityId, createdAt)`.
 - Unique keys listed in the constraints section.
 
-**Proposed change:** unique index on `AuthSession.refreshTokenHash` for session lookup. Not in `schema.prisma`.
+Unique index on `AuthSession.refreshTokenHash` for session lookup. Declared in `schema.prisma`. Not migrated.
 
 Do not add a separate index on `SolvingSession.bountyId` or `SubmissionAttempt.sessionId`. The unique `(bountyId, solverId)` and unique `(sessionId, attemptNumber)` keys already serve those lookups.
 
-The partial nonce index stays in `apps/api/prisma/manual/partial-indexes.sql` until the first migration includes it.
+The partial nonce index is in the unapplied initial migration. The same statement stays in `apps/api/prisma/manual/partial-indexes.sql`.
 
 ## Transaction boundaries
 
@@ -397,9 +397,10 @@ Unresolved. This document does not decide them:
 
 Before the first migration:
 
-- Keep the 13 existing models. Do not add a revenue table or a ledger entry type.
-- Include `auth_nonces_one_active_per_wallet` from `apps/api/prisma/manual/partial-indexes.sql`.
-- Apply the proposed session-hash unique index and the `BountyFunding.purpose` constraints only if that migration is intended to carry those schema changes. They are not in `schema.prisma` today.
+- Keep the 14 existing models. Do not add a revenue table or a ledger entry type.
+- The initial migration already includes `auth_nonces_one_active_per_wallet`. Do not add it a second time.
+- The same migration checks `amount_lamports > 0` on `bounty_ledger_entries` and `reward_allocations` (SEC-H6). Those checks are not in `schema.prisma`. A later Prisma diff must not drop them.
+- Carry the session-hash unique index and the `BountyFunding.purpose` constraints already declared in `schema.prisma`.
 - Do not apply the migration to a shared or production database from this document.
 
 Before funding implementation:
@@ -412,6 +413,5 @@ Before funding implementation:
 
 The following are still not accepted as DDL:
 
-- Exact Prisma enum names, including the proposed `purpose` values.
-- Applying any of the proposed changes above. `schema.prisma` is unchanged by this document.
+- Applying the schema. `schema.prisma` is updated and still unmigrated.
 - `StrategyResponse` is not in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). It is not a Prisma model and is not part of the first migration.

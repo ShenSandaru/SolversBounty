@@ -1,9 +1,9 @@
-// Representation of the proposed database design. It is not an accepted ADR.
-// StrategyResponse is omitted because PD-10 is still an open question.
-// Identifier type remains the UUID written on each entity. That choice is still open for review.
+// Unmigrated schema for the approved MVP database direction. No migration is applied here.
+// StrategyResponse is omitted (ADR-009). There is no platform revenue table and no extra reward-pool bucket.
 // Balances are derived from BountyLedgerEntry. There is no cached balance column.
 // onDelete is Restrict because the design does not define cascades.
-// Chain commitment stays text. ADR-005 requires confirmed before funding or payout completion. No migration is applied here.
+// Chain commitment stays text. ADR-005 requires confirmed before funding or payout completion.
+// The partial nonce index stays in prisma/manual/partial-indexes.sql. Prisma cannot declare it.
 
 generator client {
   provider = "prisma-client"
@@ -65,6 +65,14 @@ enum FundingStatus {
   @@map("funding_status")
 }
 
+// Two obligations on one bounty. Not a choice of one Solana transfer or two, and not a commission address.
+enum FundingPurpose {
+  reward_pool
+  commission
+
+  @@map("funding_purpose")
+}
+
 enum LedgerEntryType {
   deposit
   reserve
@@ -122,12 +130,12 @@ model User {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  bounties         Bounty[]
-  authSessions     AuthSession[]
-  consents         ConsentRecord[]
-  solvingSessions  SolvingSession[]
-  allocations      RewardAllocation[]
-  auditLogs        AuditLog[]
+  bounties        Bounty[]
+  authSessions    AuthSession[]
+  consents        ConsentRecord[]
+  solvingSessions SolvingSession[]
+  allocations     RewardAllocation[]
+  auditLogs       AuditLog[]
 
   @@map("users")
 }
@@ -151,7 +159,7 @@ model AuthNonce {
 model AuthSession {
   id               String    @id @default(uuid()) @db.Uuid
   userId           String    @map("user_id") @db.Uuid
-  refreshTokenHash String    @map("refresh_token_hash")
+  refreshTokenHash String    @unique @map("refresh_token_hash")
   expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
   revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(6)
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -180,13 +188,13 @@ model Bounty {
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  creator      User                @relation(fields: [creatorId], references: [id], onDelete: Restrict)
-  question     BountyQuestion?
-  fundings     BountyFunding[]
+  creator       User                @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+  question      BountyQuestion?
+  fundings      BountyFunding[]
   ledgerEntries BountyLedgerEntry[]
-  consents     ConsentRecord[]
-  sessions     SolvingSession[]
-  allocations  RewardAllocation[]
+  consents      ConsentRecord[]
+  sessions      SolvingSession[]
+  allocations   RewardAllocation[]
 
   @@index([status, deadline])
   @@index([creatorId, createdAt])
@@ -206,22 +214,27 @@ model BountyQuestion {
   @@map("bounty_questions")
 }
 
+// One reward_pool row and one commission row per bounty. Commission confirmation is not a deposit.
+// Unique (chainTransactionId, purpose) replaces a globally unique chainTransactionId.
+// One signature can be cited by both rows. Two signatures can be stored. Null chain ids stay allowed.
 model BountyFunding {
-  id                 String        @id @default(uuid()) @db.Uuid
-  bountyId           String        @map("bounty_id") @db.Uuid
-  depositReference   String        @unique @map("deposit_reference")
-  expectedLamports   BigInt        @map("expected_lamports")
-  observedLamports   BigInt?       @map("observed_lamports")
-  chainTransactionId String?       @unique @map("chain_transaction_id") @db.Uuid
-  status             FundingStatus @default(pending)
-  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  confirmedAt        DateTime?     @map("confirmed_at") @db.Timestamptz(6)
+  id                 String         @id @default(uuid()) @db.Uuid
+  bountyId           String         @map("bounty_id") @db.Uuid
+  purpose            FundingPurpose
+  depositReference   String         @unique @map("deposit_reference")
+  expectedLamports   BigInt         @map("expected_lamports")
+  observedLamports   BigInt?        @map("observed_lamports")
+  chainTransactionId String?        @map("chain_transaction_id") @db.Uuid
+  status             FundingStatus  @default(pending)
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  confirmedAt        DateTime?      @map("confirmed_at") @db.Timestamptz(6)
 
-  bounty           Bounty            @relation(fields: [bountyId], references: [id], onDelete: Restrict)
-  chainTransaction ChainTransaction? @relation(fields: [chainTransactionId], references: [id], onDelete: Restrict)
+  bounty           Bounty              @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+  chainTransaction ChainTransaction?   @relation(fields: [chainTransactionId], references: [id], onDelete: Restrict)
   ledgerEntries    BountyLedgerEntry[]
 
-  @@index([bountyId])
+  @@unique([bountyId, purpose])
+  @@unique([chainTransactionId, purpose])
   @@map("bounty_fundings")
 }
 
@@ -272,9 +285,9 @@ model SolvingSession {
   status    SessionStatus @default(active)
   createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  bounty   Bounty             @relation(fields: [bountyId], references: [id], onDelete: Restrict)
-  solver   User               @relation(fields: [solverId], references: [id], onDelete: Restrict)
-  consent  ConsentRecord      @relation(fields: [consentId], references: [id], onDelete: Restrict)
+  bounty   Bounty              @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+  solver   User                @relation(fields: [solverId], references: [id], onDelete: Restrict)
+  consent  ConsentRecord       @relation(fields: [consentId], references: [id], onDelete: Restrict)
   attempts SubmissionAttempt[]
 
   @@unique([bountyId, solverId])
@@ -349,7 +362,7 @@ model ChainTransaction {
   createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
 
   payout        Payout?             @relation(fields: [payoutId], references: [id], onDelete: Restrict)
-  funding       BountyFunding?
+  fundings      BountyFunding[]
   ledgerEntries BountyLedgerEntry[]
 
   @@index([payoutId])

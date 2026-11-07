@@ -27,7 +27,7 @@ These are in the tree and were checked against the running design, not only the 
 - Response headers set `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, and `X-Frame-Options: DENY`.
 - Lamport columns are `BigInt`. The response interceptor stringifies `bigint`. Shared helpers use `bigint`.
 - `publicBountySchema` is strict and has no expected-answer field. Marketplace fixtures are typed as public bounties. The preview receipt says the expected answer was not sent.
-- The Prisma schema has no password, email, treasury key, or user secret column. Consent has no IP column. Wallet addresses are unique. One solving session, one consent, one allocation, and one payout row are unique as specified. Deletes are `Restrict`. There is no balance cache.
+- The Prisma schema has no password, email, treasury key, or user secret column. Consent has no IP column. Wallet addresses are unique. `AuthSession.refreshTokenHash` is unique. One solving session, one consent, one allocation, and one payout row are unique as specified. Deletes are `Restrict`. There is no balance cache. None of these constraints are migrated.
 - Domain modules do not import each other. `verification` and `solana` have no domain imports.
 - `.env` is gitignored. Env examples leave secret fields empty. `apps/api/src/generated/` is gitignored.
 
@@ -318,20 +318,20 @@ Attack scenario: A handler logs `{ body: createBountyInput }`.
 
 Mitigation: Do not log request bodies. If a structured log needs a record, redact recursively and add the key names `seed` and `mnemonic`. Never log the answer fields by policy even if the helper misses them.
 
-### SEC-L4 Wallet text and session hashes are loosely constrained
+### SEC-L4 Wallet text is not a public-key check
 
 - Severity: Low
 - Kind: Verified schema gap
 - Component: `User.walletAddress`, `AuthSession.refreshTokenHash`
 - Blocks MVP: No, if the auth writer validates a Solana public key and stores one hash per session
 
-Description: Wallet columns are `VarChar(44)`, not a base58 check. `refreshTokenHash` is not unique. One user row per wallet is unique, which matches AUTH-005.
+Description: Wallet columns are `VarChar(44)`, not a base58 check. `AuthSession.refreshTokenHash` is unique in `schema.prisma`. That unique constraint is declared and not migrated. One user row per wallet is unique, which matches AUTH-005. Sessions are not implemented.
 
-Impact: Garbage wallet strings could become users. Two session rows could share a hash if the writer reused it.
+Impact: Garbage wallet strings could become users. Once the unique constraint is applied, a second session row cannot store an existing hash. The raw session token is still not a column.
 
-Attack scenario: A login body submits a 44-character string that is not a public key, or a session insert copies an existing hash.
+Attack scenario: A login body submits a 44-character string that is not a public key.
 
-Mitigation: Parse the address with a Solana public-key check before insert. Generate a new secret per session and store only its hash, with a unique index on that hash when sessions are implemented. Do not add a second wallet onto an existing user in the MVP.
+Mitigation: Parse the address with a Solana public-key check before insert. Generate a new secret per session and store only its hash. The unique index is the backstop for a reused hash. Do not add a second wallet onto an existing user in the MVP.
 
 ### SEC-L5 Client-visible error text is the thrown message
 
