@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { StatisticCard } from "@/components/statistic-card";
 import { creatorBounties } from "@/data/mock/bounties";
 import { dashboardSample } from "@/data/mock/dashboard";
+import { CreatorDraftList } from "./creator-draft-list";
 import { closeReasonLabels, statusLabels } from "@/lib/labels";
 import { formatDeadline } from "@/lib/dates";
 
@@ -21,8 +22,10 @@ export function DashboardPage() {
       />
       <section className="mt-6" aria-labelledby="creator-overview">
         <h2 id="creator-overview" className="text-lg font-semibold">
-          Creator
+          Your drafts
         </h2>
+        <CreatorDraftList />
+        <h3 className="mt-8 text-base font-semibold">Sample preview</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <StatisticCard label="Created bounties" value={creatorBounties.length} />
           <StatisticCard label="Active bounties" value={activeBounties} />

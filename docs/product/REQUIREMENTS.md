@@ -202,7 +202,7 @@ Acceptance criteria:
 ### BOUNTY-001 Create a bounty
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties
 - Description: An authenticated user can create a bounty with the required fields in the PRD.
 
@@ -214,7 +214,7 @@ Acceptance criteria:
 ### BOUNTY-002 Validate field bounds
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties
 - Description: Reward, cap, deadline, and attempt limit are sane.
 
@@ -228,7 +228,7 @@ Acceptance criteria:
 ### BOUNTY-003 Compute principal
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties
 - Description: Principal lamports equal reward per solver times max rewarded solvers.
 
@@ -241,7 +241,7 @@ Acceptance criteria:
 ### BOUNTY-004 Hide the expected answer
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, verification
 - Description: Public and solver payloads omit the expected answer. **Proposed** PD-02 stores it encrypted.
 
@@ -254,7 +254,7 @@ Acceptance criteria:
 ### BOUNTY-005 Creator private view
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties
 - Description: The owning creator can read the full configuration, including the expected answer.
 
@@ -266,7 +266,7 @@ Acceptance criteria:
 ### BOUNTY-006 Creator isolation
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, analytics
 - Description: Private configuration, submissions, and analytics are scoped to the owner.
 
@@ -278,7 +278,7 @@ Acceptance criteria:
 ### BOUNTY-007 Fund before active
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, solana
 - Description: Status becomes `active` only after the full solver reward pool and the separate 5% commission are verified ([ADR-007](../decisions/ADR-007-company-platform-commission.md), PAY-018). Funding is not implemented.
 
@@ -291,7 +291,7 @@ Acceptance criteria:
 ### BOUNTY-008 Category
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, marketplace
 - Description: Category is one of `logic`, `mathematics`, `numerical_patterns`, `ciphers`.
 
@@ -303,7 +303,7 @@ Acceptance criteria:
 ### BOUNTY-009 Attempt limit
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, submissions
 - Description: Each solver has a maximum number of stored attempts on that bounty.
 
@@ -315,7 +315,7 @@ Acceptance criteria:
 ### BOUNTY-010 Deadline
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, submissions
 - Description: After the deadline, the bounty no longer accepts new sessions or submissions.
 
@@ -327,7 +327,7 @@ Acceptance criteria:
 ### BOUNTY-011 Instructions
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, marketplace
 - Description: Optional instruction text is public on the challenge.
 
@@ -339,7 +339,7 @@ Acceptance criteria:
 ### BOUNTY-012 SOL on Devnet
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties, solana
 - Description: The only MVP reward asset is native SOL on Devnet.
 
@@ -351,7 +351,7 @@ Acceptance criteria:
 ### BOUNTY-013 One question
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties
 - Description: **Proposed** PD-01. A bounty has one question row.
 
@@ -363,7 +363,7 @@ Acceptance criteria:
 ### BOUNTY-014 List own bounties
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties, web creator
 - Description: The creator dashboard lists that creator's bounties and statuses.
 
@@ -1254,7 +1254,7 @@ Acceptance criteria:
 ### PRIV-009 Protect the expected answer at rest
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties
 - Description: **Proposed** PD-02. Encrypt the expected answer with an application key distinct from the treasury key.
 

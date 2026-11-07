@@ -71,24 +71,26 @@ Security review, written on 2026-11-07. No product workflow was added. Requireme
 
 Wallet login on the API is proven against the Neon development database and, earlier, a disposable PostgreSQL database. The web client connects Phantom through Solana Wallet Adapter and signs the exact nonce message. AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-001, AUTH-003, AUTH-006, AUTH-007, AUTH-010, and AUTH-011 stay `in_progress` because a real Phantom browser session has not been verified. The 8-hour lifetime and logout CSRF check are working defaults, not accepted ADR decisions. The initial migration is applied to the development database `neondb`. Do not apply it to a production database.
 
+Authenticated creators can save and edit bounty drafts. BOUNTY-001, BOUNTY-002, BOUNTY-003, BOUNTY-005, BOUNTY-012, BOUNTY-013, and BOUNTY-014 are `implemented`. BOUNTY-004, BOUNTY-006, BOUNTY-007, BOUNTY-008, BOUNTY-009, BOUNTY-010, BOUNTY-011, and PRIV-009 are `in_progress`. BOUNTY-015 and BOUNTY-016 stay `not_started`. Drafts are not activated. Funding, solver submissions, verification, payouts, and analytics are not started. No new migration was added.
+
 ## Not started
 
-- Bounty APIs, marketplace data, verification, payouts, analytics calculations
-- Applying the Prisma migration to a development database
+- Funding, marketplace data from the API, verification, payouts, analytics calculations
 - Devnet treasury, airdrops, and demo transactions
 - Browser wallet connection is coded and covered with mocked client tests. A real Phantom session is not verified. The manual procedure is [MANUAL_PHANTOM_AUTH.md](MANUAL_PHANTOM_AUTH.md).
 
 ## Blockers
 
-Local PostgreSQL on `127.0.0.1:5432` refused connections on 2026-11-07. The initial migration is deferred until a development database is configured. Do not point that migration at a shared or production database.
+Local PostgreSQL on `127.0.0.1:5432` refused connections on 2026-11-07. The initial migration was later applied to the Neon development database `neondb`. Do not point another migration at a shared or production database.
 
-PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). PD-08 is superseded for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). MVP analytics follow [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). Who may read them follows [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md). PD-10 is not an MVP requirement. PD-14 is answered for analytics visibility and is not implemented. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. The platform commission must follow ADR-007. Unused reward principal after deadline or the participant cap must follow ADR-008, including the rule that those lamports stay in `refundable`. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is accepted and does not approve a revenue schema. None of those workflows are started. Analytics are not implemented. Cancelled, never-activated, failed-funding, and other exceptional endings remain unspecified.
+PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). PD-08 is superseded for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). MVP analytics follow [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). Who may read them follows [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md). PD-10 is not an MVP requirement. PD-14 is answered for analytics visibility and is not implemented. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. The platform commission must follow ADR-007. Unused reward principal after deadline or the participant cap must follow ADR-008, including the rule that those lamports stay in `refundable`. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is accepted and does not approve a revenue schema. Funding, submissions, verification, payouts, and analytics are not started. Cancelled, never-activated, failed-funding, and other exceptional endings remain unspecified. A draft cannot be activated until both the reward pool and the separate 5% commission are verified.
 
 ## Next actions
 
-1. Follow [MANUAL_PHANTOM_AUTH.md](MANUAL_PHANTOM_AUTH.md) with Phantom on Devnet before marking AUTH-001, AUTH-003, AUTH-006, or AUTH-007 implemented.
-2. Retry the Phantom sign-in against the API. The development database now has the initial schema.
-3. Do not start bounty creation until the browser authentication check is recorded.
+1. Approve the Phantom login message in the browser before marking AUTH-001, AUTH-003, AUTH-006, or AUTH-007 implemented. The login message is plain text, and the click calls Phantom's injected `signMessage` with a utf8 display so Phantom does not parse it as Sign In With Solana. A live approval has not been completed.
+2. Free port 3001 for this API, then retry Phantom sign-in. The development database has the initial schema.
+3. Unlock Phantom and approve the login signature in Chrome, then save a draft from `/bounties/create`. The local answer key is already configured.
+4. The next product stage is verified Devnet funding of the reward pool and the separate 5% commission. Do not activate a bounty until both are confirmed.
 
 ## Verification
 
@@ -122,6 +124,22 @@ Browser wallet authentication on 2026-11-07:
 - Web tests: 4 files, 16 tests, all passed. The auth client tests mock fetch and `signMessage`.
 - API tests: 13 suites, 38 passed, 1 skipped. The skipped test is the disposable PostgreSQL spec. Logout without the CSRF header returns 403.
 - A real Phantom signature in the browser was not exercised. Follow [MANUAL_PHANTOM_AUTH.md](MANUAL_PHANTOM_AUTH.md). AUTH-001, AUTH-003, AUTH-006, AUTH-007, AUTH-010, and AUTH-011 stay `in_progress`.
+
+Bounty drafts on 2026-11-07:
+
+- `bounties.http.spec.ts` passed: unauthenticated create is 401, a missing CSRF token is 403, invalid title, past deadline, and zero reward are 400 and the error body does not contain the answer, a created bounty stays `draft`, 0.01 SOL for 100 solvers stores 10_000_000 reward lamports and 1_000_000_000 principal lamports with a separate 50_000_000 commission, the public active list stays empty, another creator receives 404 and an empty own-list, the owner can read and update the draft, and activation returns 409.
+- API `tsc --noEmit` passed.
+- Web tests `bounty-api.test.ts` and `create-bounty-schema.test.ts`: 7 passed. The client omits difficulty, consent, and creator identity.
+- Browser check on `http://localhost:3000`: an empty create form shows "Enter a title." The signed-out dashboard says "Sign in to see your drafts." The edit route says "Sign in to edit this draft." A saved draft was not created in the browser because port 3001 was already in use and `ANSWER_ENCRYPTION_KEY` is empty.
+- The Prisma bounty repository was not run against Neon in that pass. No new migration was created.
+
+Neon bounty validation on 2026-11-07:
+
+- Port 3001 is this API. No other project was stopped, and the frontend still calls `http://localhost:3001`.
+- `ANSWER_ENCRYPTION_KEY` is a local 32-byte base64url value in `apps/api/.env`. It is gitignored and was not printed. `answer-cipher.spec.ts` rejects a missing or invalid key with `NOT_READY`.
+- The connected database is `neondb`. The runtime URL is pooled, the direct URL is not, both name the same database, and `reward_lamports` is `bigint`. The bounty, question, and audit columns are present. No migration was applied.
+- `bounties.postgres.spec.ts` passed against Neon. It created draft `9405639f-59d3-406f-aaa1-70dc95f16845`, stored ciphertext, decrypted it for the owner, wrote both audit actions, hid the draft from the active list, rejected another creator, updated the title and description, and refused activation. The row was left in place.
+- Phantom on Devnet connected in Chrome, but the login signature was not approved. The page reported that the wallet could not sign the login message. No browser draft was saved and no SOL was transferred.
 
 Phase 4 checks on 2026-11-07:
 

@@ -8,7 +8,7 @@ export function CreateBountyPage() {
       <PageHeader
         eyebrow="Create bounty"
         title="Define a challenge"
-        description="Set the public question, the protected answer, and the Devnet reward terms. This form validates locally and does not create a bounty."
+        description="Set the public question, the protected answer, and the Devnet reward terms. Saving creates a draft. It does not fund or activate the bounty."
       />
       <CreateBountyForm />
     </PageContainer>

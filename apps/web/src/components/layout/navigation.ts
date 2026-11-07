@@ -20,7 +20,7 @@ export function pageContext(pathname: string): { section: string; detail: string
     return { section: "Marketplace", detail: "Open challenges" };
   }
   if (pathname === "/bounties/create") {
-    return { section: "Create Bounty", detail: "Preview form" };
+    return { section: "Create Bounty", detail: "Save a draft" };
   }
   if (pathname.startsWith("/bounties/")) {
     return { section: "Challenge", detail: "Details" };

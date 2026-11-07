@@ -4,31 +4,45 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuthSession } from "./auth-session";
+
 import {
   AuthClientError,
-  type AuthSession,
   apiBaseUrl,
+  completeSignedLogin,
   connectErrorMessage,
   logoutSession,
+  requestNonce,
   restoreSession,
-  signInWithWallet,
+  signingFailure,
+  type IssuedNonce,
 } from "./auth-client";
+import { phantomMessageProvider, signPreparedMessage } from "./phantom-sign";
 
 type Phase = "idle" | "connecting" | "signing" | "logging-out";
 
 export function WalletAuth() {
   const { connected, connecting, disconnect, publicKey, select, signMessage, wallet, wallets } = useWallet();
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const { session, setSession } = useAuthSession();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [prepared, setPrepared] = useState<IssuedNonce | null>(null);
+  const [prepareAttempt, setPrepareAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
     restoreSession(apiBaseUrl())
+      .catch((caught: unknown) => {
+        if (!(caught instanceof AuthClientError) || caught.code !== "API_UNAVAILABLE") {
+          throw caught;
+        }
+        return restoreSession(apiBaseUrl());
+      })
       .then((restored) => {
-        if (active) {
+        if (active && restored) {
           setSession(restored);
+          setError(null);
         }
       })
       .catch((caught: unknown) => {
@@ -46,6 +60,65 @@ export function WalletAuth() {
       active = false;
     };
   }, []);
+
+  const address = publicKey?.toBase58() ?? null;
+
+  useEffect(() => {
+    if (!ready || !address || session) {
+      setPrepared(null);
+      return;
+    }
+    let active = true;
+    requestNonce(apiBaseUrl(), address)
+      .then((issued) => {
+        if (active) {
+          setPrepared(issued);
+        }
+      })
+      .catch((caught: unknown) => {
+        if (active) {
+          setError(caught instanceof AuthClientError ? caught.message : "The sign-in message could not be prepared.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [address, prepareAttempt, ready, session]);
+
+  const onSignIn = useCallback(() => {
+    if (!publicKey || !signMessage) {
+      setError(publicKey ? "This wallet cannot sign in. It does not support message signing." : "Connect a wallet before signing in.");
+      return;
+    }
+    if (!prepared || Date.parse(prepared.expiresAt) <= Date.now()) {
+      setPrepared(null);
+      setPrepareAttempt((attempt) => attempt + 1);
+      setError("The sign-in message expired. Try again.");
+      return;
+    }
+    setError(null);
+    setPhase("signing");
+    const walletAddress = publicKey.toBase58();
+    const provider = phantomMessageProvider(window);
+    void signPreparedMessage({ message: prepared.message, adapterSign: signMessage, provider })
+      .then((signatureBytes) => completeSignedLogin({ apiUrl: apiBaseUrl(), walletAddress, signatureBytes }))
+      .then((next) => {
+        setSession(next);
+        setPrepared(null);
+        setError(null);
+      })
+      .catch((caught: unknown) => {
+        const failure = caught instanceof AuthClientError ? caught : signingFailure(caught);
+        setError(failure.message);
+        if (failure.code === "NONCE_EXPIRED" || failure.code === "AUTH_REJECTED") {
+          setPrepared(null);
+          setPrepareAttempt((attempt) => attempt + 1);
+        }
+      })
+      .finally(() => {
+        setPhase("idle");
+      });
+  }, [prepared, publicKey, setSession, signMessage]);
 
   const onConnect = useCallback(async () => {
     setError(null);
@@ -65,27 +138,6 @@ export function WalletAuth() {
     }
   }, [select, wallets]);
 
-  const onSignIn = useCallback(async () => {
-    if (!publicKey) {
-      setError("Connect a wallet before signing in.");
-      return;
-    }
-    setError(null);
-    setPhase("signing");
-    try {
-      const next = await signInWithWallet({
-        apiUrl: apiBaseUrl(),
-        walletAddress: publicKey.toBase58(),
-        signMessage,
-      });
-      setSession(next);
-    } catch (caught) {
-      setError(caught instanceof AuthClientError ? caught.message : "Sign-in failed.");
-    } finally {
-      setPhase("idle");
-    }
-  }, [publicKey, signMessage]);
-
   const onLogout = useCallback(async () => {
     if (!session) {
       return;
@@ -100,7 +152,7 @@ export function WalletAuth() {
     } finally {
       setPhase("idle");
     }
-  }, [session]);
+  }, [session, setSession]);
 
   const onDisconnect = useCallback(async () => {
     setError(null);
@@ -111,7 +163,6 @@ export function WalletAuth() {
     }
   }, [disconnect]);
 
-  const address = publicKey?.toBase58() ?? null;
   const busy = phase !== "idle" || connecting;
   const mismatch = session && address && session.walletAddress !== address;
 
@@ -139,8 +190,8 @@ export function WalletAuth() {
             {phase === "logging-out" ? "Signing out" : "Log out"}
           </Button>
         ) : address ? (
-          <Button type="button" size="sm" disabled={busy || !signMessage} onClick={() => void onSignIn()}>
-            {phase === "signing" ? "Waiting for signature" : "Sign in"}
+          <Button type="button" size="sm" disabled={busy || !signMessage || !prepared} onClick={onSignIn}>
+            {phase === "signing" ? "Waiting for signature" : prepared ? "Sign in" : "Preparing sign-in"}
           </Button>
         ) : null}
       </div>

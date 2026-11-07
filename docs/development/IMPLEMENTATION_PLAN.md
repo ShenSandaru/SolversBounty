@@ -51,6 +51,8 @@ Cover AUTH-001 through AUTH-011, USER-001, and USER-002. Phantom on the client. 
 
 Cover BOUNTY-001 through BOUNTY-006, BOUNTY-008 through BOUNTY-014, and PRIV-009. The creator can save a bounty and read it back. It stays inactive.
 
+Draft create, owner read, owner update, and the active-list exclusion are implemented and covered by `bounties.http.spec.ts`. Marketplace filtering, solver-facing display, deadline close, and analytics isolation remain open. Activation is refused until funding exists.
+
 ### M4 — Funding
 
 Cover BOUNTY-007, BOUNTY-016, PAY-008, PAY-013, PAY-014, PAY-015, and PAY-017. A confirmed deposit activates one bounty. The UI names the treasury as custodial.

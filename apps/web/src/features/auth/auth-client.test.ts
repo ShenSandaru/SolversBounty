@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { AuthClientError, logoutSession, requestNonce, restoreSession, signInWithWallet } from "./auth-client";
+import { AuthClientError, logoutSession, requestNonce, restoreSession, signInWithWallet, signingFailure } from "./auth-client";
 import { encodeSignature, messageBytes } from "./signature";
+
+function namedError(name: string, message: string): Error {
+  const error = new Error(message);
+  error.name = name;
+  return error;
+}
 
 const apiUrl = "http://localhost:3001";
 const wallet = "11111111111111111111111111111111";
@@ -26,7 +32,7 @@ describe("wallet authentication client", () => {
   });
 
   it("signs the exact backend message and submits a base64url signature", async () => {
-    let signed = Uint8Array.from([1, 2, 255, 64]);
+    let signed = new Uint8Array(64);
     const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
       if (String(url).endsWith("/auth/nonce")) {
         return jsonResponse(201, { nonce: "nonce-value", message, expiresAt: "2099-01-01T00:00:00.000Z" });
@@ -48,7 +54,11 @@ describe("wallet authentication client", () => {
       signMessage: async (bytes) => {
         expect(Buffer.from(bytes).toString("utf8")).toBe(message);
         expect(Buffer.from(bytes).equals(Buffer.from(messageBytes(message)))).toBe(true);
-        signed = Uint8Array.from([1, 2, 255, 64]);
+        signed = new Uint8Array(64);
+        signed[0] = 1;
+        signed[1] = 2;
+        signed[2] = 255;
+        signed[3] = 64;
         return signed;
       },
     });
@@ -84,7 +94,7 @@ describe("wallet authentication client", () => {
       apiUrl,
       walletAddress: wallet,
       fetchImpl,
-      signMessage: async () => Uint8Array.from([1]),
+      signMessage: async () => new Uint8Array(64),
     })).rejects.toMatchObject({ code: "AUTH_REJECTED" });
   });
 
@@ -128,6 +138,46 @@ describe("wallet authentication client", () => {
       throw new TypeError("Failed to fetch");
     });
     await expect(requestNonce(apiUrl, wallet, fetchImpl)).rejects.toMatchObject({ code: "API_UNAVAILABLE" });
+  });
+
+  it("rejects a signature that is not 64 bytes before calling the API", async () => {
+    const fetchImpl = vi.fn(async (url: string) => {
+      if (String(url).endsWith("/auth/nonce")) {
+        return jsonResponse(201, { nonce: "n", message, expiresAt: "2099-01-01T00:00:00.000Z" });
+      }
+      return jsonResponse(201, {});
+    });
+    await expect(signInWithWallet({
+      apiUrl,
+      walletAddress: wallet,
+      fetchImpl,
+      signMessage: async () => new Uint8Array(32),
+    })).rejects.toMatchObject({ code: "INVALID_SIGNATURE_LENGTH" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a disconnected wallet and a provider failure separately", () => {
+    expect(signingFailure(namedError("WalletNotConnectedError", "Wallet not connected"))).toMatchObject({
+      code: "WALLET_DISCONNECTED",
+    });
+    expect(signingFailure(namedError("WalletSignMessageError", "Unexpected error"))).toMatchObject({
+      code: "WALLET_PROVIDER_ERROR",
+    });
+    expect(signingFailure(namedError("Error", "Something else failed"))).toMatchObject({
+      code: "SIGNING_FAILED",
+    });
+  });
+
+  it("reports a disconnected wallet while signing", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(201, { nonce: "n", message, expiresAt: "2099-01-01T00:00:00.000Z" }));
+    await expect(signInWithWallet({
+      apiUrl,
+      walletAddress: wallet,
+      fetchImpl,
+      signMessage: async () => {
+        throw namedError("WalletDisconnectedError", "Wallet disconnected");
+      },
+    })).rejects.toMatchObject({ code: "WALLET_DISCONNECTED" });
   });
 
   it("reports a wallet that cannot sign messages", async () => {

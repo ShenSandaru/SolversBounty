@@ -10,12 +10,12 @@ export type LoginMessageInput = {
 };
 
 export function buildLoginMessage(input: LoginMessageInput): string {
+  // Keep this a plain message. The "wants you to sign in with your Solana account"
+  // preamble makes Phantom parse it as Sign In With Solana and reject the popup.
   return [
-    "SolversBounty wants you to sign in with your Solana account:",
-    input.walletAddress,
-    "",
+    "SolversBounty login",
+    `Wallet: ${input.walletAddress}`,
     "This signature does not approve a SOL transfer.",
-    "",
     `Domain: ${input.domain}`,
     `URI: ${input.uri}`,
     `Nonce: ${input.nonce}`,

@@ -11,6 +11,8 @@ describe("buildLoginMessage", () => {
       expiresAt: new Date("2026-11-07T12:10:00.000Z"),
     });
 
+    expect(message).toContain("SolversBounty login");
+    expect(message).not.toContain("wants you to sign in with your Solana account");
     expect(message).toContain("This signature does not approve a SOL transfer.");
     expect(message).toContain("Domain: localhost:3000");
     expect(message).toContain("URI: http://localhost:3000");

@@ -8,6 +8,7 @@ import {
   type VerificationMethod,
 } from "@solversbounty/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -16,14 +17,26 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { categoryLabels, difficultyLabels, verificationMethodLabels } from "@/lib/labels";
+import { useAuthSession } from "@/features/auth/auth-session";
+import { apiBaseUrl } from "@/features/auth/auth-client";
+import { BountyClientError, bountyWriteBody, createBounty, updateBounty, type BountyDraft } from "./bounty-api";
 import { createBountyFormSchema, type CreateBountyFormValues } from "./create-bounty-schema";
 
 const categories = Object.entries(categoryLabels) as [BountyCategory, string][];
 const methods = Object.entries(verificationMethodLabels) as [VerificationMethod, string][];
 const difficulties = Object.entries(difficultyLabels);
 
-export function CreateBountyForm() {
-  const [receipt, setReceipt] = useState<CreateBountyFormValues | null>(null);
+export function CreateBountyForm({
+  bountyId,
+  initial,
+}: {
+  bountyId?: string;
+  initial?: Partial<CreateBountyFormValues>;
+}) {
+  const { session } = useAuthSession();
+  const [saved, setSaved] = useState<BountyDraft | null>(null);
+  const [phase, setPhase] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
   const schema = useMemo(() => createBountyFormSchema(new Date()), []);
   const form = useForm<CreateBountyFormValues>({
     resolver: zodResolver(schema),
@@ -41,6 +54,7 @@ export function CreateBountyForm() {
       deadline: "",
       difficulty: "introductory",
       consentAcknowledged: false,
+      ...initial,
     },
   });
 
@@ -61,8 +75,26 @@ export function CreateBountyForm() {
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        void form.handleSubmit((values) => {
-          setReceipt(values);
+        void form.handleSubmit(async (values) => {
+          if (!session) {
+            setPhase("error");
+            setMessage("Sign in before saving a draft.");
+            return;
+          }
+          setPhase("saving");
+          setMessage(null);
+          try {
+            const body = bountyWriteBody(values);
+            const draft = bountyId
+              ? await updateBounty(apiBaseUrl(), session.csrfToken, bountyId, body)
+              : await createBounty(apiBaseUrl(), session.csrfToken, body);
+            setSaved(draft);
+            setPhase("saved");
+          } catch (caught) {
+            setSaved(null);
+            setPhase("error");
+            setMessage(caught instanceof BountyClientError ? caught.message : "The bounty could not be saved.");
+          }
         })(event);
       }}
     >
@@ -135,7 +167,7 @@ export function CreateBountyForm() {
           label="Expected answer"
           error={form.formState.errors.expectedAnswer?.message}
           htmlFor="expectedAnswer"
-          hint="Stays in this browser. The preview does not send or store it."
+          hint="Sent only to the API, which stores it encrypted. Public lists do not include it."
         >
           <Input id="expectedAnswer" autoComplete="off" {...form.register("expectedAnswer")} />
         </Field>
@@ -214,35 +246,41 @@ export function CreateBountyForm() {
       </section>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit">Review bounty</Button>
-        <p className="text-sm text-muted-foreground">Nothing is saved or sent.</p>
+        <Button type="submit" disabled={phase === "saving"}>
+          {phase === "saving" ? "Saving draft" : bountyId ? "Update draft" : "Save draft"}
+        </Button>
+        <p className="text-sm text-muted-foreground">Saves a draft. It does not fund or activate the bounty.</p>
       </div>
+      {message ? (
+        <p className="text-sm text-destructive" role="alert">
+          {message}
+        </p>
+      ) : null}
 
-      {receipt ? (
+      {saved && phase === "saved" ? (
         <section className="rounded-xl border border-border bg-card p-4 sm:p-6" aria-live="polite">
-          <h2 className="text-lg font-semibold">Preview only</h2>
+          <h2 className="text-lg font-semibold">Draft saved</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            {receipt.title} was checked in the browser. The expected answer was not included in
-            this summary and was not sent to the API. No deposit was created.
+            {saved.title} is a draft. The expected answer is stored by the API and is not shown here.
+            No deposit was created.
           </p>
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-muted-foreground">Category</dt>
-              <dd>{categoryLabels[receipt.category]}</dd>
+              <dt className="text-muted-foreground">Status</dt>
+              <dd>{saved.status}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Verification</dt>
-              <dd>{verificationMethodLabels[receipt.verificationMethod]}</dd>
+              <dt className="text-muted-foreground">Reward pool</dt>
+              <dd className="font-mono text-reward">{formatLamportsAsSol(BigInt(saved.principalLamports))} SOL</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Reward</dt>
-              <dd className="font-mono text-reward">{receipt.rewardSol} SOL</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Max rewarded solvers</dt>
-              <dd>{receipt.maxRewardedSolvers}</dd>
+              <dt className="text-muted-foreground">Commission, paid separately</dt>
+              <dd className="font-mono">{formatLamportsAsSol(BigInt(saved.commissionLamports))} SOL</dd>
             </div>
           </dl>
+          <Button className="mt-4" variant="outline" asChild>
+            <Link href={`/bounties/${saved.id}/edit`}>Edit draft</Link>
+          </Button>
         </section>
       ) : null}
     </form>

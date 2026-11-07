@@ -63,15 +63,33 @@ export async function signInWithWallet(input: {
   try {
     signatureBytes = await input.signMessage(messageBytes(issued.message));
   } catch (error) {
-    throw new AuthClientError(signingErrorMessage(error), "SIGNING_REJECTED");
+    throw signingFailure(error);
   }
+  return completeSignedLogin({
+    apiUrl: input.apiUrl,
+    walletAddress: input.walletAddress,
+    signatureBytes,
+    fetchImpl,
+  });
+}
+
+export async function completeSignedLogin(input: {
+  apiUrl: string;
+  walletAddress: string;
+  signatureBytes: Uint8Array;
+  fetchImpl?: FetchLike;
+}): Promise<AuthSession> {
+  if (input.signatureBytes.length !== 64) {
+    throw new AuthClientError("The wallet returned an unusable signature.", "INVALID_SIGNATURE_LENGTH");
+  }
+  const fetchImpl = input.fetchImpl ?? fetch;
   const response = await send(fetchImpl, `${input.apiUrl}/auth/login`, {
     method: "POST",
     credentials: "include",
     headers: jsonHeaders,
     body: JSON.stringify({
       walletAddress: input.walletAddress,
-      signature: encodeSignature(signatureBytes),
+      signature: encodeSignature(input.signatureBytes),
     }),
   });
   await response.json();
@@ -98,12 +116,31 @@ export async function logoutSession(apiUrl: string, csrfToken: string, fetchImpl
   });
 }
 
-export function signingErrorMessage(error: unknown): string {
+export function signingFailure(error: unknown): AuthClientError {
+  const name = error instanceof Error ? error.name : "unknown";
   const message = error instanceof Error ? error.message : "";
-  if (/reject|declin|cancel/i.test(message)) {
-    return "The signature request was rejected.";
+  const rejected = /reject|declin|cancel/i.test(message);
+  const disconnected = name === "WalletNotConnectedError" || name === "WalletDisconnectedError" || /not connected|disconnected/i.test(message);
+  const unsupported = /does not support|not support message/i.test(message);
+  let code = "SIGNING_FAILED";
+  let display = "The signing request failed.";
+  if (rejected) {
+    code = "SIGNING_REJECTED";
+    display = "The signature request was rejected.";
+  } else if (disconnected) {
+    code = "WALLET_DISCONNECTED";
+    display = "The wallet disconnected before it could sign. Connect it and try again.";
+  } else if (unsupported) {
+    code = "UNSUPPORTED_SIGNING";
+    display = "This wallet cannot sign in. It does not support message signing.";
+  } else if (name === "WalletSignMessageError") {
+    code = "WALLET_PROVIDER_ERROR";
+    display = "Phantom could not open the signature request. Try again.";
   }
-  return "The wallet could not sign the login message.";
+  if (process.env.NODE_ENV === "development") {
+    console.info("wallet sign-in failed", { code, name });
+  }
+  return new AuthClientError(display, code);
 }
 
 export function connectErrorMessage(error: unknown): string {
@@ -120,7 +157,7 @@ export function connectErrorMessage(error: unknown): string {
 async function send(fetchImpl: FetchLike, url: string, init: RequestInit): Promise<Response> {
   let response: Response;
   try {
-    response = await fetchImpl(url, init);
+    response = await fetchImpl(url, { ...init, cache: "no-store" });
   } catch {
     throw new AuthClientError("The API is unavailable.", "API_UNAVAILABLE");
   }

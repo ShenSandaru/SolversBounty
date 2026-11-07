@@ -10,6 +10,13 @@ import { AuthService } from "./auth.service";
 import { FakeAuthPrisma } from "./fake-auth-prisma";
 import { PrismaAuthRepository } from "./prisma-auth.repository";
 
+function setCookieList(value: string | string[] | undefined): string[] {
+  if (!value) {
+    return [];
+  }
+  return Array.isArray(value) ? value : [value];
+}
+
 describe("auth HTTP", () => {
   let app: INestApplication;
 
@@ -54,7 +61,7 @@ describe("auth HTTP", () => {
       signature: Buffer.from(signature).toString("base64url"),
     });
     expect(login.status).toBe(201);
-    const cookies = login.headers["set-cookie"] ?? [];
+    const cookies = setCookieList(login.headers["set-cookie"]);
     const sessionCookie = cookies.find((value) => value.startsWith(`${SESSION_COOKIE}=`)) ?? "";
     const csrfCookie = cookies.find((value) => value.startsWith(`${CSRF_COOKIE}=`)) ?? "";
     expect(sessionCookie).toContain("HttpOnly");
