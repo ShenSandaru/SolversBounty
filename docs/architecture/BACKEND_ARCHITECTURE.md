@@ -1,8 +1,8 @@
 # Backend architecture
 
-Status: module boundaries exist under `apps/api/src/modules`. The workflows, transaction boundaries, and authorization rules below are not implemented. The process serves `GET /health`, `GET /health/ready`, and Swagger at `/docs`. Routes are unversioned. There is no `/api/v1` prefix, because the web client calls `/health`.
+Status: module boundaries exist under `apps/api/src/modules`. Wallet login routes exist and are covered by unit tests against a fake Prisma client. They are not proven against PostgreSQL because the initial migration has not been applied. The confirmation worker, bounty, submission, verification, payout, and analytics workflows are not implemented. The process serves `GET /health`, `GET /health/ready`, Swagger at `/docs`, and `/auth/nonce`, `/auth/login`, `/auth/session`, and `/auth/logout`. Routes are unversioned.
 
-`anti-abuse` provides an in-memory rate limiter and does not apply it to routes. PD-20 is not enforced. There is no Redis. No authentication guard is registered. A missing treasury key, auth secret, or answer-encryption key does not stop startup. `DATABASE_URL` is required only when `NODE_ENV` is `production`. In development and test the API starts without it. A configured URL that fails to connect is logged and reported by readiness. It does not stop the process, so liveness still responds.
+`anti-abuse` provides an in-memory rate limiter. Nonce issuance uses the proposed limit of 10 requests per minute per wallet. Submission limits are not applied. There is no Redis. `SessionGuard` can be attached to later routes. CSRF protection is not implemented. A missing treasury key, auth secret, or answer-encryption key does not stop startup. `DATABASE_URL` is required only when `NODE_ENV` is `production`. In development and test the API starts without it. A configured URL that fails to connect is logged and reported by readiness. Auth routes then return 503. Liveness still responds.
 
 Related: [system architecture](SYSTEM_ARCHITECTURE.md), [database design](DATABASE_DESIGN.md), [blockchain design](BLOCKCHAIN_DESIGN.md), [coding standards](../development/CODING_STANDARDS.md), [ADR-001](../decisions/ADR-001-modular-monolith.md).
 
@@ -16,7 +16,7 @@ The original sketch listed a notifications module. It is not part of this monoli
 
 | Module | Owns | Must not own |
 | --- | --- | --- |
-| `auth` | Nonces, signature login, session issue and revoke | Chain transfers, answer checks |
+| `auth` | Nonces, signature login, session issue and revoke. Routes exist. Persistence is unproven until the migration is applied | Chain transfers, answer checks |
 | `users` | Wallet user and role | Bounty rules |
 | `bounties` | Bounty lifecycle, encrypted answer, public DTOs, deposit records | Payout sends |
 | `submissions` | Consent, solving sessions, attempts, orchestration of grade-then-maybe-reserve | Treasury signing |

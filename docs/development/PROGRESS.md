@@ -69,14 +69,14 @@ Security review, written on 2026-11-07. No product workflow was added. Requireme
 
 ## In progress
 
-Nothing. The Phase 5 review is ready for the user. Phase 6 is not in progress.
+Wallet login on the API: nonce issuance, local Ed25519 verification, user upsert, and an HttpOnly session cookie. AUTH-002, AUTH-004, AUTH-005, AUTH-006, AUTH-007, AUTH-008, and AUTH-009 are `in_progress`. The tests use a fake database client. PostgreSQL has not executed this path. Phantom connect, CSRF, and the accepted session lifetime are not done.
 
 ## Not started
 
-- Wallet login, bounty APIs, marketplace data, verification, payouts, analytics calculations
-- Prisma migration and a connected development database
+- Bounty APIs, marketplace data, verification, payouts, analytics calculations
+- Applying the Prisma migration to a development database
 - Devnet treasury, airdrops, and demo transactions
-- Product requirement implementation. Every requirement status stays `not_started`.
+- Browser wallet connection
 
 ## Blockers
 
@@ -86,9 +86,9 @@ PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-ses
 
 ## Next actions
 
-1. Review the Phase 5 security documents before any product workflow.
-2. User confirms or replaces the open questions before authentication, funding, or payout work treats those proposals as accepted.
-3. Apply the initial migration, including `prisma/manual/partial-indexes.sql`, only against a local development database.
+1. Apply the initial migration only against a disposable or local development database, then repeat the auth tests against PostgreSQL.
+2. Connect the web client to `/auth/nonce` and `/auth/login` with Phantom.
+3. Decide the session lifetime and CSRF mechanism before calling AUTH-006 implemented.
 4. Do not mark product requirements implemented because module folders or Prisma models exist.
 
 ## Verification
@@ -101,6 +101,12 @@ Scaffold checks on 2026-11-07:
 - `pnpm build` compiled shared, the API, and the web app.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm test` passed. Shared and web tests import `@solversbounty/shared`. The API health test imports it too.
 - Env examples exist at the root, `apps/api`, and `apps/web`. Secret fields are empty. A search found no private keys.
+
+Phase 6 wallet-login checks on 2026-11-07:
+
+- `node --experimental-vm-modules ./node_modules/jest/bin/jest.js` in `apps/api`: 12 suites, 37 tests, all passed.
+- Auth tests sign with a real Ed25519 key and a fake Prisma client. They do not open a database connection.
+- The migration file was not applied. Neon was not contacted.
 
 Phase 4 checks on 2026-11-07:
 

@@ -32,6 +32,10 @@ export class DatabaseService {
     return this.state;
   }
 
+  get activeClient(): ConnectedClient | null {
+    return this.state === "up" ? this.client : null;
+  }
+
   async onModuleInit(): Promise<void> {
     if (!this.settings.url) {
       this.state = "not_configured";

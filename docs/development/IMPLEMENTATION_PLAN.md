@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Phase 5 security review is written. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). CD-12 is superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). The other open questions below are unchanged.
+Status: Wallet login is in progress on the API and is not yet backed by an applied migration. No other product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). CD-12 is superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). The other open questions below are unchanged.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -193,4 +193,4 @@ Administrators remain a stakeholder. The hackathon does not add a separate admin
 
 ## Next phase
 
-Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. PD-10 is not an MVP analytics requirement. PD-14 is answered for analytics visibility by ADR-010 and is not implemented. ADR-008 does not implement retention. ADR-009 does not implement analytics. ADR-010 does not implement authorization.
+The user started wallet login. Continue that path against a local database before bounty creation. Do not treat this document alone as approval to apply the migration to Neon. PD-10 is not an MVP analytics requirement. PD-14 is answered for analytics visibility by ADR-010 and is not implemented. ADR-008 does not implement retention. ADR-009 does not implement analytics. ADR-010 does not implement authorization.

@@ -2,7 +2,7 @@
 
 Stable IDs for SolversBounty. Status values: `not_started`, `in_progress`, `implemented`, `deferred`.
 
-Every row below is `not_started`. No application code exists. Do not renumber an ID. Priority follows the [PRD](PRD.md) reconciliations.
+Every row below starts as `not_started`. Status changes only when the matching work has evidence. Do not renumber an ID. Priority follows the [PRD](PRD.md) reconciliations.
 
 Eligibility rule E1 is canonical in the [README](../../README.md). Metric definitions are in [PRD section 5.8](PRD.md).
 
@@ -26,7 +26,7 @@ Acceptance criteria:
 ### AUTH-002 Issue an authentication nonce
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: auth
 - Description: The API creates a single-use nonce bound to the wallet address.
 
@@ -51,7 +51,7 @@ Acceptance criteria:
 ### AUTH-004 Verify the signature on the backend
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: auth, solana
 - Description: The API checks the Ed25519 signature locally. This check does not require RPC.
 
@@ -63,7 +63,7 @@ Acceptance criteria:
 ### AUTH-005 Create or load the user
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: auth, users
 - Description: The first successful login creates a user for the wallet. Later logins load the same user.
 
@@ -75,7 +75,7 @@ Acceptance criteria:
 ### AUTH-006 Issue a session
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: auth
 - Description: A successful login creates a server-recognized session.
 
@@ -88,7 +88,7 @@ Acceptance criteria:
 ### AUTH-007 Disconnect
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: web auth, auth
 - Description: The user can disconnect the wallet and end the app session.
 
@@ -100,7 +100,7 @@ Acceptance criteria:
 ### AUTH-008 Reject invalid signatures
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: auth
 - Description: Bad signatures do not create users or sessions.
 
@@ -112,7 +112,7 @@ Acceptance criteria:
 ### AUTH-009 Reject nonce reuse
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: auth
 - Description: A nonce works once.
 
