@@ -14,19 +14,19 @@ export function ProgressIndicator({
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>{label}</span>
-        <span>
+        <span className="font-mono">
           {value} / {max}
         </span>
       </div>
       <div
-        className="h-1.5 overflow-hidden rounded-full bg-muted"
+        className="h-2 overflow-hidden rounded-full bg-secondary"
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
         aria-valuemax={max}
         aria-label={label}
       >
-        <div className="h-full rounded-full bg-primary" style={{ width: `${width}%` }} />
+        <div className="h-full rounded-full bg-brand-gradient" style={{ width: `${width}%` }} />
       </div>
     </div>
   );

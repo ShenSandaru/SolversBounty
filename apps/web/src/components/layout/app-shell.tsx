@@ -30,17 +30,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-full lg:grid lg:grid-cols-[18rem_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border bg-card px-4 py-6 lg:flex">
+      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border bg-card/80 px-4 py-6 backdrop-blur lg:flex">
         <Brand />
         <Navigation pathname={pathname} />
       </aside>
       <div className="flex min-h-full min-w-0 flex-col">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
-          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-md">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
-                className="inline-flex h-10 items-center rounded-lg border border-border px-3 text-sm font-medium lg:hidden"
+                className="inline-flex h-10 items-center rounded-lg border border-border bg-card px-3 text-sm font-medium transition-colors hover:border-brand-purple/70 lg:hidden"
                 aria-expanded={menuOpen}
                 aria-controls={menuId}
                 onClick={() => setOpenOnPath(menuOpen ? null : pathname)}
@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{context.section}</p>
-                <p className="truncate text-xs text-muted-foreground">{context.detail}</p>
+                <p className="hidden truncate text-xs text-muted-foreground sm:block">{context.detail}</p>
               </div>
             </div>
             <WalletAuth />
@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="fixed inset-0 z-30 lg:hidden" id={menuId}>
             <button
               type="button"
-              className="absolute inset-0 bg-foreground/30"
+              className="absolute inset-0 bg-black/60"
               aria-label="Close menu"
               onClick={() => setOpenOnPath(null)}
             />
@@ -81,12 +81,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 function Brand() {
   return (
     <Link href="/" className="mb-8 flex items-center gap-3 rounded-lg">
-      <span className="grid size-9 place-items-center rounded-lg bg-primary font-mono text-sm text-primary-foreground">
+      <span className="grid size-9 place-items-center rounded-lg bg-brand-gradient font-mono text-sm font-bold text-[#111116]">
         Sb
       </span>
       <span>
         <span className="block text-sm font-semibold">{APP_NAME}</span>
-        <span className="block text-xs text-muted-foreground">Devnet research preview</span>
+        <span className="block text-xs text-brand-green">Devnet research preview</span>
       </span>
     </Link>
   );
@@ -102,8 +102,10 @@ function Navigation({ pathname }: { pathname: string }) {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`rounded-lg px-3 py-2 text-sm whitespace-nowrap ${
-              active ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+            className={`rounded-lg border-l-2 px-3 py-2 text-sm whitespace-nowrap transition-colors ${
+              active
+                ? "border-brand-green bg-brand-purple/15 font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
             }`}
           >
             {item.label}

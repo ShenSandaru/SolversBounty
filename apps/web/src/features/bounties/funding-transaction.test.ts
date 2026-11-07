@@ -15,6 +15,8 @@ describe("funding transaction", () => {
     });
     expect(transaction.instructions).toHaveLength(2);
     expect(transaction.feePayer?.equals(from)).toBe(true);
-    expect(transaction.instructions[1]?.data).toEqual(new TextEncoder().encode("sb:deposit:bounty:reward_pool"));
+    expect(Array.from(transaction.instructions[1]?.data ?? [])).toEqual(
+      Array.from(new TextEncoder().encode("sb:deposit:bounty:reward_pool")),
+    );
   });
 });

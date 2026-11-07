@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { messageBytes } from "./signature";
-import { phantomMessageProvider, signPreparedMessage } from "./phantom-sign";
+import { phantomMessageProvider, signPreparedMessage, type PhantomMessageProvider } from "./phantom-sign";
 
 const message = "SolversBounty login\nWallet: wallet";
 
 describe("Phantom login signing", () => {
   it("asks Phantom to display the login message as utf8", async () => {
     const signature = new Uint8Array(64).fill(7);
-    const signMessage = vi.fn(async () => ({ signature }));
+    const signMessage = vi.fn<PhantomMessageProvider["signMessage"]>(async () => ({ signature }));
     const signed = await signPreparedMessage({
       message,
       adapterSign: async () => new Uint8Array(64),

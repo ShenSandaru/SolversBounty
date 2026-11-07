@@ -3,7 +3,7 @@ import { categoryLabels } from "@/lib/labels";
 
 export function CategoryBadge({ category }: { category: BountyCategory }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+    <span className="inline-flex items-center rounded-full border border-brand-purple/40 bg-brand-purple/15 px-2.5 py-1 text-xs font-medium text-[#d4b8ff]">
       {categoryLabels[category]}
     </span>
   );

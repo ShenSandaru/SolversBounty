@@ -167,14 +167,14 @@ export function WalletAuth() {
   const mismatch = session && address && session.walletAddress !== address;
 
   return (
-    <div className="flex max-w-xs flex-col items-end gap-2">
+    <div className="flex max-w-[11rem] shrink-0 flex-col items-end gap-2 sm:max-w-xs">
       <div className="flex flex-wrap items-center justify-end gap-2">
         {address ? (
           <p className="font-mono text-xs text-muted-foreground" title={address}>
             {shortAddress(address)}
           </p>
         ) : (
-          <p className="text-xs text-muted-foreground">{ready ? "Wallet not connected" : "Checking session"}</p>
+          <p className="hidden text-xs text-muted-foreground sm:block">{ready ? "Wallet not connected" : "Checking session"}</p>
         )}
         {address ? (
           <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void onDisconnect()}>

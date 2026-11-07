@@ -10,7 +10,7 @@ export function SiteFooter() {
           transfers are public.
         </p>
         <p>
-          <Link href="/bounties" className="underline-offset-4 hover:underline">
+          <Link href="/bounties" className="text-brand-green underline-offset-4 hover:underline">
             Browse challenges
           </Link>
         </p>

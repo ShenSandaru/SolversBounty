@@ -7,7 +7,7 @@ export function LoadingState({ label }: { label: string }) {
     >
       <p className="sr-only">{label}</p>
       {["one", "two", "three"].map((item) => (
-        <div key={item} className="h-52 animate-pulse rounded-xl border border-border bg-muted" />
+        <div key={item} className="h-52 animate-pulse rounded-xl border border-border bg-card" />
       ))}
     </div>
   );

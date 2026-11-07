@@ -15,6 +15,12 @@ type PhantomHost = {
   };
 };
 
+declare global {
+  interface Window {
+    phantom?: PhantomHost["phantom"];
+  }
+}
+
 export function phantomMessageProvider(host: PhantomHost | undefined): PhantomMessageProvider | null {
   const solana = host?.phantom?.solana;
   if (!solana || typeof solana.signMessage !== "function") {

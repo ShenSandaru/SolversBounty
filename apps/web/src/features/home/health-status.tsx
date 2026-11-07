@@ -22,11 +22,17 @@ export function HealthStatus() {
   }
 
   if (query.isError) {
-    return <p className="text-sm text-muted-foreground">API unavailable.</p>;
+    return (
+      <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
+        API unavailable.
+      </p>
+    );
   }
 
   return (
-    <p className="text-sm text-muted-foreground">
+    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+      <span className="size-2 rounded-full bg-brand-green" aria-hidden="true" />
       {query.data.service} API: {query.data.status}
     </p>
   );

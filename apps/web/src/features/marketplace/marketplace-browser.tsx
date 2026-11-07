@@ -31,7 +31,7 @@ export function MarketplaceBrowser({ bounties }: { bounties: PublicBounty[] }) {
   return (
     <div className="mt-6">
       <form
-        className="grid gap-3 rounded-xl border border-border bg-card p-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
+        className="surface grid gap-3 p-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
         onSubmit={(event) => event.preventDefault()}
       >
         <div>
@@ -74,7 +74,7 @@ export function MarketplaceBrowser({ bounties }: { bounties: PublicBounty[] }) {
           </Select>
         </div>
       </form>
-      <p className="mt-4 text-sm text-muted-foreground">
+      <p className="mt-5 text-sm text-muted-foreground" aria-live="polite">
         {visible.length} open {visible.length === 1 ? "challenge" : "challenges"}
       </p>
       {visible.length === 0 ? (
@@ -97,7 +97,7 @@ export function MarketplaceBrowser({ bounties }: { bounties: PublicBounty[] }) {
           />
         </div>
       ) : (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((bounty) => (
             <BountyCard key={bounty.id} bounty={bounty} />
           ))}

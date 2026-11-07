@@ -139,15 +139,19 @@ export function FundBountyPage({ id }: { id: string }) {
         title="Fund this bounty"
         description="Two separate SOL transfers are required. The reward pool stays available for solvers. The 5% commission is extra and is not taken from that pool. Nothing is sent until you approve each transfer in Phantom."
         actions={
-          <Link href={`/bounties/${id}/edit`} className="text-sm font-medium hover:underline">
-            Back to the draft
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href={`/bounties/${id}/edit`}>Back to the draft</Link>
+          </Button>
         }
       />
-      {!session ? <p className="mt-6 text-sm text-muted-foreground">Sign in to fund this bounty.</p> : null}
+      {!session ? (
+        <p className="surface mt-6 px-4 py-3 text-sm text-muted-foreground">
+          Sign in to fund this bounty. Phantom must approve each transfer. Nothing is sent from this page until you confirm it.
+        </p>
+      ) : null}
       {session && !funding && !error ? <p className="mt-6 text-sm text-muted-foreground">Loading funding requirements.</p> : null}
-      {error ? <p className="mt-6 text-sm text-destructive" role="alert">{error}</p> : null}
-      {notice ? <p className="mt-6 text-sm text-muted-foreground">{notice}</p> : null}
+      {error ? <p className="mt-6 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">{error}</p> : null}
+      {notice ? <p className="mt-6 rounded-lg border border-brand-green/40 bg-brand-green/10 px-3 py-2 text-sm" role="status">{notice}</p> : null}
       {funding ? <FundingSummary funding={funding} busy={busy} walletMatches={walletMatches} pending={pending} onSend={(purpose) => void sendTransfer(purpose)} onCheck={(purpose) => void checkSignature(purpose, pending[purpose] ?? "")} onActivate={() => void activate()} /> : null}
     </PageContainer>
   );
@@ -173,28 +177,56 @@ function FundingSummary({
   const pool = funding.obligations.find((item) => item.purpose === "reward_pool");
   const commission = funding.obligations.find((item) => item.purpose === "commission");
   return (
-    <div className="mt-6 grid gap-4">
-      <dl className="grid gap-3 sm:grid-cols-2">
-        <Figure label="Reward per solver" value={`${formatLamportsAsSol(BigInt(funding.rewardLamports))} SOL`} />
-        <Figure label="Maximum rewarded solvers" value={String(funding.maxRewardedSolvers)} />
-        <Figure label="Reward pool" value={`${formatLamportsAsSol(BigInt(funding.rewardPoolLamports))} SOL`} />
-        <Figure label="Platform commission (5%)" value={`${formatLamportsAsSol(BigInt(funding.commissionLamports))} SOL`} />
-        <Figure label="Total you send" value={`${formatLamportsAsSol(BigInt(funding.totalFundingLamports))} SOL`} />
-        <Figure label="Treasury" value={funding.treasuryAddress} />
-        <Figure label="Funded principal" value={`${formatLamportsAsSol(BigInt(funding.buckets.funded))} SOL`} />
-        <Figure label="Unallocated principal" value={`${formatLamportsAsSol(BigInt(funding.buckets.refundable))} SOL`} />
-      </dl>
-      <p className="text-sm text-muted-foreground">Status: {funding.status}. Network: Devnet. Custody is custodial, not escrow.</p>
-      {pool ? <ObligationRow label="Reward pool" obligation={pool} pending={pending.reward_pool} disabled={!walletMatches || busy !== null} onSend={() => onSend("reward_pool")} onCheck={() => onCheck("reward_pool")} /> : null}
-      {commission ? <ObligationRow label="Commission" obligation={commission} pending={pending.commission} disabled={!walletMatches || busy !== null} onSend={() => onSend("commission")} onCheck={() => onCheck("commission")} /> : null}
-      {!walletMatches ? <p className="text-sm text-muted-foreground">Connect the same wallet you used to sign in. The transfer is approved only when you confirm it in Phantom.</p> : null}
-      <div>
-        <Button type="button" disabled={!funding.canActivate || busy !== null} onClick={onActivate}>
+    <div className="mt-8 grid gap-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <section className="surface relative overflow-hidden border-brand-green/30 p-5" aria-labelledby="pool-heading">
+          <p className="text-xs font-semibold tracking-[0.12em] text-brand-green uppercase">Transfer 1 · Solver rewards</p>
+          <h2 id="pool-heading" className="mt-1 text-lg font-semibold">Reward pool</h2>
+          <p className="mt-3 font-mono text-3xl font-semibold text-reward">{formatLamportsAsSol(BigInt(funding.rewardPoolLamports))} <span className="text-sm">SOL</span></p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {formatLamportsAsSol(BigInt(funding.rewardLamports))} SOL for each of up to {funding.maxRewardedSolvers} solvers.
+          </p>
+          {pool ? <ObligationRow label="Reward pool" obligation={pool} pending={pending.reward_pool} disabled={!walletMatches || busy !== null} sending={busy === "reward_pool"} onSend={() => onSend("reward_pool")} onCheck={() => onCheck("reward_pool")} /> : null}
+        </section>
+        <section className="surface relative overflow-hidden border-brand-purple/40 p-5" aria-labelledby="commission-heading">
+          <p className="text-xs font-semibold tracking-[0.12em] text-[#d4b8ff] uppercase">Transfer 2 · Platform fee</p>
+          <h2 id="commission-heading" className="mt-1 text-lg font-semibold">Commission (5%)</h2>
+          <p className="mt-3 font-mono text-3xl font-semibold">{formatLamportsAsSol(BigInt(funding.commissionLamports))} <span className="text-sm">SOL</span></p>
+          <p className="mt-2 text-sm text-muted-foreground">Extra. It is not taken from the reward pool.</p>
+          {commission ? <ObligationRow label="Commission" obligation={commission} pending={pending.commission} disabled={!walletMatches || busy !== null} sending={busy === "commission"} onSend={() => onSend("commission")} onCheck={() => onCheck("commission")} /> : null}
+        </section>
+      </div>
+      <div className="surface gradient-border relative grid gap-4 overflow-hidden p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div>
+          <p className="text-xs tracking-[0.12em] text-muted-foreground uppercase">Total you send</p>
+          <p className="mt-1 font-mono text-3xl font-semibold">{formatLamportsAsSol(BigInt(funding.totalFundingLamports))} SOL</p>
+          <p className="mt-2 text-sm text-muted-foreground">Status: <StatusPill value={funding.status} />. Network: Devnet. Custody is custodial, not escrow.</p>
+        </div>
+        <Button type="button" size="lg" disabled={!funding.canActivate || busy !== null} aria-busy={busy === "activate"} onClick={onActivate}>
           {busy === "activate" ? "Activating" : funding.status === "active" ? "Active" : "Activate bounty"}
         </Button>
       </div>
+      {!walletMatches ? <p className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm" role="status">Connect the same wallet you used to sign in. The transfer is approved only when you confirm it in Phantom.</p> : null}
+      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Figure label="Maximum rewarded solvers" value={String(funding.maxRewardedSolvers)} />
+        <Figure label="Funded principal" value={`${formatLamportsAsSol(BigInt(funding.buckets.funded))} SOL`} />
+        <Figure label="Unallocated principal" value={`${formatLamportsAsSol(BigInt(funding.buckets.refundable))} SOL`} />
+        <div className="sm:col-span-2 lg:col-span-3">
+          <Figure label="Custodial Devnet treasury" value={funding.treasuryAddress} mono />
+        </div>
+      </dl>
     </div>
   );
+}
+
+function StatusPill({ value }: { value: string }) {
+  const tone =
+    value === "confirmed" || value === "active"
+      ? "border-brand-green/40 bg-brand-green/10 text-brand-green"
+      : value === "failed" || value === "rejected"
+        ? "border-destructive/40 bg-destructive/10 text-destructive"
+        : "border-warning/40 bg-warning/10 text-warning";
+  return <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${tone}`}>{value.replaceAll("_", " ")}</span>;
 }
 
 function ObligationRow({
@@ -202,6 +234,7 @@ function ObligationRow({
   obligation,
   pending,
   disabled,
+  sending,
   onSend,
   onCheck,
 }: {
@@ -209,29 +242,33 @@ function ObligationRow({
   obligation: FundingView["obligations"][number];
   pending: string | null;
   disabled: boolean;
+  sending: boolean;
   onSend: () => void;
   onCheck: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3">
+    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
       <div>
-        <p className="font-medium">{label}</p>
-        <p className="text-sm text-muted-foreground">{obligation.status}{obligation.commitment ? ` · ${obligation.commitment}` : ""}</p>
+        <p className="sr-only">{label} transfer</p>
+        <StatusPill value={obligation.status} />
+        {obligation.commitment ? <span className="ml-2 text-xs text-muted-foreground">{obligation.commitment}</span> : null}
       </div>
-      {obligation.status === "confirmed" ? null : pending ? (
+      {obligation.status === "confirmed" ? (
+        <span className="text-sm font-medium text-brand-green">Confirmed</span>
+      ) : pending ? (
         <Button type="button" variant="outline" disabled={disabled} onClick={onCheck}>Check confirmation</Button>
       ) : (
-        <Button type="button" disabled={disabled} onClick={onSend}>Send SOL</Button>
+        <Button type="button" disabled={disabled} aria-busy={sending} onClick={onSend}>{sending ? "Waiting for Phantom" : "Send SOL"}</Button>
       )}
     </div>
   );
 }
 
-function Figure({ label, value }: { label: string; value: string }) {
+function Figure({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="rounded-xl border border-border px-4 py-3">
+    <div className="surface px-4 py-3">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="mt-1 break-all font-medium">{value}</dd>
+      <dd className={`mt-1 break-all font-medium ${mono ? "font-mono text-sm" : ""}`}>{value}</dd>
     </div>
   );
 }

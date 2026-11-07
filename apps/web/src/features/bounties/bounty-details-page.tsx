@@ -39,15 +39,15 @@ export function BountyDetailsPage({ id }: { id: string }) {
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <CategoryBadge category={bounty.category} />
         <DifficultyBadge level={bounty.difficulty} />
-        <span className="rounded-full border border-border px-2.5 py-1 text-xs font-medium">
+        <span className="rounded-full border border-input bg-secondary px-2.5 py-1 text-xs font-medium">
           {closedLabel ?? statusLabels[bounty.status]}
         </span>
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.8fr)]">
         <div className="grid gap-6">
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="surface p-6">
             <h2 className="text-lg font-semibold">Question</h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-7">{bounty.prompt}</p>
+            <p className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-background px-4 py-3 text-base leading-8">{bounty.prompt}</p>
             {bounty.instructions ? (
               <>
                 <h3 className="mt-6 text-sm font-semibold">Instructions</h3>
@@ -55,7 +55,7 @@ export function BountyDetailsPage({ id }: { id: string }) {
               </>
             ) : null}
           </section>
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="surface p-6">
             <h2 className="text-lg font-semibold">Challenge rules</h2>
             <ul className="mt-3 grid gap-2 text-sm leading-6 text-muted-foreground">
               <li>Attempt limit: {bounty.attemptLimit} stored attempts for each solver.</li>
@@ -66,7 +66,7 @@ export function BountyDetailsPage({ id }: { id: string }) {
               <li>Deadline is {formatDeadline(bounty.deadline)}.</li>
             </ul>
           </section>
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="surface p-6">
             <h2 className="text-lg font-semibold">Answer submission</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Placeholder. Submitting an answer, checking it, and deciding a reward are not
@@ -84,7 +84,7 @@ export function BountyDetailsPage({ id }: { id: string }) {
               Submit answer
             </Button>
           </section>
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="surface p-6">
             <h2 className="text-lg font-semibold">Research participation</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               A session starts only after consent to policy research-consent-v1. The record can
@@ -94,8 +94,8 @@ export function BountyDetailsPage({ id }: { id: string }) {
             </p>
           </section>
         </div>
-        <aside className="grid h-fit gap-4 rounded-xl border border-border bg-card p-5">
-          <RewardDisplay lamports={bounty.rewardLamports} />
+        <aside className="surface gradient-border relative grid h-fit gap-4 overflow-hidden p-6 lg:sticky lg:top-24">
+          <RewardDisplay lamports={bounty.rewardLamports} size="lg" />
           <p className="text-sm text-muted-foreground">Pool principal {principal} SOL</p>
           <ProgressIndicator
             value={bounty.rewardedCount}

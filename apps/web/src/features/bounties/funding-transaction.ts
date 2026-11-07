@@ -26,7 +26,7 @@ export function buildFundingTransaction(input: {
     new TransactionInstruction({
       keys: [],
       programId: MEMO_PROGRAM,
-      data: new TextEncoder().encode(input.memo),
+      data: Buffer.from(input.memo, "utf8"),
     }),
   );
   return transaction;

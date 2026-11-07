@@ -44,7 +44,7 @@ export function EditBountyPage({ id }: { id: string }) {
         title={draft?.title ?? "Your bounty"}
         description="Updates stay on the draft. Funding uses two separate SOL transfers to the custodial Devnet treasury."
         actions={
-          <Link href="/dashboard" className="text-sm font-medium hover:underline">
+          <Link href="/dashboard" className="text-sm font-medium text-brand-green hover:underline">
             Back to drafts
           </Link>
         }

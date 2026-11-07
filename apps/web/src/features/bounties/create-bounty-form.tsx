@@ -61,10 +61,18 @@ export function CreateBountyForm({
   const rewardSol = useWatch({ control: form.control, name: "rewardSol" });
   const maxRewardedSolvers = useWatch({ control: form.control, name: "maxRewardedSolvers" });
   const rewardLamports = parseSolToLamports(rewardSol);
-  const principal =
+  const principalValue =
     rewardLamports !== null && Number.isInteger(maxRewardedSolvers) && maxRewardedSolvers > 0
-      ? formatLamportsAsSol(principalLamports(rewardLamports, maxRewardedSolvers))
+      ? principalLamports(rewardLamports, maxRewardedSolvers)
       : null;
+  const principal = principalValue === null ? null : formatLamportsAsSol(principalValue);
+  // Display estimate only. The API computes and stores the authoritative commission (ADR-007).
+  const commissionValue = principalValue === null ? null : (principalValue * 5n) / 100n;
+  const commission = commissionValue === null ? null : formatLamportsAsSol(commissionValue);
+  const total =
+    principalValue === null || commissionValue === null
+      ? null
+      : formatLamportsAsSol(principalValue + commissionValue);
 
   return (
     <form
@@ -98,8 +106,8 @@ export function CreateBountyForm({
         })(event);
       }}
     >
-      <section className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:p-6">
-        <h2 className="text-lg font-semibold">Challenge</h2>
+      <section className="surface grid gap-4 p-5 sm:p-6">
+        <SectionHeading step="1" title="Challenge" />
         <Field label="Bounty title" error={form.formState.errors.title?.message} htmlFor="title">
           <Input id="title" {...form.register("title")} />
         </Field>
@@ -173,8 +181,8 @@ export function CreateBountyForm({
         </Field>
       </section>
 
-      <section className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:p-6">
-        <h2 className="text-lg font-semibold">Reward terms</h2>
+      <section className="surface grid gap-4 p-5 sm:p-6">
+        <SectionHeading step="2" title="Reward terms" />
         <div className="grid gap-4 sm:grid-cols-3">
           <Field
             label="Reward per solver (SOL)"
@@ -214,17 +222,31 @@ export function CreateBountyForm({
         <Field label="Deadline" error={form.formState.errors.deadline?.message} htmlFor="deadline">
           <Input id="deadline" type="datetime-local" {...form.register("deadline")} />
         </Field>
-        <p className="rounded-lg bg-muted px-3 py-2 text-sm">
-          Principal{" "}
-          <span className="font-mono text-reward">{principal ?? "—"} SOL</span>
-          <span className="mt-1 block text-muted-foreground">
-            Reward per solver times max rewarded solvers. This preview does not fund the pool.
-          </span>
-        </p>
+        <div className="rounded-xl border border-brand-green/25 bg-brand-green/[0.05] p-4" aria-live="polite">
+          <h3 className="text-xs font-semibold tracking-[0.12em] text-brand-green uppercase">Reward calculation preview</h3>
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-muted-foreground">Reward pool</dt>
+              <dd className="mt-1 font-mono text-lg text-reward">{principal ?? "—"} SOL</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Commission (5%, paid separately)</dt>
+              <dd className="mt-1 font-mono text-lg">{commission ?? "—"} SOL</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Total to fund</dt>
+              <dd className="mt-1 font-mono text-lg font-semibold">{total ?? "—"} SOL</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            Reward per solver times max rewarded solvers, plus the platform commission. This is an
+            estimate. The server stores the final amounts, and saving does not fund the pool.
+          </p>
+        </div>
       </section>
 
-      <section className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:p-6">
-        <h2 className="text-lg font-semibold">Research consent</h2>
+      <section className="surface grid gap-4 p-5 sm:p-6">
+        <SectionHeading step="3" title="Research consent" />
         <p className="text-sm leading-6 text-muted-foreground">
           Policy version research-consent-v1. A solving session cannot start until the solver
           accepts it. The record covers wallet address, attempts, times, submitted answers, and
@@ -233,7 +255,7 @@ export function CreateBountyForm({
         <label className="flex items-start gap-3 text-sm leading-6">
           <input
             type="checkbox"
-            className="mt-1 size-4"
+            className="mt-1 size-4 accent-brand-purple"
             {...form.register("consentAcknowledged")}
           />
           <span>I understand solvers must accept this research consent before a session starts.</span>
@@ -252,13 +274,13 @@ export function CreateBountyForm({
         <p className="text-sm text-muted-foreground">Saves a draft. It does not fund or activate the bounty.</p>
       </div>
       {message ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
           {message}
         </p>
       ) : null}
 
       {saved && phase === "saved" ? (
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6" aria-live="polite">
+        <section className="surface gradient-border relative overflow-hidden p-5 sm:p-6" aria-live="polite">
           <h2 className="text-lg font-semibold">Draft saved</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {saved.title} is a draft. The expected answer is stored by the API and is not shown here.
@@ -311,5 +333,16 @@ function Field({
         </p>
       ) : null}
     </div>
+  );
+}
+
+function SectionHeading({ step, title }: { step: string; title: string }) {
+  return (
+    <h2 className="flex items-center gap-3 text-lg font-semibold">
+      <span className="grid size-7 place-items-center rounded-full bg-brand-gradient font-mono text-xs font-bold text-[#111116]" aria-hidden="true">
+        {step}
+      </span>
+      {title}
+    </h2>
   );
 }
