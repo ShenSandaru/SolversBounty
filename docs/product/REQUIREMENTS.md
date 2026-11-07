@@ -873,7 +873,7 @@ Acceptance criteria:
 - Deadline or `fully_allocated` closure does not transfer unused principal to the creator.
 - The retained amount is not posted as `paid` or as `refunded`, and [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) does not deduct it from `refundable`.
 - The reward-pool identity remains `funded = reserved + paid + refundable + refunded`.
-- Reports must not add retained revenue on top of `refundable` as a second holding. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed and approves no schema.
+- Reports must not add retained revenue on top of `refundable` as a second holding. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is accepted and approves no schema.
 - Cancelled, never-activated, failed or incomplete funding, creator close, and admin close do not use this rule.
 - Solvers pay no participation fee.
 

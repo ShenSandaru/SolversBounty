@@ -1,9 +1,9 @@
 # ADR-011 Simplified MVP platform revenue accounting
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-11-07
 
-Proposed — pending review. This record is not binding. It does not approve tables, columns, enum values, ledger entry types, or transaction structures. It does not implement revenue collection. Requirement statuses stay `not_started`.
+This decision does not approve tables, columns, enum values, ledger entry types, or transaction structures. It does not implement revenue collection. Requirement statuses stay `not_started`.
 
 ## Context
 
@@ -104,7 +104,7 @@ The revenue record proposed here is a reference to that existing balance, not a 
 ## Accounting requirements
 
 - Amounts are integer lamports, using a `BigInt`-compatible representation.
-- Platform revenue stays outside solver reward-pool principal.
+- Commission revenue stays outside `funded`. Retained reward revenue classifies principal that remains in `refundable`.
 - Commission revenue and retained reward revenue stay distinct.
 - A revenue record names its source, its bounty, and the funding or closure event it comes from.
 - Posting is idempotent so the same event is not recognized twice.
@@ -135,7 +135,7 @@ No revenue table name, Prisma model, ledger entry enum value, column, relationsh
 - ADR-004: Immediate individual solver payouts.
 - ADR-005: Solana `confirmed` commitment.
 - ADR-007: Company platform commission. Accepted. This proposal does not change the 5% rate.
-- ADR-008: Unused reward pool retention. Accepted. Retained lamports stay in `refundable`. This proposal does not change that rule. It remains a proposed recognition record only.
+- ADR-008: Unused reward pool retention. Accepted. Retained lamports stay in `refundable`. This decision does not change that rule and approves no table, column, or entry type.
 
 ## Consequences
 

@@ -66,7 +66,7 @@ Status meanings:
 | [ADR-008 Unused reward pool retention](ADR-008-unused-reward-pool-retention.md) | accepted | After deadline or the participant cap, unallocated principal is platform revenue and stays in `refundable`. Not a second asset or a creator refund. E1 unchanged |
 | [ADR-009 Minimal research analytics](ADR-009-minimal-research-analytics.md) | accepted | MVP records correctness, attempt count, completion time, and participant count. Strategies, explanations, answer changes, and export are later |
 | [ADR-010 Role-based analytics visibility](ADR-010-role-based-analytics-visibility.md) | accepted | Creators see aggregates for their own bounties. Administrators see platform aggregates. Neither sees individual solver research records or wallets in analytics |
-| [ADR-011 Simplified MVP platform revenue accounting](ADR-011-separate-platform-revenue-ledger.md) | proposed | Commission is outside the pool. Retained principal stays in `refundable` and is classified, not deducted. No schema approved |
+| [ADR-011 Simplified MVP platform revenue accounting](ADR-011-separate-platform-revenue-ledger.md) | accepted | Commission stays outside `funded`. Retained principal stays in `refundable` and is classified, not a second asset. No schema approved |
 
 ## How to supersede
 
