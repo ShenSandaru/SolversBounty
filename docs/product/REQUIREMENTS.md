@@ -852,7 +852,7 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: rewards, bounties
-- Description: The unallocated reward-pool balance stays in the ledger through close, expiry, and full allocation. `refundable` is that balance. It does not by itself entitle the creator to a refund. ADR-008 retains the remainder as platform revenue after the deadline or the participant cap. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed and does not approve a posting that removes that remainder from `refundable`. The retention posting is not specified and is not implemented. No creator refund is sent for that balance. Status stays `not_started`.
+- Description: The unallocated reward-pool balance stays in the ledger through close, expiry, and full allocation. `refundable` is that balance. It does not by itself entitle the creator to a refund. [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) retains the remainder as platform revenue after the deadline or the participant cap and keeps those lamports in `refundable`. A revenue classification of that balance is not a second asset. Retention is not implemented. No creator refund is sent for that balance. Status stays `not_started`.
 
 Acceptance criteria:
 
@@ -871,9 +871,9 @@ Acceptance criteria:
 Acceptance criteria:
 
 - Deadline or `fully_allocated` closure does not transfer unused principal to the creator.
-- The retained amount is not posted as `paid` or as `refunded`.
+- The retained amount is not posted as `paid` or as `refunded`, and [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md) does not deduct it from `refundable`.
 - The reward-pool identity remains `funded = reserved + paid + refundable + refunded`.
-- Subtracting the retained amount from `refundable` without another identity term is not specified. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed and does not approve that posting.
+- Reports must not add retained revenue on top of `refundable` as a second holding. [ADR-011](../decisions/ADR-011-separate-platform-revenue-ledger.md) is proposed and approves no schema.
 - Cancelled, never-activated, failed or incomplete funding, creator close, and admin close do not use this rule.
 - Solvers pay no participation fee.
 

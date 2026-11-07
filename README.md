@@ -136,7 +136,7 @@ Use these terms in copy, code, and docs.
 | Reward allocation | The single reserved reward for one solver on one bounty. |
 | Payout | The on-chain transfer attempt for one allocation. |
 | Treasury | Backend-managed custodial Devnet wallet that holds reward SOL. |
-| Refundable balance | Unallocated reward-pool lamports not reserved, paid, or refunded. The name is an accounting balance, not a creator refund entitlement. After the deadline or the participant cap, [ADR-008](docs/decisions/ADR-008-unused-reward-pool-retention.md) retains this remainder as platform revenue. It is not added to `paid`. |
+| Refundable balance | Unallocated reward-pool lamports not reserved, paid, or refunded. The name is an accounting balance, not a creator refund entitlement. After the deadline or the participant cap, [ADR-008](docs/decisions/ADR-008-unused-reward-pool-retention.md) retains this remainder as platform revenue and keeps the lamports in this balance. They are not a second asset and are not added to `paid`. |
 | Max rewarded solvers | Maximum number of wallets that may receive the reward. |
 | Pseudonymous | Identified by wallet address, without a claim of real-world uniqueness or anonymity. |
 

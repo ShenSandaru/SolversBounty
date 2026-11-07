@@ -66,9 +66,11 @@ funded = reserved + paid + refundable + refunded
 
 Retained unused reward principal must be accounted for separately as platform revenue after normal bounty closure.
 
+For the MVP, that separate accounting recognizes the unallocated principal that remains in `refundable`. It does not remove those lamports from `refundable`, does not add a reward-pool bucket, and does not create a second custody balance. Reports must not add `refundable` and retained revenue together as two holdings of the same principal. The `refundable` label does not entitle the creator to a refund.
+
 Commission revenue remains separate from reward-pool accounting and is not part of `funded`.
 
-This decision does not add database fields, ledger entry types, or a posting procedure. The precise ledger representation of retained platform revenue is an implementation-planning item.
+This decision does not add database fields, ledger entry types, or a posting procedure. The precise record used for that recognition is an implementation-planning item. The reward-pool treatment is fixed: the retained lamports stay in `refundable`.
 
 ## Consequences
 

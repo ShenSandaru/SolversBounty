@@ -33,20 +33,28 @@ Keep the reward-pool identity. Record platform revenue separately from that iden
 | `funded` | Confirmed creator-funded solver reward principal |
 | `reserved` | Solver rewards allocated but not yet confirmed as paid |
 | `paid` | Confirmed solver payouts only |
-| `refundable` | Unallocated reward principal that has not yet been paid, refunded, or retained |
+| `refundable` | Unallocated reward principal that has not been paid or refunded. After normal closure the lamports stay here |
 | `refunded` | Confirmed creator refunds, where an accepted policy permits them |
 
-`refundable` is an accounting balance. It does not by itself entitle the creator to a refund. Refund entitlement stays with the accepted product decisions. [ADR-008](ADR-008-unused-reward-pool-retention.md) does not entitle the creator to the remainder after deadline or the participant cap.
+`refundable` is an accounting classification inside the reward-pool identity. It does not by itself entitle the creator to a refund. Refund entitlement stays with the accepted product decisions. [ADR-008](ADR-008-unused-reward-pool-retention.md) does not entitle the creator to the remainder after deadline or the participant cap.
 
-The word "retained" in the `refundable` definition is that economic outcome. It is not a subtraction from the balance. While the closeout posting below stays unresolved, principal that ADR-008 retains still sits in `refundable`.
+After that normal closure, the unallocated principal stays in `refundable`. This proposal does not deduct it.
 
-`paid` and `refunded` are not redefined.
+Three different ideas stay separate:
+
+| Idea | What it is |
+| --- | --- |
+| Reward-pool accounting balance | The identity terms. The 0.40 SOL remainder is `refundable` |
+| Platform revenue recognition | A record that classifies that same 0.40 SOL as retained revenue, plus the separate 0.05 SOL commission |
+| Custody balance | SOL held by the custodial treasury on Devnet. One on-chain balance. Not a second copy of the ledger |
+
+`paid` and `refunded` are not redefined. No new reward-pool bucket is added.
 
 ### Platform revenue record
 
 **Commission revenue.** 5% of the original solver reward pool, paid separately by the creator under ADR-007, and recorded apart from solver reward principal. The rate applies to the pool, not to the creator's total payment.
 
-**Retained reward revenue.** Unallocated reward principal retained under ADR-008. This source applies only when a bounty reaches its deadline or its maximum rewarded participant limit. It is not a solver payout and not a creator refund.
+**Retained reward revenue.** A classification of the unallocated principal that remains in `refundable` after a bounty reaches its deadline or its maximum rewarded participant limit under ADR-008. The record refers to that existing reward-pool amount. It is not a solver payout, not a creator refund, and not an additional financial balance.
 
 No other revenue source is part of this proposal.
 
@@ -63,7 +71,7 @@ For normal closure:
 1. The bounty reaches its deadline or its maximum rewarded participant limit.
 2. Outstanding reserved solver payouts are reconciled under [ADR-004](ADR-004-immediate-individual-solver-payouts.md). Confirmation still follows [ADR-005](ADR-005-solana-confirmed-commitment.md).
 3. Remaining unallocated reward principal is retained by SolversBounty under ADR-008.
-4. That retained amount is recorded separately as platform revenue, linked to the bounty and the closure event.
+4. That retained amount is recognized in a separate revenue record linked to the bounty and the closure event. The record classifies the `refundable` remainder. It does not move those lamports.
 5. The same retained amount is not counted twice.
 
 ### How the example balances
@@ -85,19 +93,13 @@ With `reserved = 0` and `refunded = 0` after those payouts confirm, the reward-p
 funded 1.00 = paid 0.60 + refundable 0.40
 ```
 
-The 0.05 SOL commission is outside `funded`. Total platform revenue is that commission plus the 0.40 SOL remainder. The 0.40 SOL is one amount. Adding platform revenue on top of `refundable` counts it twice.
+The 0.05 SOL commission is outside `funded`. It is its own revenue amount because the creator paid it on top of the pool.
 
-### What is not yet resolved
+The 0.40 SOL is one amount. It is both the `refundable` term in the identity and the retained-revenue classification. A report of platform assets uses the custody balance, or the reward-pool terms, once. A report of platform revenue may list 0.05 SOL commission and 0.40 SOL retained principal. Adding that 0.40 SOL again to `refundable`, to `funded`, or to the treasury balance counts the same principal twice.
 
-Accepted decisions do not provide a posting that removes the retained 0.40 SOL from `refundable` and still keeps the identity true.
+This proposal does not remove the 0.40 SOL from `refundable`. [ADR-008](ADR-008-unused-reward-pool-retention.md) now requires that treatment: the retained lamports stay in `refundable`, are not a second custody balance, and are not added again when reporting holdings. Removing them would make `funded 1.00 = paid 0.60 + refundable 0.00` false. ADR-008 also forbids parking the remainder in `paid` or `refunded`. No fifth identity term is added.
 
-- The identity has these terms only: `funded`, `reserved`, `paid`, `refundable`, and `refunded`.
-- ADR-008 forbids posting the remainder as `paid` or as `refunded`.
-- Subtracting 0.40 SOL from `refundable` while leaving `funded` at 1.00 SOL and `paid` at 0.60 SOL makes the identity false: 1.00 ≠ 0.60.
-- Reducing `funded` by the same amount would stop `funded` from meaning cumulative confirmed reward-pool principal. No accepted decision allows that.
-- This proposal does not add a fifth identity term.
-
-Until a later design supplies a matching movement, the retained-revenue record can only recognize the `refundable` remainder that the identity already holds. That recognition is not a second pile of lamports. The posting that would reclassify those lamports without breaking the identity or double-counting them is unresolved. This ADR does not invent that posting, a table, or an entry type.
+The revenue record proposed here is a reference to that existing balance, not a second asset. The shape of the record remains an implementation-planning item. This proposal still approves no table, column, enum value, or transaction structure.
 
 ## Accounting requirements
 
@@ -133,13 +135,13 @@ No revenue table name, Prisma model, ledger entry enum value, column, relationsh
 - ADR-004: Immediate individual solver payouts.
 - ADR-005: Solana `confirmed` commitment.
 - ADR-007: Company platform commission. Accepted. This proposal does not change the 5% rate.
-- ADR-008: Unused reward pool retention. Accepted for deadline and the participant cap. This proposal does not change that policy.
+- ADR-008: Unused reward pool retention. Accepted. Retained lamports stay in `refundable`. This proposal does not change that rule. It remains a proposed recognition record only.
 
 ## Consequences
 
 - Commission and retained principal can be reported without calling either one a solver payout.
 - `refundable` remains a balance name, not a promise to pay the creator.
-- Closeout still needs a later design before the lamports can leave `refundable` without breaking the identity.
+- Retained principal stays inside `refundable`. The revenue record does not create a second asset.
 - Exceptional endings stay unspecified.
 
 ## Alternatives
@@ -147,5 +149,5 @@ No revenue table name, Prisma model, ledger entry enum value, column, relationsh
 | Alternative | Why it was not selected |
 | --- | --- |
 | Post retained principal as `paid` or `refunded` | Those terms already have accepted meanings. ADR-008 forbids both |
-| Subtract the remainder from `refundable` and leave the identity short | The equation would no longer hold |
-| Specify tables and entry types in this proposal | The identity-preserving posting is still unresolved |
+| Subtract the remainder from `refundable` | The identity would be short, and this proposal keeps those lamports in `refundable` |
+| Treat the revenue record as a second holding of the same 0.40 SOL | That double-counts principal already in the reward pool and in the treasury |
