@@ -218,15 +218,15 @@ Mitigation: Insert the chain row and the `deposit`, `settle`, or `refund` entry 
 - Severity: Medium
 - Kind: Future risk
 - Component: `SubmissionAttempt.submittedAnswer`, PD-19
-- Blocks MVP: Blocks the submission write and any creator review API
+- Blocks MVP: Blocks the submission write
 
-Description: PD-19, still proposed, stores the submitted answer in plaintext for the owner and the solver. The expected answer is a different column and a different rule. There is no row-level policy. Explanation text, if PD-10 is later built, has the same audience.
+Description: PD-19, still proposed, stores the submitted answer in plaintext for verification and the solver's own history. Creator and administrator analytics do not return that text or the solver wallet ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). The expected answer is a different column and a different rule. There is no row-level policy. Explanation text is not collected in the MVP.
 
 Impact: Any handler or export that selects the column publishes research text. A database backup is readable without the answer-encryption key.
 
 Attack scenario: The public bounty DTO is built from the attempt include. Another solver, or a public analytics route, receives the text.
 
-Mitigation: Select the column only on the owner route and the solver's own history. Aggregates must count in SQL and must not load the text. Audit `metadata` stays `{}` or ids. CSV, when it exists, omits the text and the wallet. Do not log the column.
+Mitigation: Select the column only for the submitting solver's own history. Creator and administrator analytics must count in SQL and must not load the text or the solver wallet. Audit `metadata` stays `{}` or ids. CSV, when it exists, omits the text and the wallet. Do not log the column.
 
 ### SEC-M6 Liveness does not include the database
 
@@ -559,11 +559,7 @@ Superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). Fu
 
 ### PD-14 Wallet-linked research
 
-Options: owner-only rows that include the wallet, or aggregates only.
-
-Implications: Owner rows are still personal data. Public pages and CSV stay aggregated and wallet-free either way.
-
-Recommendation, not a decision: default reports stay aggregated. A private owner view may show wallet-linked attempts. Exports omit wallets.
+Superseded for analytics visibility by [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md). Creators see aggregates for their own bounties. Administrators see platform, bounty, and creator aggregates of the ADR-009 metrics. Neither role receives individual solver research records or solver wallet addresses through analytics. Operational administration is a separate path and does not grant those records. ADR-010 does not implement the checks.
 
 ### PD-15 Treasury key location
 

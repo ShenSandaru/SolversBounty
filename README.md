@@ -13,7 +13,7 @@ The hackathon MVP uses a **backend-managed custodial Devnet treasury**. Wallet l
 SolversBounty has two equal purposes:
 
 1. **Human intelligence marketplace.** Creators publish cognitive challenges and fund rewards. Eligible correct solvers receive a fixed micro-payment, one reward per wallet per bounty.
-2. **Human reasoning research.** With explicit consent, the MVP records four observed metrics: correctness, attempt count, completion time, and participant count ([ADR-009](docs/decisions/ADR-009-minimal-research-analytics.md)). Strategy surveys, written explanations, answer-change history, and research export are not in the MVP.
+2. **Human reasoning research.** With explicit consent, the MVP records four observed metrics: correctness, attempt count, completion time, and participant count ([ADR-009](docs/decisions/ADR-009-minimal-research-analytics.md)). Creators see aggregates for their own bounties. Administrators may see platform aggregates. Neither sees solver wallet addresses or individual research records in analytics ([ADR-010](docs/decisions/ADR-010-role-based-analytics-visibility.md)). Strategy surveys, written explanations, answer-change history, and research export are not in the MVP.
 
 The product is privacy-conscious. It does not promise anonymity. A wallet address is a pseudonym, and Solana transactions are public. The MVP does not collect email addresses, passwords, or KYC data.
 
@@ -128,7 +128,7 @@ Use these terms in copy, code, and docs.
 | Challenge | Solver-facing name for a bounty. |
 | Creator | Authenticated wallet that owns a bounty. |
 | Solver | Authenticated wallet that attempts a bounty. |
-| Administrator | Allowlisted wallet with the `admin` role. Proposed in PD-04. |
+| Administrator | Allowlisted wallet with the `admin` role (PD-04). May read platform aggregated analytics. May not read individual solver research records through analytics ([ADR-010](docs/decisions/ADR-010-role-based-analytics-visibility.md)). |
 | Expected answer | Creator-defined answer. Hidden from public APIs. |
 | Submitted answer | Text the solver sent for one attempt. |
 | Solving session | One solver's server-timed attempt window on one bounty. |

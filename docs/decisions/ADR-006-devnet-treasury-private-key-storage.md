@@ -77,7 +77,7 @@ Existing decisions remain unchanged:
 - ADR-004: Immediate individual solver payouts.
 - ADR-005: Solana `confirmed` commitment requirement.
 
-Eligibility rule E1 and the ledger identity are unchanged. PD-08 and PD-14 remain proposed.
+Eligibility rule E1 and the ledger identity are unchanged. Unused principal after deadline or the participant cap follows ADR-008. Analytics visibility follows ADR-010. This ADR does not change either.
 
 ## Alternatives
 

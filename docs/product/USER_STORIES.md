@@ -95,6 +95,7 @@ Acceptance criteria:
 - Given two sessions, one of which becomes correct on the second attempt, when I open analytics, then participants, correct count, incorrect count, accuracy, average completion time, and attempt count match section 5.8.
 - Given no sessions, when I open analytics, then I see an empty state rather than an error.
 - Given I do not own the bounty, when I request analytics, then I receive no private counts.
+- Given the analytics response, when I inspect it, then it has no solver wallet address and no individual answer history.
 - Given a solver sends a client clock, when metrics are computed, then only server timestamps are used.
 - Given a correct attempt that fails E1, when analytics are shown, then it counts as correct and creates no payout.
 
@@ -277,7 +278,23 @@ Requirements: ADMIN-004, MARKET-006.
 Acceptance criteria:
 
 - Given an active bounty, when I close it as admin, then the close reason is `admin` and new sessions fail.
+- Given I am not an administrator, when I request that close, then the API refuses it. Hiding the control is not the check.
 - Given a refundable balance, when I close it, then no refund transfer is sent by that action, and the balance is not retained under ADR-008 by that action.
+
+### US-A-04 Read platform analytics
+
+As an administrator, I want aggregated ADR-009 figures for the platform, for a bounty, and by creator, so that I can see participation without identifying a solver.
+
+Priority: P1.
+
+Requirements: ADMIN-002, ADMIN-006, ANALYTICS-009, ANALYTICS-013.
+
+Acceptance criteria:
+
+- Given I am an administrator, when I open platform analytics, then I see total bounties, participants, correct answers, incorrect answers, average completion time, and accuracy.
+- Given the same response, when I inspect it, then it has no solver wallet address and no individual research record.
+- Given I am only a creator, when I request platform analytics, then I receive forbidden.
+- Given I moderate an account or a bounty, when I use those operational tools, then they do not return solver answer histories.
 
 ## Demo acceptance
 

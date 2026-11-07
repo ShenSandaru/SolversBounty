@@ -24,7 +24,7 @@ Write an ADR before implementing a change that:
 
 Do not write an ADR for a bug fix that follows an existing decision, a copy change, or a visual tweak.
 
-A `PD-*` item that the user accepts without changing its meaning can be marked accepted in the implementation plan. Write an ADR if acceptance changes the consequences or if the decision is one of the bullets above. PD-03 is superseded by ADR-003. PD-05 is superseded by ADR-004. PD-13 is superseded by ADR-005. PD-15 is superseded by ADR-006. PD-08 is superseded by ADR-008 for deadline and full-allocation closure. PD-14 is the proposal most likely to need that update.
+A `PD-*` item that the user accepts without changing its meaning can be marked accepted in the implementation plan. Write an ADR if acceptance changes the consequences or if the decision is one of the bullets above. PD-03 is superseded by ADR-003. PD-05 is superseded by ADR-004. PD-13 is superseded by ADR-005. PD-15 is superseded by ADR-006. PD-08 is superseded by ADR-008 for deadline and full-allocation closure. PD-14 is superseded for analytics visibility by ADR-010.
 
 ## Required sections
 
@@ -65,6 +65,7 @@ Status meanings:
 | [ADR-007 Company platform commission](ADR-007-company-platform-commission.md) | accepted | 5% of the solver reward pool, paid on top. Not deducted from solver rewards. Supersedes CD-12 |
 | [ADR-008 Unused reward pool retention](ADR-008-unused-reward-pool-retention.md) | accepted | After deadline or the participant cap, unallocated principal is platform revenue. Not a creator refund. E1 unchanged |
 | [ADR-009 Minimal research analytics](ADR-009-minimal-research-analytics.md) | accepted | MVP records correctness, attempt count, completion time, and participant count. Strategies, explanations, answer changes, and export are later |
+| [ADR-010 Role-based analytics visibility](ADR-010-role-based-analytics-visibility.md) | accepted | Creators see aggregates for their own bounties. Administrators see platform aggregates. Neither sees individual solver research records or wallets in analytics |
 
 ## How to supersede
 

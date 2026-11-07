@@ -83,7 +83,7 @@ Excluded from the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analyti
 
 ## Requirement coverage
 
-P0 IDs sit on M2 through M8 as named above. P1 IDs are SOLVE-010, SOLVE-011, PAY-011, ANALYTICS-007, ANALYTICS-008, ANALYTICS-011, ANALYTICS-012, ANALYTICS-015, PRIV-006, ADMIN-001 through ADMIN-004, and USER-003. ADMIN-005 is a P0 constraint: do not build a separate admin product while building the path.
+P0 IDs sit on M2 through M8 as named above. P1 IDs are SOLVE-010, SOLVE-011, PAY-011, ANALYTICS-007, ANALYTICS-008, ANALYTICS-011, ANALYTICS-012, ANALYTICS-015, PRIV-006, ADMIN-001 through ADMIN-004, ADMIN-006, and USER-003. ADMIN-005 is a P0 constraint: do not build a separate admin product while building the path. ADMIN-006 is accepted access in [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md) and is not implemented.
 
 NFR IDs are satisfied by the milestone that introduces the behavior they name, and they are rechecked at M9.
 
@@ -134,12 +134,12 @@ Each item is **proposed — pending confirmation**, except a row marked supersed
 | PD-11 | P0 verification methods are `exact`, `case_insensitive`, `normalized_text`, and `numeric_exact`. No fuzzy or AI grading. `numeric_exact` has no tolerance. |
 | PD-12 | Local PostgreSQL for development. Neon for the shared hackathon database. The database design is not approved DDL. |
 | PD-13 | Superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). Funding and payouts complete at `confirmed`, after execution and detail checks. `processed` is not sufficient. `finalized` is not required. |
-| PD-14 | The owner may open a private wallet-linked submission list. Default analytics and CSV omit wallet addresses. Public pages never show that list. |
+| PD-14 | Superseded for analytics visibility by [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md). Creators see aggregates for their own bounties. Administrators see platform aggregates of the ADR-009 metrics, including by bounty and by creator. Neither role sees individual solver research records or solver wallet addresses in analytics. Operational administration is separate and does not grant those records. |
 | PD-15 | Superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). `TREASURY_SECRET_KEY` is a backend-only environment secret for the Devnet MVP. It is never committed, logged, stored in the database, or sent to the browser. This is not the Mainnet custody strategy. |
 | PD-16 | An in-process worker confirms deposits and payouts. HTTP handlers record intent and return. |
 | PD-17 | Zod schemas in `packages/shared` are the request and response contract. OpenAPI is generated from them. |
 | PD-18 | Deposit memo `sb:deposit:<bountyId>:<reference>`. Payout memo `sb:payout:<payoutId>`. Refund memo `sb:refund:<bountyId>`. |
-| PD-19 | Store submitted answers for the owner and the solver. Omit them from public APIs. Do not encrypt them in the MVP. |
+| PD-19 | Store submitted answers for verification and the solver's own history. Omit them from public APIs and from creator and administrator analytics ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). Do not encrypt them in the MVP. |
 | PD-20 | Starting rate limits: 10 nonce requests per minute per wallet and 30 submissions per minute per wallet. |
 | PD-21 | Overfunding is accepted into `refundable`. Underfunding does not activate the bounty. |
 
@@ -157,14 +157,14 @@ Full allocation: the E1 transaction that takes the last slot also sets `closed` 
 
 ## Open questions
 
-PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is answered by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). PD-08 is answered for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). PD-10 is answered for the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md): strategies and explanations are not collected. PD-14 still needs an explicit answer before private wallet-linked rows are treated as accepted. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. The platform commission must follow ADR-007. Unused reward principal after deadline or the participant cap must follow ADR-008. MVP analytics must follow ADR-009. None of these decisions authorizes implementation.
+PD-03 is answered by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is answered by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is answered by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is answered by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). PD-08 is answered for deadline and full allocation by [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md). PD-10 is answered for the MVP by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md): strategies and explanations are not collected. PD-14 is answered for analytics visibility by [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md): aggregates only, with no individual solver research records and no solver wallets in analytics. Authentication must follow ADR-003. Payout timing must follow ADR-004. Confirmation must follow ADR-005. Treasury key storage must follow ADR-006. The platform commission must follow ADR-007. Unused reward principal after deadline or the participant cap must follow ADR-008. MVP analytics must follow ADR-009. Analytics visibility must follow ADR-010. None of these decisions authorizes implementation.
 
 1. PD-03. Answered. Server-side PostgreSQL sessions in an HttpOnly cookie. JWT access and refresh tokens are not used.
 2. PD-05. Answered. Immediate individual payout after reservation. No batch. The submission response does not wait for chain confirmation.
 3. PD-08. Answered for deadline and the maximum rewarded participant limit. Unallocated principal is retained as platform revenue and is not refunded. Other endings remain unspecified.
 4. PD-13. Answered. Funding and payout completion require `confirmed`, plus execution and detail checks. `finalized` is not required. `processed` is not sufficient.
 5. PD-10. Answered for the MVP. Strategies and explanations are not collected. A future version may reconsider them. The strategy list is not accepted.
-6. PD-14. Confirm that the private creator dashboard may show wallet-linked rows while exports and public views stay aggregated and wallet-free.
+6. PD-14. Answered for analytics visibility. Creators see their own bounty aggregates. Administrators see platform aggregates. Neither sees individual solver research records or solver wallets in analytics. Operational administration does not grant those records.
 7. PD-15. Answered. The Devnet treasury private key is a backend-only environment secret. It is not a Mainnet custody strategy. Signing is not implemented.
 
 The other PD items are the working defaults. Objecting during the Phase 2 go-ahead is the time to change them.
@@ -193,4 +193,4 @@ Administrators remain a stakeholder. The hackathon does not add a separate admin
 
 ## Next phase
 
-Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. PD-10 is not an MVP analytics requirement. PD-14 remains open. ADR-008 does not implement retention. ADR-009 does not implement analytics.
+Do not start Phase 6 from this document alone. The next action is a review of the Phase 5 security documents, then an explicit request to implement a product workflow. PD-10 is not an MVP analytics requirement. PD-14 is answered for analytics visibility by ADR-010 and is not implemented. ADR-008 does not implement retention. ADR-009 does not implement analytics. ADR-010 does not implement authorization.

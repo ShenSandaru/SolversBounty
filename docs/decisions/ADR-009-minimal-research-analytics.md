@@ -60,8 +60,7 @@ Existing consent and privacy rules stay in force.
 - Explicit research consent is required before a solving session begins (PD-09).
 - Wallet authentication does not grant that consent.
 - The product does not collect unnecessary personal information.
-- Default aggregate analytics do not expose solver wallet addresses.
-- Wallet-linked individual records stay limited to the access already allowed. PD-14 remains proposed and is not accepted by this decision.
+- Default aggregate analytics do not expose solver wallet addresses. Who may read those aggregates is [ADR-010](ADR-010-role-based-analytics-visibility.md). This decision does not change the four metrics.
 
 ## Related decisions
 

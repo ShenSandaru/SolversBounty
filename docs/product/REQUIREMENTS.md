@@ -616,7 +616,7 @@ Acceptance criteria:
 Acceptance criteria:
 
 - The explanation is optional and length-limited. Proposed cap: 2_000 characters.
-- Only the owning creator's private research view and the solver's own history can read it.
+- Analytics do not return it. Another solver cannot read it from the public bounty.
 
 ## VERIFY
 
@@ -1078,12 +1078,15 @@ Acceptance criteria:
 - Priority: P0
 - Status: `not_started`
 - Modules: analytics
-- Description: Analytics endpoints require the bounty owner or an admin.
+- Description: Analytics endpoints require the bounty owner for that bounty. An administrator may read aggregated analytics for any bounty and for the platform ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). The check is server-side. Status stays `not_started`.
 
 Acceptance criteria:
 
 - A different creator receives a forbidden or not-found response with no counts that depend on private rows.
 - A solver cannot fetch creator analytics.
+- Hiding the analytics link does not authorize the request.
+- The response has the ADR-009 aggregate figures only. It has no solver wallet address, no submitted answer, and no per-solver research row.
+- An administrator can read those aggregates for a bounty they do not own, and a platform aggregate, without receiving individual research records.
 
 ### ANALYTICS-010 Present statistics
 
@@ -1133,7 +1136,7 @@ Acceptance criteria:
 Acceptance criteria:
 
 - The MVP summary payload has participant, correctness, attempt, and completion-time figures, not a dump of every answer.
-- **Proposed** PD-14 allows a separate private submission list that includes wallet addresses. ADR-009 does not accept that list. It is not the default analytics payload. Research export is not in the MVP.
+- [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md) denies individual solver research records and solver wallet addresses in analytics for creators and administrators. Research export is not in the MVP.
 
 ### ANALYTICS-014 Server-side events only
 
@@ -1152,13 +1155,13 @@ Acceptance criteria:
 - Priority: P1
 - Status: `not_started`
 - Modules: analytics, submissions
-- Description: **Proposed** PD-14. Excluded from the default MVP analytics by [ADR-009](../decisions/ADR-009-minimal-research-analytics.md). The owner may later open a private list of attempts with wallet, answer, result, and times. PD-14 is not accepted. Status stays `not_started`.
+- Description: Denied by [ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md). Creators and administrators do not receive a private list of attempts with wallet, answer, result, and times. Status stays `not_started`.
 
 Acceptance criteria:
 
-- The list is authenticated and owner-scoped.
-- It is clearly separate from the aggregate report and from CSV export.
-- Public routes do not return it.
+- Analytics responses for a creator and for an administrator contain no per-solver research row.
+- A solver can still read their own participation history.
+- Public routes do not return individual research records.
 
 ## PRIV
 
@@ -1290,7 +1293,7 @@ Acceptance criteria:
 - Priority: P1
 - Status: `not_started`
 - Modules: rewards, bounties
-- Description: An admin can list bounty funding and payout states across creators.
+- Description: An admin can list bounty funding and payout states across creators. That operational list is not research analytics and does not include solver answer histories ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
 
 Acceptance criteria:
 
@@ -1320,6 +1323,20 @@ Acceptance criteria:
 
 - Navigation for ordinary users has no admin console.
 - P1 admin capability stays within allowlisted API operations and, at most, a minimal screen.
+
+### ADMIN-006 Platform analytics
+
+- Priority: P1
+- Status: `not_started`
+- Modules: analytics
+- Description: An administrator can read ADR-009 aggregates for the platform, for one bounty, and grouped by creator ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). This is not a separate admin product and not an individual research view.
+
+Acceptance criteria:
+
+- The figures are total bounties, participants, correct answers, incorrect answers, average completion time, and accuracy, plus the same bounty and creator groupings.
+- The payload has no solver wallet address and no individual research record.
+- A creator who is not an administrator receives forbidden for the platform view.
+- The check is server-side.
 
 ## NFR
 

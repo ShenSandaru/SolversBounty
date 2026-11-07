@@ -67,7 +67,7 @@ The platform records the observable activity in ADR-009. It does not claim to ob
 
 University researchers, AI and machine-learning researchers, companies, independent developers, educational institutions, and content creators.
 
-They need to publish challenges, recruit solvers, collect responses, see solving patterns, distribute rewards, and export research results.
+They need to publish challenges, recruit solvers, collect responses, see aggregated solving patterns for their own bounties, and distribute rewards. Research export is not in the MVP. There is no separate company account.
 
 Any authenticated wallet may create a bounty. There is no separate creator application (CD-06).
 
@@ -79,7 +79,7 @@ They need to discover challenges, participate without email or password, solve t
 
 ### 3.3 Administrator
 
-The administrator handles platform configuration, challenge moderation, suspicious activity, bounty and payout monitoring, and operational issues.
+The administrator handles platform configuration, challenge moderation, suspicious activity, bounty and payout monitoring, operational issues, and platform-wide aggregated analytics ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). That analytics access does not include individual solver research records or solver wallet addresses.
 
 For the hackathon, administration is an allowlisted wallet and protected API operations (PD-04). A separate admin product is out of scope. See reconciliation C5.
 
@@ -248,7 +248,9 @@ MVP collection is [ADR-009](../decisions/ADR-009-minimal-research-analytics.md).
 | Average completion time | Mean, over solvers with a correct attempt, of first-correct server time minus session start |
 | Accuracy | Correct attempts / all attempts |
 
-The creator view may show total participants, correct answer count, incorrect answer count, average completion time, and accuracy as simple cards, numbers, or a basic chart.
+The creator view for a bounty they own may show total participants, correct answer count, incorrect answer count, average completion time, and accuracy as simple cards, numbers, or a basic chart.
+
+An administrator may see those same figures aggregated for the platform, for one bounty, or grouped by creator ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). That view is operationally separate from account management and bounty moderation. It does not identify a solver.
 
 Not in the MVP. These may be reconsidered later:
 
@@ -259,7 +261,7 @@ Not in the MVP. These may be reconsidered later:
 - Advanced statistics and complex visualizations.
 - Research data export.
 
-Creators can read analytics only for bounties they own. Default reports are aggregates and do not include solver wallet addresses. PD-14 (**proposed — pending confirmation**) remains a separate private-list proposal. This decision does not accept it. Consent is still required before a solving session (PD-09). Wallet sign-in does not grant consent.
+Creators can read analytics only for bounties they own. Administrators can read aggregated analytics across the platform. The backend enforces both checks. Hiding a link is not authorization. Analytics responses do not include solver wallet addresses, individual solver research records, or answer histories. PD-14's private wallet-linked list is not allowed ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). Consent is still required before a solving session (PD-09). Wallet sign-in does not grant consent. Analytics do not decide E1.
 
 ## 6. Workflows
 
@@ -313,7 +315,7 @@ Collected for the MVP:
 | Bounty ID | Tie activity to a challenge |
 | Session start | Completion time |
 | Submission time | Response time |
-| Submitted answer | Verification and creator research |
+| Submitted answer | Verification, and the solver's own history. Not a creator or administrator analytics field |
 | Attempt count | Correctness and how many answers were stored |
 | Correctness | Backend verification result |
 | Transaction signature | Payment evidence |
@@ -325,12 +327,13 @@ Privacy rules:
 - No private keys stored or requested by the platform.
 - No extra personal profile.
 - Explicit consent before a solving session (PD-09). Wallet sign-in does not grant it.
-- Default research views are aggregates and omit solver wallet addresses.
+- Analytics are aggregates. Creators see their own bounties. Administrators may see platform aggregates. Neither response includes solver wallet addresses or individual research records ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
+- The backend enforces that access. Hiding a control is not authorization.
 - The consent step states what is collected and why, including the four ADR-009 metrics.
 - Copy says privacy-conscious, not anonymous.
 - Strategy responses, written explanations, answer-change history, and research export are not MVP collection.
 
-PD-02 (**proposed — pending confirmation**): encrypt the expected answer at rest. PD-19: store submitted answers for the owning creator's private research view, and omit them from public APIs.
+PD-02 (**proposed — pending confirmation**): encrypt the expected answer at rest. PD-19: store submitted answers for verification and the solver's own history, and omit them from public APIs and from creator and administrator analytics ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
 
 ## 8. Blockchain product requirements
 

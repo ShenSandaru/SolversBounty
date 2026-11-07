@@ -73,7 +73,7 @@ flowchart TB
 | PostgreSQL | Product source of truth | On-chain transfers do not replace the ledger. They advance it after checks. |
 | Solana Devnet | Public rail | Amounts and addresses are observable. Success commitment is `confirmed` ([ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md)), which is not mainnet finality. |
 
-Creator private fields and solver research fields use different API routes from public bounty DTOs. Public DTOs omit the expected answer, its ciphertext, submitted answers, explanations, and wallet-level research rows.
+Creator private fields and solver research fields use different API routes from public bounty DTOs. Public DTOs omit the expected answer, its ciphertext, submitted answers, explanations, and wallet-level research rows. Creator and administrator analytics also omit solver wallet addresses and individual research records ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
 
 ## Application boundaries
 
@@ -204,8 +204,8 @@ funded = reserved + paid + refundable + refunded
 
 - Public routes: marketplace reads and health. They return no private research rows.
 - Authenticated routes: session required.
-- Owner routes: bounty private detail, analytics, distribution, and close. A creator close does not apply ADR-008 retention.
-- Admin routes: P1 operational reads and admin close. Role comes from the server allowlist (PD-04).
+- Owner routes: bounty private detail, own-bounty analytics, distribution, and close. A creator close does not apply ADR-008 retention. Own-bounty analytics are aggregates and omit solver wallets ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
+- Admin routes: operational reads, admin close, and platform aggregated analytics. Role comes from the server allowlist (PD-04). Analytics responses still omit individual solver research records and solver wallet addresses. Operational access does not grant those records.
 - Worker routes: none. The confirmation loop is in-process, not a public webhook, unless a later ADR adds one.
 
 Rate limits sit in front of nonce issuance and submissions (PD-20, NFR-008).

@@ -44,7 +44,8 @@ Do not treat a provider as selected. Privy, Reown, and native SIWS are still ope
 - [ ] **Gate, NFR-020.** `startedAt` and `submittedAt` are server times. Client timestamps are ignored.
 - [ ] **Gate, VERIFY-009.** Client `isCorrect` is ignored. Evidence: a wrong answer with `isCorrect: true` is stored incorrect and unpaid.
 - [ ] **Gate, SOLVE-004.** Attempt numbers are assigned inside the session transaction and cannot exceed `attemptLimit`.
-- [ ] **Gate, SEC-M5.** Submitted answers are selected only for the owner and the submitting solver. Aggregates do not load the text.
+- [ ] **Gate, SEC-M5.** Submitted answers are selected only for the submitting solver's own history. Creator and administrator analytics do not select the text or the solver wallet ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
+- [ ] **Gate, ADR-010.** Analytics authorization is server-side. Another creator receives no private counts. An administrator platform aggregate has no solver wallet and no individual research row. Hiding a link is not the control. Evidence: ANALYTICS-009 and ADMIN-006 tests. Not implemented.
 - [ ] **Gate, SEC-I2.** Docs and consent copy still say a wallet is not one human and the product is not Sybil-proof.
 
 ## Ledger and payouts

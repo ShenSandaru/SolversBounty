@@ -104,7 +104,7 @@ After commit, `rewards` asks `solana` to send if a payout is `pending`. The HTTP
 
 ### Analytics
 
-`analytics` checks the owner, then aggregates the four [ADR-009](../decisions/ADR-009-minimal-research-analytics.md) metrics from stored sessions and attempts. Research export is not an MVP method. Default aggregates omit solver wallet addresses. Analytics do not decide eligibility.
+`analytics` checks the session on the server. A creator receives the four [ADR-009](../decisions/ADR-009-minimal-research-analytics.md) aggregates only for bounties they own. An administrator may receive those same aggregates for the platform, for one bounty, or grouped by creator ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). Research export is not an MVP method. Analytics responses omit solver wallet addresses and individual research records. Analytics do not decide eligibility. Hiding a control is not the check. Operational account and moderation routes are a separate authorization path and do not return those research records.
 
 ## Transaction boundaries
 
@@ -136,7 +136,7 @@ Do not hold a database transaction open across RPC.
 | Public read | Active marketplace fields only |
 | Authenticated | Valid session |
 | Owner | `bounty.creatorId` equals the session user |
-| Admin | Server role `admin` from the allowlist (PD-04) |
+| Admin | Server role `admin` from the allowlist (PD-04). Platform analytics and operational administration are separate checks ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)) |
 
 Unknown bounty IDs and bounties owned by someone else use the same not-found response on private routes when that avoids confirming that an ID exists. Forbidden is acceptable on admin routes.
 

@@ -124,7 +124,7 @@ There is no login, bounty, submission, funding, or payout route to attack.
 - Deposit announcement and the confirmation worker.
 - Consent, session start, and answer submit.
 - Reservation, payout send, and confirmation.
-- Owner analytics and, under PD-14, a private wallet-linked view.
+- Owner analytics are aggregates for bounties that user owns. Administrators may read platform aggregates. Neither analytics view includes a private wallet-linked research row ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
 - Admin close. That close is not ADR-008 retention.
 
 ## Abuse scenarios
@@ -166,7 +166,7 @@ Confidentiality goals:
 
 - Public JSON never contains the expected answer, its ciphertext, a submitted answer, an explanation, or a session token.
 - Decryption runs only for verification and the owning creator's private read.
-- Analytics default to aggregates. Wallet-linked rows are a private owner view only if PD-14 is later accepted.
+- Analytics are aggregates. Creator responses cover owned bounties only. Administrator responses may cover the platform, one bounty, or creators. Neither includes solver wallet addresses or individual research records ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)).
 - Logs store ids, status, and public signatures. They do not store answers, authorization headers, or either secret.
 
 Integrity goals:

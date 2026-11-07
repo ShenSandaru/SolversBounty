@@ -197,7 +197,7 @@ One session per solver per bounty. Status becomes `completed` when an allocation
 | `ineligibilityReason` | Null, `pool_exhausted`, or `insufficient_refundable` |
 | `submittedAt` | Server time |
 
-PD-19 (**proposed — pending confirmation**): submitted answers are stored for the owning creator's private review and are omitted from public APIs. They are not encrypted in the MVP. The expected answer is encrypted. Those are different columns and different rules.
+PD-19 (**proposed — pending confirmation**): submitted answers are stored for verification and the solver's own history. They are omitted from public APIs and from creator and administrator analytics ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). They are not encrypted in the MVP. The expected answer is encrypted. Those are different columns and different rules. This decision adds no column.
 
 ### StrategyResponse
 
@@ -281,11 +281,11 @@ Required actions are listed in NFR-017.
 | Data | Handling |
 | --- | --- |
 | Expected answer | Ciphertext only (PD-02). Key is `ANSWER_ENCRYPTION_KEY`, distinct from the treasury key |
-| Submitted answer | Access-controlled plaintext (PD-19). Owner private view and the solver's own history |
+| Submitted answer | Access-controlled plaintext (PD-19). The solver's own history. Not returned by creator or administrator analytics ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)) |
 | Explanation | Not collected in the MVP ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)). A later version would use the same audience as the submitted answer |
 | Refresh token | Hash at rest |
 | Treasury secret | Not a column. Backend environment only ([ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md)) |
-| Wallet address | Stored for auth and payment. Omitted from default analytics. Research export is not in the MVP |
+| Wallet address | Stored for auth and payment. Omitted from analytics for creators and administrators ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). Research export is not in the MVP |
 | Chain signature | Public. Safe to store and show |
 
 Proposed encryption detail for PD-02: AES-256-GCM via Node `crypto`, with a random nonce stored beside the ciphertext and a key id for later rotation. Decryption is allowed only in verification and the owner private read.
