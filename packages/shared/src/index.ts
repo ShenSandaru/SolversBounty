@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export { APP_NAME, LAMPORTS_PER_SOL } from "./constants";
+export { APP_NAME, LAMPORTS_PER_SOL, RESEARCH_CONSENT_VERSION } from "./constants";
 export { formatLamportsAsSol, parseSolToLamports, principalLamports } from "./lamports";
 export {
   bountyCategorySchema,

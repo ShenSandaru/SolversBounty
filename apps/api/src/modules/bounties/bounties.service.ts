@@ -42,7 +42,20 @@ export type PrivateBounty = {
   closeReason: string | null;
 };
 
-export type PublicBountyView = Omit<PrivateBounty, "expectedAnswer"> & { rewardedCount: number };
+export type PublicBountyView = {
+  id: string;
+  title: string;
+  description: string;
+  instructions: string;
+  prompt: string;
+  category: BountyInput["category"];
+  status: PrivateBounty["status"];
+  rewardLamports: string;
+  maxRewardedSolvers: number;
+  rewardedCount: number;
+  attemptLimit: number;
+  deadline: string;
+};
 
 @Injectable()
 export class BountiesService {
@@ -72,9 +85,21 @@ export class BountiesService {
     return rows.map((row) => this.privateView(row));
   }
 
-  async active(): Promise<PublicBountyView[]> {
-    const rows = await this.db().listActive();
-    return rows.map((row) => this.publicView(row));
+  async active(query: { q?: string; category?: string } = {}): Promise<PublicBountyView[]> {
+    const rows = await this.db().listActive(this.now());
+    const q = query.q?.trim().toLowerCase() ?? "";
+    return rows
+      .filter((row) => !query.category || row.category === query.category)
+      .filter((row) => q.length === 0 || row.title.toLowerCase().includes(q) || row.description.toLowerCase().includes(q))
+      .map((row) => this.publicView(row));
+  }
+
+  async publicOne(id: string): Promise<PublicBountyView> {
+    const row = await this.db().findPublic(id, this.now());
+    if (!row) {
+      throw new BountyFlowError(404, "NOT_FOUND", "Bounty not found.");
+    }
+    return this.publicView(row);
   }
 
   async activate(creatorId: string, id: string): Promise<PrivateBounty> {
@@ -177,14 +202,12 @@ export class BountiesService {
       instructions: row.instructions,
       prompt: row.prompt,
       category: row.category,
-      verificationMethod: row.verificationMethod,
-      ...amountsFor(row.rewardLamports, row.maxRewardedSolvers),
+      rewardLamports: row.rewardLamports.toString(),
       maxRewardedSolvers: row.maxRewardedSolvers,
+      rewardedCount: row.rewardedCount,
       attemptLimit: row.attemptLimit,
       deadline: row.deadline.toISOString(),
       status: row.status,
-      closeReason: row.closeReason,
-      rewardedCount: 0,
     };
   }
 

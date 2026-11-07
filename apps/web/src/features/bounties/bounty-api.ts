@@ -1,3 +1,4 @@
+import { publicBountySchema, type PublicBounty, type VerificationMethod } from "@solversbounty/shared";
 import type { CreateBountyFormValues } from "./create-bounty-schema";
 
 export type BountyDraft = {
@@ -225,6 +226,101 @@ function readDraft(value: unknown): BountyDraft {
     throw new BountyClientError("The API returned an incomplete bounty.");
   }
   return value as BountyDraft;
+}
+
+export type SolvingSessionView = {
+  id: string;
+  bountyId: string;
+  status: "active" | "completed";
+  startedAt: string;
+  attemptLimit: number;
+  attemptsUsed: number;
+  remainingAttempts: number;
+  title: string;
+  prompt: string;
+  instructions: string;
+  verificationMethod: VerificationMethod;
+  rewardLamports: string;
+  deadline: string;
+  latest: {
+    attemptNumber: number;
+    isCorrect: boolean;
+    ineligibilityReason: "pool_exhausted" | "insufficient_refundable" | null;
+    rewardStatus: "pending" | null;
+  } | null;
+};
+
+export async function listPublicBounties(apiUrl: string, query: { q?: string; category?: string }, fetchImpl: FetchLike = fetch): Promise<PublicBounty[]> {
+  const params = new URLSearchParams();
+  if (query.q) {
+    params.set("q", query.q);
+  }
+  if (query.category) {
+    params.set("category", query.category);
+  }
+  const suffix = params.size > 0 ? `?${params.toString()}` : "";
+  const response = await fundingSend(fetchImpl, `${apiUrl}/bounties${suffix}`, { method: "GET" });
+  const body = (await response.json()) as unknown;
+  if (!Array.isArray(body)) {
+    throw new BountyClientError("The API returned an incomplete bounty list.");
+  }
+  return body.map(parsePublicBounty);
+}
+
+export async function readPublicBounty(apiUrl: string, id: string, fetchImpl: FetchLike = fetch): Promise<PublicBounty> {
+  const response = await fundingSend(fetchImpl, `${apiUrl}/bounties/${id}/public`, { method: "GET" });
+  return parsePublicBounty(await response.json());
+}
+
+export async function acceptResearchConsent(apiUrl: string, csrfToken: string, id: string, fetchImpl: FetchLike = fetch): Promise<void> {
+  await fundingSend(fetchImpl, `${apiUrl}/bounties/${id}/consent`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({ accepted: true }),
+  });
+}
+
+export async function startSolvingSession(apiUrl: string, csrfToken: string, id: string, fetchImpl: FetchLike = fetch): Promise<SolvingSessionView> {
+  const response = await fundingSend(fetchImpl, `${apiUrl}/bounties/${id}/sessions`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-CSRF-Token": csrfToken },
+  });
+  return readSession(await response.json());
+}
+
+export async function readSolvingSession(apiUrl: string, id: string, fetchImpl: FetchLike = fetch): Promise<SolvingSessionView> {
+  const response = await fundingSend(fetchImpl, `${apiUrl}/sessions/${id}`, { method: "GET", credentials: "include" });
+  return readSession(await response.json());
+}
+
+export async function submitSolvingAnswer(apiUrl: string, csrfToken: string, id: string, answer: string, fetchImpl: FetchLike = fetch): Promise<SolvingSessionView> {
+  const response = await fundingSend(fetchImpl, `${apiUrl}/sessions/${id}/submissions`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({ answer }),
+  });
+  return readSession(await response.json());
+}
+
+function parsePublicBounty(value: unknown): PublicBounty {
+  const parsed = publicBountySchema.safeParse(value);
+  if (!parsed.success) {
+    throw new BountyClientError("The API returned an incomplete bounty.");
+  }
+  return parsed.data;
+}
+
+function readSession(value: unknown): SolvingSessionView {
+  if (!isRecord(value) || typeof value.id !== "string" || typeof value.prompt !== "string" || typeof value.attemptsUsed !== "number") {
+    throw new BountyClientError("The API returned an incomplete solving session.");
+  }
+  if ("expectedAnswer" in value || "submittedAnswer" in value) {
+    throw new BountyClientError("The API returned an incomplete solving session.");
+  }
+  return value as SolvingSessionView;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

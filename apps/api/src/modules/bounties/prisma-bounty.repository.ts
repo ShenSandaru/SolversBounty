@@ -13,16 +13,33 @@ import type {
   PublicBountyRecord,
   StoredObligation,
 } from "./bounty.persistence";
+import { capacityDecision } from "../rewards/eligibility";
 import { bucketsFromEntries, depositReference } from "./funding-ledger";
+import type { ResearchAggregates, StoredSession, SubmitAnswerResult, VerificationMethodName } from "./bounty.persistence";
+
+type RowDelegate = {
+  findUnique(args: unknown): Promise<unknown>;
+  findFirst(args: unknown): Promise<unknown>;
+  findMany(args: unknown): Promise<unknown>;
+  create(args: unknown): Promise<unknown>;
+  update(args: unknown): Promise<unknown>;
+  count(args: unknown): Promise<unknown>;
+};
 
 type PrismaLike = {
   $transaction<T>(fn: (tx: PrismaLike) => Promise<T>): Promise<T>;
   bounty: {
     create(args: unknown): Promise<unknown>;
     update(args: unknown): Promise<unknown>;
+    updateMany(args: unknown): Promise<unknown>;
     findUnique(args: unknown): Promise<unknown>;
     findMany(args: unknown): Promise<unknown>;
   };
+  consentRecord: RowDelegate;
+  solvingSession: RowDelegate;
+  submissionAttempt: RowDelegate;
+  rewardAllocation: RowDelegate;
+  payout: RowDelegate;
   bountyFunding: {
     findMany(args: unknown): Promise<unknown>;
     create(args: unknown): Promise<unknown>;
@@ -192,24 +209,16 @@ export class PrismaBountyRepository implements BountyDb {
     });
   }
 
-  async listActive(): Promise<PublicBountyRecord[]> {
-    const rows = await this.client().bounty.findMany({
-      where: { status: "active" },
+  async listActive(now: Date): Promise<PublicBountyRecord[]> {
+    const client = this.client();
+    await client.bounty.updateMany({
+      where: { status: "active", deadline: { lte: now } },
+      data: { status: "closed", closeReason: "deadline", closedAt: now },
+    });
+    const rows = await client.bounty.findMany({
+      where: { status: "active", deadline: { gt: now } },
       orderBy: { deadline: "asc" },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        instructions: true,
-        category: true,
-        status: true,
-        rewardLamports: true,
-        maxRewardedSolvers: true,
-        attemptLimit: true,
-        deadline: true,
-        closeReason: true,
-        question: { select: { prompt: true, verificationMethod: true } },
-      },
+      select: publicSelect(),
     });
     if (!Array.isArray(rows)) {
       throw new BountyFlowError(500, "INTERNAL", "Internal server error");
@@ -330,6 +339,191 @@ export class PrismaBountyRepository implements BountyDb {
     return { kind: "applied", snapshot: snapshotOf(reread) };
   }
 
+  async findPublic(id: string, now: Date): Promise<PublicBountyRecord | null> {
+    const client = this.client();
+    await client.bounty.updateMany({ where: { id, status: "active", deadline: { lte: now } }, data: { status: "closed", closeReason: "deadline", closedAt: now } });
+    const found = await client.bounty.findUnique({ where: { id }, select: publicSelect() });
+    if (!isRecord(found) || found.status === "draft" || found.status === "funding_pending") {
+      return null;
+    }
+    return readPublic(found);
+  }
+
+  async recordConsent(bountyId: string, userId: string, now: Date): Promise<{ id: string; policyVersion: string; acceptedAt: Date } | "missing" | "inactive"> {
+    return this.client().$transaction(async (tx) => {
+      await tx.$queryRawUnsafe("select id from bounties where id = $1::uuid for update", bountyId);
+      const bounty = await tx.bounty.findUnique({ where: { id: bountyId } });
+      if (!isRecord(bounty) || bounty.status === "draft" || bounty.status === "funding_pending") {
+        return "missing";
+      }
+      if (bounty.status !== "active" || readDate(bounty.deadline).getTime() <= now.getTime()) {
+        if (bounty.status === "active") {
+          await tx.bounty.update({ where: { id: bountyId }, data: { status: "closed", closeReason: "deadline", closedAt: now } });
+        }
+        return "inactive";
+      }
+      const existing = await tx.consentRecord.findFirst({ where: { bountyId, userId } });
+      if (isRecord(existing)) {
+        return { id: readString(existing.id), policyVersion: "research-consent-v1", acceptedAt: readDate(existing.acceptedAt) };
+      }
+      const created = await tx.consentRecord.create({ data: { bountyId, userId, policyVersion: "research-consent-v1", acceptedAt: now } });
+      if (!isRecord(created)) {
+        throw new BountyFlowError(500, "INTERNAL", "Internal server error");
+      }
+      return { id: readString(created.id), policyVersion: "research-consent-v1", acceptedAt: now };
+    });
+  }
+
+  async startSession(bountyId: string, solverId: string, now: Date): Promise<StoredSession | "missing" | "no_consent" | "inactive" | "full"> {
+    return this.client().$transaction(async (tx) => {
+      await tx.$queryRawUnsafe("select id from bounties where id = $1::uuid for update", bountyId);
+      const bounty = await tx.bounty.findUnique({ where: { id: bountyId }, include: { question: true } });
+      if (!isRecord(bounty) || bounty.status === "draft" || bounty.status === "funding_pending") {
+        return "missing";
+      }
+      if (bounty.status === "active" && readDate(bounty.deadline).getTime() <= now.getTime()) {
+        await tx.bounty.update({ where: { id: bountyId }, data: { status: "closed", closeReason: "deadline", closedAt: now } });
+        return "inactive";
+      }
+      if (bounty.status !== "active") {
+        return bounty.closeReason === "fully_allocated" ? "full" : "inactive";
+      }
+      const allocationCount = await tx.rewardAllocation.count({ where: { bountyId } });
+      if (readInt(allocationCount) >= readInt(bounty.maxRewardedSolvers)) {
+        await tx.bounty.update({ where: { id: bountyId }, data: { status: "closed", closeReason: "fully_allocated", closedAt: now } });
+        return "full";
+      }
+      const consent = await tx.consentRecord.findFirst({ where: { bountyId, userId: solverId } });
+      if (!isRecord(consent)) {
+        return "no_consent";
+      }
+      const existing = await tx.solvingSession.findFirst({ where: { bountyId, solverId }, include: sessionInclude() });
+      if (isRecord(existing)) {
+        return readSession(existing);
+      }
+      const created = await tx.solvingSession.create({
+        data: { bountyId, solverId, consentId: readString(consent.id), startedAt: now, status: "active" },
+        include: sessionInclude(),
+      });
+      return readSession(created);
+    });
+  }
+
+  async readSession(sessionId: string, solverId: string): Promise<StoredSession | null> {
+    const found = await this.client().solvingSession.findFirst({ where: { id: sessionId, solverId }, include: sessionInclude() });
+    return isRecord(found) ? readSession(found) : null;
+  }
+
+  async submitAnswer(sessionId: string, solverId: string, answer: string, now: Date, decide: (input: { ciphertext: string; method: VerificationMethodName }) => boolean): Promise<SubmitAnswerResult> {
+    return this.client().$transaction(async (tx) => {
+      const session = await tx.solvingSession.findFirst({ where: { id: sessionId, solverId } });
+      if (!isRecord(session)) {
+        return { kind: "missing" };
+      }
+      const bountyId = readString(session.bountyId);
+      await tx.$queryRawUnsafe("select id from bounties where id = $1::uuid for update", bountyId);
+      const bounty = await tx.bounty.findUnique({ where: { id: bountyId }, include: { question: true, ledgerEntries: true } });
+      const current = await tx.solvingSession.findFirst({ where: { id: sessionId, solverId }, include: sessionInclude() });
+      if (!isRecord(bounty) || !isRecord(bounty.question) || !isRecord(current)) {
+        return { kind: "missing" };
+      }
+      if (current.status === "completed") {
+        return { kind: "completed" };
+      }
+      if (bounty.status === "active" && readDate(bounty.deadline).getTime() <= now.getTime()) {
+        await tx.bounty.update({ where: { id: bountyId }, data: { status: "closed", closeReason: "deadline", closedAt: now } });
+        return { kind: "inactive" };
+      }
+      if (bounty.status !== "active") {
+        return { kind: "inactive" };
+      }
+      const prior = Array.isArray(current.attempts) ? current.attempts.length : 0;
+      if (prior >= readInt(bounty.attemptLimit)) {
+        await tx.solvingSession.update({ where: { id: sessionId }, data: { status: "completed" } });
+        return { kind: "limit" };
+      }
+      const correct = decide({ ciphertext: readString(bounty.question.expectedAnswerCiphertext), method: readVerification(bounty.question.verificationMethod) });
+      const entries = Array.isArray(bounty.ledgerEntries) ? bounty.ledgerEntries.filter(isRecord) : [];
+      const buckets = bucketsFromEntries(entries.map((entry) => ({ entryType: readString(entry.entryType), amountLamports: readBigint(entry.amountLamports) })));
+      const allocationCount = readInt(await tx.rewardAllocation.count({ where: { bountyId } }));
+      const capacity = correct
+        ? capacityDecision({ allocationCount, maxRewardedSolvers: readInt(bounty.maxRewardedSolvers), refundable: buckets.refundable, rewardLamports: readBigint(bounty.rewardLamports) })
+        : null;
+      const attempt = await tx.submissionAttempt.create({
+        data: {
+          sessionId,
+          attemptNumber: prior + 1,
+          submittedAnswer: answer,
+          isCorrect: correct,
+          ineligibilityReason: capacity && !capacity.reserve ? capacity.reason : null,
+          submittedAt: now,
+        },
+      });
+      if (!isRecord(attempt)) {
+        throw new BountyFlowError(500, "INTERNAL", "Internal server error");
+      }
+      if (capacity?.reserve) {
+        const allocation = await tx.rewardAllocation.create({
+          data: { bountyId, solverId, attemptId: readString(attempt.id), amountLamports: readBigint(bounty.rewardLamports), status: "reserved" },
+        });
+        if (!isRecord(allocation)) {
+          throw new BountyFlowError(500, "INTERNAL", "Internal server error");
+        }
+        const payout = await tx.payout.create({
+          data: { allocationId: readString(allocation.id), idempotencyKey: `payout:${bountyId}:${solverId}`, status: "pending" },
+        });
+        if (!isRecord(payout)) {
+          throw new BountyFlowError(500, "INTERNAL", "Internal server error");
+        }
+        await tx.bountyLedgerEntry.create({
+          data: { bountyId, entryType: "reserve", amountLamports: readBigint(bounty.rewardLamports), payoutId: readString(payout.id) },
+        });
+        if (allocationCount + 1 >= readInt(bounty.maxRewardedSolvers)) {
+          await tx.bounty.update({ where: { id: bountyId }, data: { status: "closed", closeReason: "fully_allocated", closedAt: now } });
+        }
+        await tx.solvingSession.update({ where: { id: sessionId }, data: { status: "completed" } });
+      } else if (correct || prior + 1 >= readInt(bounty.attemptLimit)) {
+        await tx.solvingSession.update({ where: { id: sessionId }, data: { status: "completed" } });
+      }
+      await tx.auditLog.create({ data: { actorUserId: solverId, action: "submission.recorded", entityType: "solving_session", entityId: sessionId, metadata: { correct, attemptNumber: prior + 1 } } });
+      const reread = await tx.solvingSession.findFirst({ where: { id: sessionId, solverId }, include: sessionInclude() });
+      return { kind: "stored", session: readSession(reread) };
+    });
+  }
+
+  async creatorAnalytics(bountyId: string, creatorId: string): Promise<ResearchAggregates | "missing"> {
+    const bounty = await this.client().bounty.findUnique({ where: { id: bountyId } });
+    if (!isRecord(bounty) || bounty.creatorId !== creatorId) {
+      return "missing";
+    }
+    const sessions = await this.client().solvingSession.findMany({
+      where: { bountyId },
+      select: { startedAt: true, attempts: { select: { isCorrect: true, submittedAt: true, attemptNumber: true } } },
+    });
+    if (!Array.isArray(sessions)) {
+      throw new BountyFlowError(500, "INTERNAL", "Internal server error");
+    }
+    let correctCount = 0;
+    let incorrectCount = 0;
+    const durations: number[] = [];
+    for (const session of sessions.filter(isRecord)) {
+      const attempts = Array.isArray(session.attempts) ? session.attempts.filter(isRecord) : [];
+      const first = attempts.filter((item) => item.isCorrect === true).sort((left, right) => readInt(left.attemptNumber) - readInt(right.attemptNumber))[0];
+      if (first) {
+        durations.push(readDate(first.submittedAt).getTime() - readDate(session.startedAt).getTime());
+      }
+      correctCount += attempts.filter((item) => item.isCorrect === true).length;
+      incorrectCount += attempts.filter((item) => item.isCorrect === false).length;
+    }
+    return {
+      participantCount: sessions.length,
+      correctCount,
+      incorrectCount,
+      attemptCount: correctCount + incorrectCount,
+      averageCompletionTimeMs: durations.length === 0 ? null : Math.floor(durations.reduce((sum, value) => sum + value, 0) / durations.length),
+    };
+  }
+
   private client(): PrismaLike {
     const client = this.database?.activeClient;
     if (!client || !isPrismaLike(client)) {
@@ -378,7 +572,7 @@ function readSignature(value: Record<string, unknown>): string | null {
 }
 
 function isPrismaLike(value: ConnectedClient): value is ConnectedClient & PrismaLike {
-  return "bounty" in value && "bountyFunding" in value && "chainTransaction" in value && "bountyLedgerEntry" in value && "auditLog" in value && "$transaction" in value;
+  return "bounty" in value && "bountyFunding" in value && "chainTransaction" in value && "bountyLedgerEntry" in value && "auditLog" in value && "consentRecord" in value && "solvingSession" in value && "submissionAttempt" in value && "rewardAllocation" in value && "payout" in value && "$transaction" in value;
 }
 
 function bountyData(input: BountyWrite): Record<string, unknown> {
@@ -445,6 +639,60 @@ function readPublic(value: unknown): PublicBountyRecord {
     attemptLimit: bounty.attemptLimit,
     deadline: bounty.deadline,
     closeReason: bounty.closeReason,
+    rewardedCount: isRecord(value._count) ? readInt(value._count.allocations) : 0,
+  };
+}
+
+function publicSelect(): Record<string, unknown> {
+  return {
+    id: true,
+    title: true,
+    description: true,
+    instructions: true,
+    category: true,
+    status: true,
+    rewardLamports: true,
+    maxRewardedSolvers: true,
+    attemptLimit: true,
+    deadline: true,
+    closeReason: true,
+    question: { select: { prompt: true, verificationMethod: true } },
+    _count: { select: { allocations: true } },
+  };
+}
+
+function sessionInclude(): Record<string, unknown> {
+  return {
+    bounty: { include: { question: true } },
+    attempts: { select: { attemptNumber: true, isCorrect: true, ineligibilityReason: true, submittedAt: true, allocation: { select: { id: true } } }, orderBy: { attemptNumber: "asc" } },
+  };
+}
+
+function readSession(value: unknown): StoredSession {
+  if (!isRecord(value) || !isRecord(value.bounty) || !isRecord(value.bounty.question)) {
+    throw new BountyFlowError(500, "INTERNAL", "Internal server error");
+  }
+  const attempts = Array.isArray(value.attempts) ? value.attempts.filter(isRecord) : [];
+  return {
+    id: readString(value.id),
+    bountyId: readString(value.bountyId),
+    solverId: readString(value.solverId),
+    status: value.status === "completed" ? "completed" : "active",
+    startedAt: readDate(value.startedAt),
+    attemptLimit: readInt(value.bounty.attemptLimit),
+    title: readString(value.bounty.title),
+    prompt: readString(value.bounty.question.prompt),
+    instructions: readString(value.bounty.instructions),
+    verificationMethod: readVerification(value.bounty.question.verificationMethod),
+    rewardLamports: readBigint(value.bounty.rewardLamports),
+    deadline: readDate(value.bounty.deadline),
+    attempts: attempts.map((item) => ({
+      attemptNumber: readInt(item.attemptNumber),
+      isCorrect: item.isCorrect === true,
+      ineligibilityReason: item.ineligibilityReason === "pool_exhausted" || item.ineligibilityReason === "insufficient_refundable" ? item.ineligibilityReason : null,
+      submittedAt: readDate(item.submittedAt),
+      rewardReserved: isRecord(item.allocation),
+    })),
   };
 }
 

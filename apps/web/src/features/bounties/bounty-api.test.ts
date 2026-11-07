@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { bountyWriteBody, createBounty, listMyBounties, updateBounty } from "./bounty-api";
+import { bountyWriteBody, createBounty, listMyBounties, listPublicBounties, updateBounty } from "./bounty-api";
 import type { CreateBountyFormValues } from "./create-bounty-schema";
 
 const values: CreateBountyFormValues = {
@@ -73,5 +73,24 @@ describe("bounty client", () => {
     const rows = await listMyBounties("http://localhost:3001", fetchImpl);
     expect(rows).toHaveLength(1);
     expect(fetchImpl).toHaveBeenCalledWith("http://localhost:3001/bounties/mine", expect.objectContaining({ credentials: "include" }));
+  });
+
+  it("rejects a marketplace payload that includes an expected answer", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify([{
+      id: "bounty-1",
+      title: "Parity",
+      description: "A public description.",
+      instructions: "",
+      prompt: "2 + 2",
+      category: "mathematics",
+      status: "active",
+      rewardLamports: "10000000",
+      maxRewardedSolvers: 10,
+      rewardedCount: 0,
+      attemptLimit: 3,
+      deadline: "2099-01-01T00:00:00.000Z",
+      expectedAnswer: "4",
+    }]), { status: 200 }));
+    await expect(listPublicBounties("http://localhost:3001", {}, fetchImpl)).rejects.toThrow(/incomplete bounty/);
   });
 });

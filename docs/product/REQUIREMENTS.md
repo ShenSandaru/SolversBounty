@@ -402,7 +402,7 @@ Acceptance criteria:
 ### MARKET-001 Browse active bounties
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties, web marketplace
 - Description: The marketplace lists bounties a solver may still join.
 
@@ -414,7 +414,7 @@ Acceptance criteria:
 ### MARKET-002 Search
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties, web marketplace
 - Description: Search matches public title and description.
 
@@ -426,7 +426,7 @@ Acceptance criteria:
 ### MARKET-003 Filter by category
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties, web marketplace
 - Description: A category control filters the list.
 
@@ -438,7 +438,7 @@ Acceptance criteria:
 ### MARKET-004 Public bounty facts
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, web marketplace
 - Description: Each card or detail shows reward, max rewarded solvers, deadline, instructions, category, and status.
 
@@ -450,7 +450,7 @@ Acceptance criteria:
 ### MARKET-005 Attempt gate
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions
 - Description: Starting a session requires an active, in-date bounty that is under the allocation cap.
 
@@ -462,7 +462,7 @@ Acceptance criteria:
 ### MARKET-006 Terminal bounties
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions, bounties
 - Description: Closed, expired, and fully allocated bounties reject new eligible participants.
 
@@ -474,7 +474,7 @@ Acceptance criteria:
 ### MARKET-007 Public secrecy
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: bounties
 - Description: Marketplace JSON does not reveal protected answers.
 
@@ -487,7 +487,7 @@ Acceptance criteria:
 ### SOLVE-001 Read a challenge
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: web solver, bounties
 - Description: An authenticated solver can open public challenge detail.
 
@@ -499,7 +499,7 @@ Acceptance criteria:
 ### SOLVE-002 Start a solving session
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions
 - Description: The solver starts one session per bounty. The server stores `startedAt`.
 
@@ -512,7 +512,7 @@ Acceptance criteria:
 ### SOLVE-003 Submit an answer
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions, verification
 - Description: The solver submits text for the open session. The API stores the attempt and the server receipt time.
 
@@ -524,7 +524,7 @@ Acceptance criteria:
 ### SOLVE-004 Enforce the attempt limit
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions
 - Description: The backend rejects attempts beyond the bounty limit.
 
@@ -536,7 +536,7 @@ Acceptance criteria:
 ### SOLVE-005 Submission status
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions, web solver
 - Description: The solver sees attempt number, correct or incorrect, and eligibility.
 
@@ -548,7 +548,7 @@ Acceptance criteria:
 ### SOLVE-006 One reward per wallet
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: rewards, submissions
 - Description: The same wallet cannot receive two rewards for one bounty.
 
@@ -560,7 +560,7 @@ Acceptance criteria:
 ### SOLVE-007 Show eligibility
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: web solver, rewards
 - Description: The workspace states whether this solver was allocated a reward and the payout status.
 
@@ -572,7 +572,7 @@ Acceptance criteria:
 ### SOLVE-008 Consent before the session
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions
 - Description: **Proposed** PD-09. Research recording starts only after stored consent.
 
@@ -624,7 +624,7 @@ Acceptance criteria:
 ### VERIFY-001 Verify on the server
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: verification
 - Description: Comparison runs in the API process.
 
@@ -636,7 +636,7 @@ Acceptance criteria:
 ### VERIFY-002 Exact match
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: verification
 - Description: Method `exact` requires identical strings.
 
@@ -648,7 +648,7 @@ Acceptance criteria:
 ### VERIFY-003 Case-insensitive match
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: verification
 - Description: Method `case_insensitive` ignores letter case and does not otherwise normalize.
 
@@ -660,7 +660,7 @@ Acceptance criteria:
 ### VERIFY-004 Normalized text
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: verification
 - Description: Method `normalized_text` trims and collapses whitespace, then compares case-sensitively.
 
@@ -673,7 +673,7 @@ Acceptance criteria:
 ### VERIFY-005 Exact numeric
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: verification
 - Description: Method `numeric_exact` trims and compares decimal numeric strings without a tolerance.
 
@@ -686,7 +686,7 @@ Acceptance criteria:
 ### VERIFY-006 Store both outcomes
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions
 - Description: Correct and incorrect attempts are persisted.
 
@@ -698,7 +698,7 @@ Acceptance criteria:
 ### VERIFY-007 Link the result to the attempt
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions
 - Description: The decision is a column on the attempt, not a detached record that can be mismatched.
 
@@ -710,7 +710,7 @@ Acceptance criteria:
 ### VERIFY-008 No public answer oracle
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, verification, submissions
 - Description: APIs do not provide a way to dump or confirm the expected answer except by an authenticated solver consuming an attempt.
 
@@ -722,7 +722,7 @@ Acceptance criteria:
 ### VERIFY-009 Ignore client correctness
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions
 - Description: The client cannot set the stored result.
 
@@ -979,7 +979,7 @@ Acceptance criteria:
 ### ANALYTICS-001 Participant count
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: analytics
 - Description: Count solving sessions for the bounty. Definition in PRD section 5.8.
 
@@ -991,7 +991,7 @@ Acceptance criteria:
 ### ANALYTICS-002 Correct and incorrect submissions
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: analytics
 - Description: Return correct-attempt and incorrect-attempt counts.
 
@@ -1003,7 +1003,7 @@ Acceptance criteria:
 ### ANALYTICS-003 Overall accuracy
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: analytics
 - Description: Correct attempts divided by all attempts.
 
@@ -1027,7 +1027,7 @@ Acceptance criteria:
 ### ANALYTICS-005 Completion time
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: analytics
 - Description: Average time from server session start to the first correct attempt, over solvers with a correct attempt. Median completion time is not an MVP requirement ([ADR-009](../decisions/ADR-009-minimal-research-analytics.md)).
 
@@ -1202,7 +1202,7 @@ Acceptance criteria:
 ### PRIV-004 Explicit consent
 
 - Priority: P0
-- Status: `not_started`
+- Status: `implemented`
 - Modules: submissions, web solver
 - Description: Consent is an explicit accept action stored before the session.
 

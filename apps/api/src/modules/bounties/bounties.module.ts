@@ -10,5 +10,6 @@ import { PrismaBountyRepository } from "./prisma-bounty.repository";
   imports: [AuthModule],
   controllers: [BountiesController],
   providers: [BountiesService, FundingService, PrismaBountyRepository, { provide: SOLANA_TRANSFER_GATEWAY, useClass: RpcSolanaTransferGateway }],
+  exports: [PrismaBountyRepository],
 })
 export class BountiesModule {}

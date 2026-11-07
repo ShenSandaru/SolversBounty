@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { marketplaceBounties } from "@/data/mock/bounties";
 import { MarketplacePage } from "@/features/marketplace/marketplace-page";
 
 export const metadata: Metadata = {
@@ -7,5 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <MarketplacePage bounties={marketplaceBounties} />;
+  return <MarketplacePage />;
 }

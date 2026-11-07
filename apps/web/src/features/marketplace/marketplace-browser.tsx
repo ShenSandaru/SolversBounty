@@ -13,12 +13,12 @@ import {
   type CategoryFilter,
   type MarketplaceSort,
 } from "@/data/mock/marketplace";
-import type { PreviewBounty } from "@/data/mock/types";
+import type { PublicBounty } from "@solversbounty/shared";
 import { BountyCard } from "./bounty-card";
 
 const categories = Object.keys(categoryLabels) as BountyCategory[];
 
-export function MarketplaceBrowser({ bounties }: { bounties: PreviewBounty[] }) {
+export function MarketplaceBrowser({ bounties }: { bounties: PublicBounty[] }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [sort, setSort] = useState<MarketplaceSort>("deadline");
@@ -40,7 +40,7 @@ export function MarketplaceBrowser({ bounties }: { bounties: PreviewBounty[] }) 
             id="bounty-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Title, description, or question"
+            placeholder="Title or description"
             className="mt-1.5"
           />
         </div>
@@ -80,8 +80,8 @@ export function MarketplaceBrowser({ bounties }: { bounties: PreviewBounty[] }) 
       {visible.length === 0 ? (
         <div className="mt-4">
           <EmptyState
-            title="No challenges match"
-            description="Search looks at public title, description, question, and instructions. Try another phrase or category."
+            title={bounties.length === 0 ? "No open challenges" : "No challenges match"}
+            description={bounties.length === 0 ? "A bounty appears here after the creator funds it and the API marks it active." : "Search looks at public title, description, question, and instructions. Try another phrase or category."}
             action={
               <Button
                 type="button"

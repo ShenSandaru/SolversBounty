@@ -1,17 +1,16 @@
-import type { BountyCategory } from "@solversbounty/shared";
-import type { PreviewBounty } from "./types";
+import type { BountyCategory, PublicBounty } from "@solversbounty/shared";
 
 export type CategoryFilter = BountyCategory | "all";
 export type MarketplaceSort = "deadline" | "reward" | "title";
 
 export function filterMarketplaceBounties(
-  bounties: readonly PreviewBounty[],
+  bounties: readonly PublicBounty[],
   options: {
     query: string;
     category: CategoryFilter;
     sort: MarketplaceSort;
   },
-): PreviewBounty[] {
+): PublicBounty[] {
   const needle = options.query.trim().toLowerCase();
   const filtered = bounties.filter((bounty) => {
     if (options.category !== "all" && bounty.category !== options.category) {
@@ -29,7 +28,7 @@ export function filterMarketplaceBounties(
   return [...filtered].sort((left, right) => compareBounties(left, right, options.sort));
 }
 
-function compareBounties(left: PreviewBounty, right: PreviewBounty, sort: MarketplaceSort): number {
+function compareBounties(left: PublicBounty, right: PublicBounty, sort: MarketplaceSort): number {
   if (sort === "title") {
     return left.title.localeCompare(right.title);
   }

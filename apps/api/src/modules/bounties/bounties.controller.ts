@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Request } from "express";
 import { z } from "zod";
@@ -11,6 +11,10 @@ import { FundingService } from "./funding.service";
 
 const idSchema = z.object({ id: z.string().uuid() });
 const signatureSchema = z.object({ signature: z.string().min(64).max(88) });
+const listQuerySchema = z.object({
+  q: z.string().max(140).optional(),
+  category: z.enum(["logic", "mathematics", "numerical_patterns", "ciphers"]).optional(),
+});
 
 @ApiTags("bounties")
 @Controller("bounties")
@@ -28,9 +32,15 @@ export class BountiesController {
   }
 
   @Get()
-  @ApiOkResponse({ description: "Lists active bounties. Drafts are omitted. Expected answers are omitted." })
-  active() {
-    return this.run(() => this.bounties.active());
+  @ApiOkResponse({ description: "Lists active bounties a solver can still join. Drafts and funding-pending bounties are omitted. Expected answers are omitted." })
+  active(@Query(new ZodValidationPipe(listQuerySchema)) query: z.infer<typeof listQuerySchema>) {
+    return this.run(() => this.bounties.active(query));
+  }
+
+  @Get(":id/public")
+  @ApiOkResponse({ description: "Returns public challenge facts. Drafts are omitted. The expected answer is omitted." })
+  publicOne(@Param(new ZodValidationPipe(idSchema)) params: z.infer<typeof idSchema>) {
+    return this.run(() => this.bounties.publicOne(params.id));
   }
 
   @Get("mine")
