@@ -42,7 +42,7 @@ export function EditBountyPage({ id }: { id: string }) {
       <PageHeader
         eyebrow="Edit draft"
         title={draft?.title ?? "Your bounty"}
-        description="Updates stay on the draft. Funding and activation are separate."
+        description="Updates stay on the draft. Funding uses two separate SOL transfers to the custodial Devnet treasury."
         actions={
           <Link href="/dashboard" className="text-sm font-medium hover:underline">
             Back to drafts
@@ -60,7 +60,8 @@ export function EditBountyPage({ id }: { id: string }) {
         <>
           <p className="mt-4 text-sm text-muted-foreground">
             Reward pool {formatLamportsAsSol(BigInt(draft.principalLamports))} SOL. Separate commission{" "}
-            {formatLamportsAsSol(BigInt(draft.commissionLamports))} SOL. Status: {draft.status}.
+            {formatLamportsAsSol(BigInt(draft.commissionLamports))} SOL. Status: {draft.status}.{" "}
+            <Link href={`/bounties/${draft.id}/fund`} className="font-medium hover:underline">Fund this bounty</Link>.
           </p>
           <CreateBountyForm bountyId={draft.id} initial={formValues(draft)} />
         </>

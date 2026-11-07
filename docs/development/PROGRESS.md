@@ -71,7 +71,7 @@ Security review, written on 2026-11-07. No product workflow was added. Requireme
 
 Wallet login on the API is proven against the Neon development database and, earlier, a disposable PostgreSQL database. The web client connects Phantom through Solana Wallet Adapter and signs the exact nonce message. AUTH-002, AUTH-004, AUTH-005, AUTH-008, and AUTH-009 are `implemented`. AUTH-001, AUTH-003, AUTH-006, AUTH-007, AUTH-010, and AUTH-011 stay `in_progress` because a real Phantom browser session has not been verified. The 8-hour lifetime and logout CSRF check are working defaults, not accepted ADR decisions. The initial migration is applied to the development database `neondb`. Do not apply it to a production database.
 
-Authenticated creators can save and edit bounty drafts. BOUNTY-001, BOUNTY-002, BOUNTY-003, BOUNTY-005, BOUNTY-012, BOUNTY-013, and BOUNTY-014 are `implemented`. BOUNTY-004, BOUNTY-006, BOUNTY-007, BOUNTY-008, BOUNTY-009, BOUNTY-010, BOUNTY-011, and PRIV-009 are `in_progress`. BOUNTY-015 and BOUNTY-016 stay `not_started`. Drafts are not activated. Funding, solver submissions, verification, payouts, and analytics are not started. No new migration was added.
+Authenticated creators can save and edit bounty drafts. BOUNTY-001, BOUNTY-002, BOUNTY-003, BOUNTY-005, BOUNTY-012, BOUNTY-013, and BOUNTY-014 are `implemented`. BOUNTY-004, BOUNTY-006, BOUNTY-007, BOUNTY-008, BOUNTY-009, BOUNTY-010, BOUNTY-011, BOUNTY-016, and PRIV-009 are `in_progress`. BOUNTY-015 stays `not_started`. [ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md) funds the reward pool and the 5% commission as two Devnet transfers. Mocked RPC tests pass. A live Devnet transfer was not sent. Solver submissions, answer verification, payouts, and analytics are not started. No new migration was added.
 
 ## Not started
 
@@ -90,7 +90,7 @@ PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-ses
 1. Approve the Phantom login message in the browser before marking AUTH-001, AUTH-003, AUTH-006, or AUTH-007 implemented. The login message is plain text, and the click calls Phantom's injected `signMessage` with a utf8 display so Phantom does not parse it as Sign In With Solana. A live approval has not been completed.
 2. Free port 3001 for this API, then retry Phantom sign-in. The development database has the initial schema.
 3. Unlock Phantom and approve the login signature in Chrome, then save a draft from `/bounties/create`. The local answer key is already configured.
-4. The next product stage is verified Devnet funding of the reward pool and the separate 5% commission. Do not activate a bounty until both are confirmed.
+4. Set `TREASURY_PUBLIC_KEY` to the custodial Devnet address, fund a draft from `/bounties/:id/fund` with two Phantom transfers, and activate only after both confirm. Do not mark BOUNTY-007, BOUNTY-016, PAY-008, or PAY-018 `implemented` until that live transfer is recorded.
 
 ## Verification
 

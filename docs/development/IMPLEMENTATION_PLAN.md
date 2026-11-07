@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Wallet login is in progress on the API and is not yet backed by an applied migration. No other product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). CD-12 is superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). The other open questions below are unchanged.
+Status: Wallet login is in progress on the API and is not yet backed by an applied migration. No other product feature in this plan is implemented. PD-03 is superseded by [ADR-003](../decisions/ADR-003-postgresql-server-side-sessions.md). PD-05 is superseded by [ADR-004](../decisions/ADR-004-immediate-individual-solver-payouts.md). PD-13 is superseded by [ADR-005](../decisions/ADR-005-solana-confirmed-commitment.md). PD-15 is superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). CD-12 is superseded by [ADR-007](../decisions/ADR-007-company-platform-commission.md). Creator funding uses two Devnet transfers under [ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md). The other open questions below are unchanged.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -140,7 +140,7 @@ Each item is **proposed — pending confirmation**, except a row marked supersed
 | PD-15 | Superseded by [ADR-006](../decisions/ADR-006-devnet-treasury-private-key-storage.md). `TREASURY_SECRET_KEY` is a backend-only environment secret for the Devnet MVP. It is never committed, logged, stored in the database, or sent to the browser. This is not the Mainnet custody strategy. |
 | PD-16 | An in-process worker confirms deposits and payouts. HTTP handlers record intent and return. |
 | PD-17 | Zod schemas in `packages/shared` are the request and response contract. OpenAPI is generated from them. |
-| PD-18 | Deposit memo `sb:deposit:<bountyId>:<reference>`. Payout memo `sb:payout:<payoutId>`. Refund memo `sb:refund:<bountyId>`. |
+| PD-18 | Deposit memo `sb:deposit:<bountyId>:<reference>`. [ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md) uses `reward_pool` and `commission` as those references. Payout and refund memos are not implemented. |
 | PD-19 | Store submitted answers for verification and the solver's own history. Omit them from public APIs and from creator and administrator analytics ([ADR-010](../decisions/ADR-010-role-based-analytics-visibility.md)). Do not encrypt them in the MVP. |
 | PD-20 | Starting rate limits: 10 nonce requests per minute per wallet and 30 submissions per minute per wallet. |
 | PD-21 | Overfunding is accepted into `refundable`. Underfunding does not activate the bounty. |

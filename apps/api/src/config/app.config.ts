@@ -28,6 +28,7 @@ export const solanaConfig = registerAs("solana", () => {
   const env = readEnv();
   return {
     rpcUrl: env.SOLANA_RPC_URL ?? clusterApiUrl("devnet"),
+    treasuryPublicKey: env.TREASURY_PUBLIC_KEY ?? null,
   };
 });
 

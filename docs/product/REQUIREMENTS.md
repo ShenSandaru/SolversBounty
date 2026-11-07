@@ -280,7 +280,7 @@ Acceptance criteria:
 - Priority: P0
 - Status: `in_progress`
 - Modules: bounties, solana
-- Description: Status becomes `active` only after the full solver reward pool and the separate 5% commission are verified ([ADR-007](../decisions/ADR-007-company-platform-commission.md), PAY-018). Funding is not implemented.
+- Description: Status becomes `active` only after the full solver reward pool and the separate 5% commission are verified ([ADR-007](../decisions/ADR-007-company-platform-commission.md), [ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md), PAY-018). Mocked RPC tests cover activation. A live Devnet transfer has not been verified.
 
 Acceptance criteria:
 
@@ -388,9 +388,9 @@ Acceptance criteria:
 ### BOUNTY-016 Show funding
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, web creator
-- Description: The owner sees required principal, confirmed deposits, and the ledger buckets.
+- Description: The owner sees required principal, confirmed deposits, and the ledger buckets. The funding screen reads those figures from the API. A live Devnet deposit has not been verified.
 
 Acceptance criteria:
 
@@ -824,9 +824,9 @@ Acceptance criteria:
 ### PAY-008 Verify deposits
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: solana, bounties
-- Description: A bounty activates only when a confirmed transfer to the treasury covers the principal and carries that bounty's deposit reference.
+- Description: A bounty activates only when a confirmed transfer to the treasury covers the principal and carries that bounty's deposit reference ([ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md)). Mocked RPC tests cover the checks. A live Devnet transfer has not been verified.
 
 Acceptance criteria:
 
@@ -960,9 +960,9 @@ Acceptance criteria:
 ### PAY-018 Record platform commission
 
 - Priority: P0
-- Status: `not_started`
+- Status: `in_progress`
 - Modules: bounties, solana
-- Description: [ADR-007](../decisions/ADR-007-company-platform-commission.md). The creator pays 5% of the solver reward pool in addition to the pool. Commission processing is not implemented.
+- Description: [ADR-007](../decisions/ADR-007-company-platform-commission.md) and [ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md). The creator pays 5% of the solver reward pool in addition to the pool. Mocked tests cover the separate obligation. A live Devnet commission transfer has not been verified.
 
 Acceptance criteria:
 
@@ -971,7 +971,7 @@ Acceptance criteria:
 - Solver reward amounts are unchanged.
 - Commission is not posted into `funded`, `reserved`, `paid`, `refundable`, or `refunded`.
 - The bounty does not become active until both the reward pool and the commission are verified under ADR-005, including network, parties, amounts, and references.
-- The on-chain arrangement and the commission receiving address are not specified.
+- [ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md) uses a second creator-signed transfer to the same custodial treasury. The memo is `sb:deposit:<bountyId>:commission`.
 - What happens to a paid commission if the bounty is cancelled, never becomes active, or funding fails is not specified. After the deadline or the participant cap, unused reward-pool principal is [ADR-008](../decisions/ADR-008-unused-reward-pool-retention.md), not a creator refund.
 
 ## ANALYTICS

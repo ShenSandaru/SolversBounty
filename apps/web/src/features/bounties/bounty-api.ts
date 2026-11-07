@@ -88,6 +88,55 @@ export async function listMyBounties(apiUrl: string, fetchImpl: FetchLike = fetc
   return body.map(readDraft);
 }
 
+export type FundingObligation = {
+  purpose: "reward_pool" | "commission";
+  expectedLamports: string;
+  observedLamports: string | null;
+  depositReference: string;
+  status: "pending" | "confirmed" | "rejected";
+  signature: string | null;
+  commitment: string | null;
+};
+
+export type FundingView = {
+  bountyId: string;
+  status: BountyDraft["status"];
+  treasuryAddress: string;
+  network: "devnet";
+  custody: "custodial";
+  rewardLamports: string;
+  maxRewardedSolvers: number;
+  rewardPoolLamports: string;
+  commissionLamports: string;
+  totalFundingLamports: string;
+  obligations: FundingObligation[];
+  buckets: { funded: string; reserved: string; paid: string; refundable: string; refunded: string };
+  canActivate: boolean;
+};
+
+export async function readFunding(apiUrl: string, id: string, fetchImpl: FetchLike = fetch): Promise<FundingView> {
+  const response = await fundingSend(fetchImpl, `${apiUrl}/bounties/${id}/funding`, { method: "GET", credentials: "include" });
+  return readFundingView(await response.json());
+}
+
+export async function submitFunding(apiUrl: string, csrfToken: string, id: string, purpose: "reward-pool" | "commission", signature: string, fetchImpl: FetchLike = fetch): Promise<FundingView> {
+  const response = await fundingSend(fetchImpl, `${apiUrl}/bounties/${id}/funding/${purpose}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({ signature }),
+  });
+  return readFundingView(await response.json());
+}
+
+export async function activateBounty(apiUrl: string, csrfToken: string, id: string, fetchImpl: FetchLike = fetch): Promise<void> {
+  await fundingSend(fetchImpl, `${apiUrl}/bounties/${id}/activate`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "X-CSRF-Token": csrfToken },
+  });
+}
+
 export async function readMyBounty(apiUrl: string, id: string, fetchImpl: FetchLike = fetch): Promise<BountyDraft> {
   const response = await send(fetchImpl, `${apiUrl}/bounties/${id}`, { method: "GET", credentials: "include" });
   return readDraft(await response.json());
@@ -96,6 +145,42 @@ export async function readMyBounty(apiUrl: string, id: string, fetchImpl: FetchL
 async function sendJson(fetchImpl: FetchLike, url: string, init: RequestInit): Promise<BountyDraft> {
   const response = await send(fetchImpl, url, init);
   return readDraft(await response.json());
+}
+
+async function fundingSend(fetchImpl: FetchLike, url: string, init: RequestInit): Promise<Response> {
+  let response: Response;
+  try {
+    response = await fetchImpl(url, { ...init, cache: "no-store" });
+  } catch {
+    throw new BountyClientError("The API is unavailable.", "API_UNAVAILABLE");
+  }
+  if (response.ok) {
+    return response;
+  }
+  let message = "The funding request failed.";
+  let code = "API_FAILURE";
+  try {
+    const body = (await response.json()) as { message?: string; code?: string };
+    if (typeof body.message === "string" && body.message.length > 0) {
+      message = body.message;
+    }
+    if (body.code) {
+      code = body.code;
+    }
+  } catch {
+    code = "API_FAILURE";
+  }
+  throw new BountyClientError(message, code);
+}
+
+function readFundingView(value: unknown): FundingView {
+  if (!isRecord(value) || typeof value.bountyId !== "string" || typeof value.treasuryAddress !== "string" || !Array.isArray(value.obligations)) {
+    throw new BountyClientError("The API returned an incomplete funding record.");
+  }
+  if (value.custody !== "custodial" || value.network !== "devnet") {
+    throw new BountyClientError("The API returned an incomplete funding record.");
+  }
+  return value as FundingView;
 }
 
 async function send(fetchImpl: FetchLike, url: string, init: RequestInit): Promise<Response> {

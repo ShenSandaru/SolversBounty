@@ -77,16 +77,19 @@ export class BountiesService {
     return rows.map((row) => this.publicView(row));
   }
 
-  async activate(creatorId: string, id: string): Promise<never> {
-    const row = await this.db().findOwned(id, creatorId);
-    if (!row) {
+  async activate(creatorId: string, id: string): Promise<PrivateBounty> {
+    const result = await this.db().activateIfFunded(id, creatorId, this.now());
+    if (result === "missing") {
       throw new BountyFlowError(404, "NOT_FOUND", "Bounty not found.");
     }
-    throw new BountyFlowError(
-      409,
-      "CONFLICT",
-      "Reward-pool funding and the separate 5% commission must both be verified before activation.",
-    );
+    if (result === "closed" || result === "incomplete") {
+      throw new BountyFlowError(
+        409,
+        "CONFLICT",
+        "Reward-pool funding and the separate 5% commission must both be verified before activation.",
+      );
+    }
+    return this.privateView(result);
   }
 
   private async save(creatorId: string, input: unknown, id: string | null): Promise<PrivateBounty> {

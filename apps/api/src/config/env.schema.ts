@@ -73,6 +73,7 @@ const envSchema = z.object({
   AUTH_TOKEN_SECRET: optionalText,
   ANSWER_ENCRYPTION_KEY: optionalText,
   TREASURY_SECRET_KEY: optionalText,
+  TREASURY_PUBLIC_KEY: optionalText,
   ADMIN_WALLET_ALLOWLIST: optionalText,
 });
 

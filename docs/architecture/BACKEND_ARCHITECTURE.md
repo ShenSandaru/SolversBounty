@@ -1,6 +1,6 @@
 # Backend architecture
 
-Status: module boundaries exist under `apps/api/src/modules`. Wallet login routes exist. Nonce issue, signature checks, user upsert, and nonce replay passed against a disposable PostgreSQL database. The session lifetime is an 8-hour working default, not an accepted ADR decision. Logout requires an `X-CSRF-Token` header that matches the HttpOnly `sb_csrf` cookie. That CSRF mechanism is a working default, not an accepted ADR decision. CORS allows credentialed requests only for the explicit `CORS_ORIGIN` list and rejects `*`. The confirmation worker, bounty, submission, verification, payout, and analytics workflows are not implemented. The process serves `GET /health`, `GET /health/ready`, Swagger at `/docs`, and `/auth/nonce`, `/auth/login`, `/auth/session`, and `/auth/logout`. Routes are unversioned.
+Status: module boundaries exist under `apps/api/src/modules`. Wallet login routes exist. Nonce issue, signature checks, user upsert, and nonce replay passed against a disposable PostgreSQL database. The session lifetime is an 8-hour working default, not an accepted ADR decision. Logout requires an `X-CSRF-Token` header that matches the HttpOnly `sb_csrf` cookie. That CSRF mechanism is a working default, not an accepted ADR decision. CORS allows credentialed requests only for the explicit `CORS_ORIGIN` list and rejects `*`. Creator draft and Devnet funding routes exist. Funding verification runs in the submit request against a mocked or configured Devnet RPC. Solver submission, answer verification, payout, and analytics workflows are not implemented. The process serves `GET /health`, `GET /health/ready`, Swagger at `/docs`, wallet auth, bounty drafts, `GET /bounties/:id/funding`, `POST /bounties/:id/funding/reward-pool`, `POST /bounties/:id/funding/commission`, and `POST /bounties/:id/activate`. Routes are unversioned.
 
 `anti-abuse` provides an in-memory rate limiter. Nonce issuance uses the proposed limit of 10 requests per minute per wallet. Submission limits are not applied. There is no Redis. `SessionGuard` can be attached to later routes. Logout checks the CSRF token before revoking the session. A missing treasury key, auth secret, or answer-encryption key does not stop startup. `DATABASE_URL` is required only when `NODE_ENV` is `production`. In development and test the API starts without it. A configured URL that fails to connect is logged and reported by readiness. Auth routes then return 503. Liveness still responds.
 
@@ -86,9 +86,9 @@ PD-16 (**proposed — pending confirmation**): the worker is an in-process sched
 
 `bounties` validates the Zod body, computes principal in lamports, encrypts the expected answer (PD-02), inserts the bounty and its single question (PD-01), and writes an audit row. Status is `draft` until a deposit is announced, then `funding_pending`.
 
-### Announce deposit
+### Fund a bounty
 
-`bounties` stores the creator-supplied signature as pending after a cheap shape check. It does not mark the bounty active in that request. The worker later asks `solana` for the transaction and emits `deposit.observed`.
+[ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md). The owner requests funding requirements, then submits one signature for the reward pool and one for the commission. The submit request asks Devnet RPC for that signature. A timeout does not mark the transfer failed. A confirmed reward-pool transfer posts one `deposit`. A confirmed commission transfer does not. Activation is a separate request and requires both rows to be `confirmed`. The bounty is not public while it is a draft or `funding_pending`.
 
 ### Start session
 

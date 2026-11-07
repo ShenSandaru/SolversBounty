@@ -7,13 +7,18 @@ import { CsrfGuard } from "../auth/csrf.guard";
 import { SessionGuard } from "../auth/session.guard";
 import { asHttpException } from "./bounty.errors";
 import { BountiesService } from "./bounties.service";
+import { FundingService } from "./funding.service";
 
 const idSchema = z.object({ id: z.string().uuid() });
+const signatureSchema = z.object({ signature: z.string().min(64).max(88) });
 
 @ApiTags("bounties")
 @Controller("bounties")
 export class BountiesController {
-  constructor(private readonly bounties: BountiesService) {}
+  constructor(
+    private readonly bounties: BountiesService,
+    private readonly funding: FundingService,
+  ) {}
 
   @Post()
   @UseGuards(SessionGuard, CsrfGuard)
@@ -53,6 +58,25 @@ export class BountiesController {
     return this.run(() => this.bounties.update(this.creatorId(request), params.id, body));
   }
 
+  @Get(":id/funding")
+  @UseGuards(SessionGuard)
+  @ApiOkResponse({ description: "Returns the custodial Devnet treasury address and the two funding obligations. Drafts stay out of the public list." })
+  fundingRequirements(@Req() request: Request, @Param(new ZodValidationPipe(idSchema)) params: z.infer<typeof idSchema>) {
+    return this.run(() => this.funding.requirements(this.creatorId(request), params.id));
+  }
+
+  @Post(":id/funding/:purpose")
+  @UseGuards(SessionGuard, CsrfGuard)
+  @ApiOkResponse({ description: "Verifies one creator-signed Devnet transfer. The reward pool and the 5% commission are separate signatures." })
+  submitFunding(
+    @Req() request: Request,
+    @Param(new ZodValidationPipe(idSchema.extend({ purpose: z.enum(["reward-pool", "commission"]) }))) params: { id: string; purpose: "reward-pool" | "commission" },
+    @Body(new ZodValidationPipe(signatureSchema)) body: z.infer<typeof signatureSchema>,
+  ) {
+    const purpose = params.purpose === "reward-pool" ? "reward_pool" : "commission";
+    return this.run(() => this.funding.submit(this.creatorId(request), this.wallet(request), params.id, purpose, body.signature));
+  }
+
   @Post(":id/activate")
   @UseGuards(SessionGuard, CsrfGuard)
   @ApiOkResponse({ description: "Refuses activation until reward-pool and commission funding are verified." })
@@ -66,6 +90,14 @@ export class BountiesController {
       throw new Error("Authenticated request is missing a user.");
     }
     return id;
+  }
+
+  private wallet(request: Request): string {
+    const wallet = request.authUser?.walletAddress;
+    if (!wallet) {
+      throw new Error("Authenticated request is missing a wallet.");
+    }
+    return wallet;
   }
 
   private async run<T>(work: () => Promise<T>): Promise<T> {

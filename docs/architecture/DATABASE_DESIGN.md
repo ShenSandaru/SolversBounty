@@ -142,7 +142,7 @@ The model holds two logical funding records, distinguished by `purpose`, not a n
 | `status` | Yes | `pending`, `confirmed`, `rejected` |
 | `createdAt`, `confirmedAt` | Yes | Server time |
 
-These two records are separate funding obligations. They are not a decision that the creator signs two Solana transactions. One transfer or two remains unresolved. The commission address is unresolved.
+These two records are separate funding obligations. [ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md) pays them with two creator-signed Devnet transfers to the same custodial treasury. One signature confirms one obligation.
 
 | Obligation | `expectedLamports` | Verification | Effect on `funded` |
 | --- | --- | --- | --- |
@@ -166,7 +166,7 @@ commissionLamports = floor(rewardPoolLamports * 5 / 100)
 
 Calculate that with integer arithmetic. Do not use floating-point arithmetic. A fractional lamport is rounded down. The commission is never rounded up. `floor(1_000_000_001 * 5 / 100)` is 50_000_000. The `commission` funding record stores that integer in `expectedLamports`. Confirmation of that record still does not increase `funded`.
 
-The commission address, and whether one Solana transfer or two pays the two obligations, remain unresolved.
+[ADR-012](../decisions/ADR-012-two-devnet-funding-transfers.md) sends both obligations to `TREASURY_PUBLIC_KEY`. The commission is not a second receiving address.
 
 ### BountyLedgerEntry
 

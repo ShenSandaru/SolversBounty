@@ -21,7 +21,7 @@ export function configureApp(app: NestExpressApplication): void {
   const document = new DocumentBuilder()
     .setTitle("SolversBounty API")
     .setDescription(
-      "Wallet authentication is available. Bounties, verification, and payouts are not implemented.",
+      "Wallet authentication and creator Devnet funding are available. Solver submissions and payouts are not implemented.",
     )
     .setVersion("0.0.0")
     .build();
