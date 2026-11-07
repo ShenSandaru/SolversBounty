@@ -129,4 +129,4 @@ A change is done when all of the following hold:
 
 ## Current phase
 
-The Phase 2 scaffold is complete. Product requirements remain `not_started`. The next action is a user decision on the open questions in the implementation plan, then an explicit request to start Phase 3.
+The Phase 4 backend foundation is in place: Nest module boundaries, configuration, Prisma models for the proposed schema, health, and API conventions. No migration has been applied. Product requirements remain `not_started`. Do not start Phase 5 or a product workflow unless the user explicitly asks. Open questions in the implementation plan are still unanswered.

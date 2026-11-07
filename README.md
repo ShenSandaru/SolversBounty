@@ -4,7 +4,7 @@
 
 SolversBounty is a wallet-authenticated cognitive micro-task marketplace and human reasoning research platform. Creators publish predefined challenges, fund a fixed SOL reward pool on Solana Devnet, and study how people attempt those challenges. Solvers connect a wallet, submit answers, and receive the same micro-reward when the backend judges them eligible.
 
-**Document status:** Phase 2 scaffold plus a static frontend preview. Product features are not implemented.
+**Document status:** Phase 4 backend foundation plus a static frontend preview. Product workflows are not implemented.
 
 The hackathon MVP uses a **backend-managed custodial Devnet treasury**. Wallet login and SOL transfers are on Solana. Custody of reward funds is not trustless escrow. See [ADR-002](docs/decisions/ADR-002-custodial-devnet-treasury.md).
 
@@ -41,7 +41,7 @@ Details and the proposal register: [Implementation plan](docs/development/IMPLEM
 
 ## Repository overview
 
-The repository contains the documentation foundation and the Phase 2 application scaffold. Product routes, models, and flows are not built.
+The repository contains the documentation foundation, the application scaffold, a static web preview, and the API infrastructure foundation. Prisma models represent the proposed database design and have not been migrated. Product workflows are not built.
 
 ```text
 .
@@ -78,7 +78,7 @@ pnpm test
 pnpm typecheck
 ```
 
-`pnpm dev` starts the web app on port 3000 and the API on port 3001. Swagger is at `http://localhost:3001/docs`. `GET /health` is the only product-shaped API route. Copy [.env.example](.env.example) when you need local environment files. Postgres is optional: the API starts without `DATABASE_URL`.
+`pnpm dev` starts the web app on port 3000 and the API on port 3001. Swagger is at `http://localhost:3001/docs`. `GET /health` reports process liveness. `GET /health/ready` reports whether a configured PostgreSQL connection is up. Copy [.env.example](.env.example) when you need local environment files. Development starts without `DATABASE_URL`. A URL that is set and cannot connect does not stop `/health`. Production requires `DATABASE_URL`. Authentication, bounty, verification, and payout routes are not implemented.
 
 Preview routes in the web app use sample data. They do not authenticate, save a bounty, verify an answer, or move SOL.
 
@@ -93,7 +93,7 @@ Preview routes in the web app use sample data. They do not authenticate, save a 
 
 Read [AGENTS.md](AGENTS.md) before changing product behavior. Update [progress](docs/development/PROGRESS.md) when a milestone actually changes. Do not mark a requirement `implemented` until its acceptance criteria pass.
 
-Local development is planned against PostgreSQL. The shared hackathon database is planned on Neon. Schema in the database design is proposed, not approved DDL.
+Local development is planned against PostgreSQL. The shared hackathon database is planned on Neon. Schema in the database design is proposed, not approved DDL. `prisma generate` writes the client to `apps/api/src/generated/prisma`. Do not run a migration until a local database is configured. The partial nonce index in `apps/api/prisma/manual/partial-indexes.sql` is not applied.
 
 ## Documentation
 

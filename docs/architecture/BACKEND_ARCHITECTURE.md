@@ -1,6 +1,8 @@
 # Backend architecture
 
-Status: design intent. The NestJS application is not scaffolded. Module names below are the intended `apps/api` boundaries.
+Status: module boundaries exist under `apps/api/src/modules`. The workflows, transaction boundaries, and authorization rules below are not implemented. The process serves `GET /health`, `GET /health/ready`, and Swagger at `/docs`. Routes are unversioned. There is no `/api/v1` prefix, because the web client calls `/health`.
+
+`anti-abuse` provides an in-memory rate limiter and does not apply it to routes. PD-20 is not enforced. There is no Redis. No authentication guard is registered. A missing treasury key, auth secret, or answer-encryption key does not stop startup. `DATABASE_URL` is required only when `NODE_ENV` is `production`. In development and test the API starts without it. A configured URL that fails to connect is logged and reported by readiness. It does not stop the process, so liveness still responds.
 
 Related: [system architecture](SYSTEM_ARCHITECTURE.md), [database design](DATABASE_DESIGN.md), [blockchain design](BLOCKCHAIN_DESIGN.md), [coding standards](../development/CODING_STANDARDS.md), [ADR-001](../decisions/ADR-001-modular-monolith.md).
 
@@ -153,6 +155,8 @@ Domain errors map to HTTP through one filter. Controllers do not invent their ow
 | Rate limit | 429 | `RATE_LIMITED` |
 | Unexpected | 500 | `INTERNAL` |
 
+Readiness is not an error envelope. When PostgreSQL is configured and unreachable, `GET /health/ready` returns 503 with `{ "status": "not_ready", "checks": { "database": "down" } }`. Other 503 responses use code `NOT_READY`.
+
 Conflict responses include a specific machine reason where the client must render it, such as `ATTEMPT_LIMIT_REACHED`, `BOUNTY_NOT_ACTIVE`, `DEADLINE_PASSED`, or `REWARD_ALREADY_ALLOCATED`. They do not include the expected answer.
 
 Payout capacity outcomes for an otherwise valid correct submit are 200 results with an ineligibility reason, not 500s. The attempt is stored. Reasons: `pool_exhausted`, `insufficient_refundable`.
@@ -161,7 +165,7 @@ Validation source is Zod (PD-17, **proposed — pending confirmation**). OpenAPI
 
 ## Logging
 
-Use structured logs with `requestId`, `userId`, `bountyId`, `payoutId`, and `action` when those exist. Redact expected answers, submitted answers, explanations, authorization headers, refresh tokens, signed secret keys, and treasury material.
+Use structured logs with `requestId`, `userId`, `bountyId`, `payoutId`, and `action` when those exist. The current request log records `requestId`, method, path without the query string, and status code. It does not log bodies. Redact expected answers, submitted answers, explanations, authorization headers, refresh tokens, signed secret keys, treasury material, and postgres URLs. Unexpected errors return `INTERNAL` and `Internal server error`. The response does not include a stack or the exception message.
 
 Log chain signatures. They are public.
 
@@ -177,8 +181,11 @@ Proposed environment names, all server-side:
 | `ANSWER_ENCRYPTION_KEY` | Expected-answer encryption (PD-02) |
 | `AUTH_TOKEN_SECRET` | Session signing (PD-03) |
 | `ADMIN_WALLET_ALLOWLIST` | Comma-separated wallets (PD-04) |
+| `CORS_ORIGIN` | Comma-separated browser origins. Default `http://localhost:3000` |
+| `JSON_BODY_LIMIT` | JSON body limit. Default `64kb` |
+| `PORT` | HTTP port. Default `3001` |
 
-Missing treasury configuration disables sends. It must not crash public reads.
+Missing treasury configuration disables sends. It must not crash public reads. That rule is in force for the health endpoints. Sends are not implemented.
 
 ## Process model
 

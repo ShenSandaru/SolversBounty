@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Phase 2 scaffold is complete. No product feature in this plan is implemented.
+Status: Phase 4 backend foundation is in place. Proposed Prisma models exist and have not been migrated. No product feature in this plan is implemented. The open questions below are unchanged.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -157,7 +157,7 @@ Full allocation: the E1 transaction that takes the last slot also sets `closed` 
 
 ## Open questions
 
-These seven need an explicit answer before Phase 2 treats the matching PD as accepted. Until then they stay proposed.
+These seven need an explicit answer before authentication, funding, or payout work treats the matching PD as accepted. Phase 4 did not answer them. Until then they stay proposed.
 
 1. PD-03. Confirm JWT access plus refresh token, or replace it with a server session cookie.
 2. PD-05. Confirm immediate per-solver payout, or replace it with a creator-triggered batch.
@@ -193,4 +193,4 @@ Administrators remain a stakeholder. The hackathon does not add a separate admin
 
 ## Next phase
 
-Do not start Phase 2 from this document alone. The next action is a user decision on the seven open questions, then an explicit request to scaffold the monorepo. Scaffold work is M1 only until that request exists.
+Do not start Phase 5 from this document alone. The next action is a review of the Phase 4 foundation, then an explicit request to implement a product workflow. The seven open questions are still unanswered.

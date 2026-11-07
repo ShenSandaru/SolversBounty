@@ -1,6 +1,6 @@
 # Testing strategy
 
-Status: the strategy is accepted as the plan for later milestones. No test runner is installed. No test has been executed. Planned test names below are specifications, not results.
+Status: the strategy is accepted as the plan for later milestones. Vitest and Jest are installed. API infrastructure tests cover configuration, database lifecycle, health, validation, errors, and module startup. They do not use a database. The product test names below are specifications, not results. Integration tests that need PostgreSQL stay gated by a dedicated test `DATABASE_URL` and have not been run.
 
 Related: [requirements](../product/REQUIREMENTS.md), [coding standards](CODING_STANDARDS.md), [blockchain design](../architecture/BLOCKCHAIN_DESIGN.md).
 

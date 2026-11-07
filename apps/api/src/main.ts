@@ -1,24 +1,19 @@
 import "reflect-metadata";
 import { Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
-import { resolveSolanaRpcUrl } from "./config/solana-env";
+import { configureApp } from "./bootstrap";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
-  app.enableCors({ origin: "http://localhost:3000" });
-
-  const config = new DocumentBuilder()
-    .setTitle("SolversBounty API")
-    .setDescription("Hackathon API shell. Product routes are not implemented.")
-    .setVersion("0.0.0")
-    .build();
-  SwaggerModule.setup("docs", app, SwaggerModule.createDocument(app, config));
-
-  const port = Number(process.env.PORT ?? 3001);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+  configureApp(app);
+  const config = app.get(ConfigService);
+  const port = config.getOrThrow<number>("app.port");
+  const rpcUrl = config.getOrThrow<string>("solana.rpcUrl");
   await app.listen(port);
-  Logger.log(`Listening on ${port}. Devnet RPC ${resolveSolanaRpcUrl()}`, "Bootstrap");
+  Logger.log(`Listening on ${port}. Devnet RPC ${rpcUrl}`, "Bootstrap");
 }
 
 void bootstrap();

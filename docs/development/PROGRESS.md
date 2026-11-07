@@ -2,9 +2,9 @@
 
 | | |
 | --- | --- |
-| Phase | Frontend preview after the Phase 2 scaffold |
-| Milestone | M1 complete. Preview pages exist. Product milestones are not started. |
-| Application | Static web preview. No product APIs. |
+| Phase | Backend and Prisma foundation |
+| Milestone | M1 complete. API infrastructure is in place. Product milestones are not started. |
+| Application | Static web preview. API serves health, readiness, and OpenAPI only. |
 | Updated | 2026-11-07 |
 
 No requirement is `implemented`. The catalogue in [REQUIREMENTS.md](../product/REQUIREMENTS.md) stays `not_started` until acceptance criteria pass. This file must not be updated to claim a demo, a test run of a product flow, or a deployed API unless that work actually happened.
@@ -51,28 +51,38 @@ Frontend preview, checked on 2026-11-07. Requirement statuses stay `not_started`
 - Research analytics are labeled demonstration data, including an empty-session sample.
 - `pnpm --filter @solversbounty/web lint`, `test`, and `build` passed.
 
+Backend foundation, checked on 2026-11-07. Requirement statuses stay `not_started`. These pieces do not authenticate, create bounties, verify answers, or move SOL.
+
+- Nest modules: `auth`, `users`, `bounties`, `submissions`, `verification`, `rewards`, `analytics`, `solana`, `anti-abuse`, `audit`. Boundaries only.
+- Config validates app, database, Solana, and optional secret settings. Health starts without an auth secret, a treasury key, or `DATABASE_URL`.
+- Prisma models match the proposed database design. `StrategyResponse` is omitted. The partial nonce index is written and not applied.
+- `GET /health` still returns the shared liveness payload. `GET /health/ready` reports `not_configured`, `up`, or `down`.
+- Global validation, exception filter, request id, security headers, redacted request logs, and bigint string serialization are in place.
+- API infrastructure tests passed: 8 suites, 27 tests. They do not open a database connection.
+
 ## In progress
 
-Nothing. The frontend preview is ready for review. Phase 4 is not in progress.
+Nothing. Phase 4 infrastructure is ready for review. Phase 5 is not in progress.
 
 ## Not started
 
-- Wallet login, bounties, marketplace, verification, payouts, analytics
-- Prisma models and migrations
+- Wallet login, bounty APIs, marketplace data, verification, payouts, analytics calculations
+- Prisma migration and a connected development database
 - Devnet treasury, airdrops, and demo transactions
 - Product requirement implementation. Every requirement status stays `not_started`.
 
 ## Blockers
 
-No blocker remains for the scaffold.
+Local PostgreSQL on `127.0.0.1:5432` refused connections on 2026-11-07. The initial migration is deferred until a development database is configured. Do not point that migration at a shared or production database.
 
-Phase 3 should not treat PD-03, PD-05, PD-08, PD-13, PD-10, PD-14, or PD-15 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other six affect authentication or the money path.
+Phase 5 should not treat PD-03, PD-05, PD-08, PD-13, PD-10, PD-14, or PD-15 as accepted until the open questions in the [implementation plan](IMPLEMENTATION_PLAN.md) are answered. PD-10 can wait until P1. The other six affect authentication or the money path.
 
 ## Next actions
 
-1. Review the frontend preview before any Phase 4 work.
+1. Review the Phase 4 foundation before any product workflow.
 2. User confirms or replaces the open questions before authentication, funding, or payout work treats those proposals as accepted.
-3. Do not mark product requirements implemented because a preview page exists.
+3. Apply the initial migration, including `prisma/manual/partial-indexes.sql`, only against a local development database.
+4. Do not mark product requirements implemented because module folders or Prisma models exist.
 
 ## Verification
 
@@ -84,6 +94,18 @@ Scaffold checks on 2026-11-07:
 - `pnpm build` compiled shared, the API, and the web app.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm test` passed. Shared and web tests import `@solversbounty/shared`. The API health test imports it too.
 - Env examples exist at the root, `apps/api`, and `apps/web`. Secret fields are empty. A search found no private keys.
+
+Phase 4 checks on 2026-11-07:
+
+- `pnpm install` completed.
+- `pnpm --filter @solversbounty/api lint`, `test`, and `build` passed. API tests: 8 suites, 27 tests.
+- `pnpm typecheck`, `pnpm build`, `pnpm lint`, and `pnpm test` passed. Shared tests: 3 passed. Web tests: 6 passed.
+- The watched API on port 3001 started. `GET /health` returned `{ "status": "ok", "service": "SolversBounty" }`. `GET /health/ready` returned `{ "status": "ready", "checks": { "database": "not_configured" } }` because that process has no `DATABASE_URL`.
+- `GET /docs` returned 200. OpenAPI lists `/health` and `/health/ready` only.
+- A separate process on port 3002 with `DATABASE_URL` set to local PostgreSQL stayed up. `GET /health` stayed 200. `GET /health/ready` returned 503 `{ "status": "not_ready", "checks": { "database": "down" } }`. The log said the server at `127.0.0.1:5432` could not be reached and did not print the connection string.
+- `prisma generate` wrote the client. No migration was created. PostgreSQL on `127.0.0.1:5432` refused connections.
+- The web home page still showed `SolversBounty API: ok`.
+- A search of source, docs, and env examples found no private keys.
 
 Documentation review for M0, checked on 2026-11-07:
 

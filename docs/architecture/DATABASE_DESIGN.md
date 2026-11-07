@@ -1,6 +1,17 @@
 # Database design
 
-Status: **proposed — pending confirmation**. This is not approved DDL. Prisma is not in the repository. Nothing here has been migrated.
+Status: **proposed — pending confirmation**. This is not approved DDL. `apps/api/prisma/schema.prisma` represents the entities below. Nothing here has been migrated. No `prisma/migrations` history exists because local PostgreSQL was not accepting connections when the schema was added.
+
+Implementation notes that stay open:
+
+- `StrategyResponse` is specified below and is not a Prisma model. PD-10 is still an open question, so it is omitted from the first schema.
+- The `Session` entity is modeled as `AuthSession` and mapped to `auth_sessions`, so the table name stays distinct from `solving_sessions`.
+- Primary keys use UUID. The identifier type is still an open choice.
+- Balances are derived from `BountyLedgerEntry`. There is no cached balance column.
+- Foreign keys use `onDelete: Restrict`. The design does not define cascades.
+- `ChainTransaction.commitment` is text. PD-13 has not chosen `confirmed` versus `finalized`.
+- The one-active-nonce rule cannot be expressed in Prisma. `apps/api/prisma/manual/partial-indexes.sql` holds the partial unique index and has not been applied.
+- `SolvingSession (bountyId, solverId)` unique covers a bounty lookup. `SubmissionAttempt (sessionId, attemptNumber)` unique covers the grading lookup. Separate indexes for those leading columns are not added.
 
 Related: [backend architecture](BACKEND_ARCHITECTURE.md), [blockchain design](BLOCKCHAIN_DESIGN.md), [PRD](../product/PRD.md), PD-01, PD-02, PD-06, PD-12, and PD-19 in the [implementation plan](../development/IMPLEMENTATION_PLAN.md).
 

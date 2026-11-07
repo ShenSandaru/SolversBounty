@@ -1,5 +1,9 @@
-// Proposed schema only. Product models are intentionally absent until a later phase.
-// Do not add bounty, user, or payout models here yet.
+// Representation of the proposed database design. It is not an accepted ADR.
+// StrategyResponse is omitted because PD-10 is still an open question.
+// Identifier type remains the UUID written on each entity. That choice is still open for review.
+// Balances are derived from BountyLedgerEntry. There is no cached balance column.
+// onDelete is Restrict because the design does not define cascades.
+// Chain commitment stays text because PD-13 has not chosen confirmed versus finalized.
 
 generator client {
   provider = "prisma-client"
@@ -8,4 +12,362 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum UserRole {
+  user
+  admin
+
+  @@map("user_role")
+}
+
+enum BountyCategory {
+  logic
+  mathematics
+  numerical_patterns
+  ciphers
+
+  @@map("bounty_category")
+}
+
+enum BountyStatus {
+  draft
+  funding_pending
+  active
+  closed
+
+  @@map("bounty_status")
+}
+
+enum BountyCloseReason {
+  creator
+  deadline
+  fully_allocated
+  admin
+
+  @@map("bounty_close_reason")
+}
+
+enum VerificationMethod {
+  exact
+  case_insensitive
+  normalized_text
+  numeric_exact
+
+  @@map("verification_method")
+}
+
+enum FundingStatus {
+  pending
+  confirmed
+  rejected
+
+  @@map("funding_status")
+}
+
+enum LedgerEntryType {
+  deposit
+  reserve
+  settle
+  release
+  refund
+
+  @@map("ledger_entry_type")
+}
+
+enum SessionStatus {
+  active
+  completed
+
+  @@map("solving_session_status")
+}
+
+enum IneligibilityReason {
+  pool_exhausted
+  insufficient_refundable
+
+  @@map("ineligibility_reason")
+}
+
+enum AllocationStatus {
+  reserved
+  paid
+  released
+
+  @@map("allocation_status")
+}
+
+enum PayoutStatus {
+  pending
+  submitted
+  confirmed
+  failed
+  retryable
+
+  @@map("payout_status")
+}
+
+enum ChainTransactionKind {
+  deposit
+  payout
+  refund
+
+  @@map("chain_transaction_kind")
+}
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  walletAddress String   @unique @map("wallet_address") @db.VarChar(44)
+  role          UserRole @default(user)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  bounties         Bounty[]
+  authSessions     AuthSession[]
+  consents         ConsentRecord[]
+  solvingSessions  SolvingSession[]
+  allocations      RewardAllocation[]
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model AuthNonce {
+  id         String    @id @default(uuid()) @db.Uuid
+  userWallet String    @map("user_wallet") @db.VarChar(44)
+  nonce      String    @unique
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt     DateTime? @map("used_at") @db.Timestamptz(6)
+  retiredAt  DateTime? @map("retired_at") @db.Timestamptz(6)
+
+  // One active nonce per wallet (used_at and retired_at both null) needs a
+  // partial unique index. Prisma cannot declare it. See prisma/manual/partial-indexes.sql.
+  // That SQL is not applied until the initial migration is created.
+  @@index([userWallet])
+  @@map("auth_nonces")
+}
+
+// Design name: Session. Named AuthSession so it is distinct from SolvingSession.
+model AuthSession {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  refreshTokenHash String    @map("refresh_token_hash")
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@map("auth_sessions")
+}
+
+model Bounty {
+  id                 String             @id @default(uuid()) @db.Uuid
+  creatorId          String             @map("creator_id") @db.Uuid
+  title              String
+  description        String
+  instructions       String             @default("")
+  category           BountyCategory
+  rewardLamports     BigInt             @map("reward_lamports")
+  maxRewardedSolvers Int                @map("max_rewarded_solvers")
+  attemptLimit       Int                @map("attempt_limit")
+  deadline           DateTime           @db.Timestamptz(6)
+  status             BountyStatus       @default(draft)
+  closeReason        BountyCloseReason? @map("close_reason")
+  publishedAt        DateTime?          @map("published_at") @db.Timestamptz(6)
+  closedAt           DateTime?          @map("closed_at") @db.Timestamptz(6)
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  creator      User                @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+  question     BountyQuestion?
+  fundings     BountyFunding[]
+  ledgerEntries BountyLedgerEntry[]
+  consents     ConsentRecord[]
+  sessions     SolvingSession[]
+  allocations  RewardAllocation[]
+
+  @@index([status, deadline])
+  @@index([creatorId, createdAt])
+  @@map("bounties")
+}
+
+model BountyQuestion {
+  id                       String             @id @default(uuid()) @db.Uuid
+  bountyId                 String             @unique @map("bounty_id") @db.Uuid
+  prompt                   String
+  expectedAnswerCiphertext String             @map("expected_answer_ciphertext")
+  encryptionKeyId          String             @map("encryption_key_id")
+  verificationMethod       VerificationMethod @map("verification_method")
+
+  bounty Bounty @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+
+  @@map("bounty_questions")
+}
+
+model BountyFunding {
+  id                 String        @id @default(uuid()) @db.Uuid
+  bountyId           String        @map("bounty_id") @db.Uuid
+  depositReference   String        @unique @map("deposit_reference")
+  expectedLamports   BigInt        @map("expected_lamports")
+  observedLamports   BigInt?       @map("observed_lamports")
+  chainTransactionId String?       @unique @map("chain_transaction_id") @db.Uuid
+  status             FundingStatus @default(pending)
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  confirmedAt        DateTime?     @map("confirmed_at") @db.Timestamptz(6)
+
+  bounty           Bounty            @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+  chainTransaction ChainTransaction? @relation(fields: [chainTransactionId], references: [id], onDelete: Restrict)
+  ledgerEntries    BountyLedgerEntry[]
+
+  @@index([bountyId])
+  @@map("bounty_fundings")
+}
+
+model BountyLedgerEntry {
+  id                 String          @id @default(uuid()) @db.Uuid
+  bountyId           String          @map("bounty_id") @db.Uuid
+  entryType          LedgerEntryType @map("entry_type")
+  amountLamports     BigInt          @map("amount_lamports")
+  payoutId           String?         @map("payout_id") @db.Uuid
+  fundingId          String?         @map("funding_id") @db.Uuid
+  chainTransactionId String?         @map("chain_transaction_id") @db.Uuid
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bounty           Bounty            @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+  payout           Payout?           @relation(fields: [payoutId], references: [id], onDelete: Restrict)
+  funding          BountyFunding?    @relation(fields: [fundingId], references: [id], onDelete: Restrict)
+  chainTransaction ChainTransaction? @relation(fields: [chainTransactionId], references: [id], onDelete: Restrict)
+
+  @@unique([chainTransactionId, entryType])
+  @@index([bountyId, createdAt])
+  @@index([payoutId])
+  @@index([fundingId])
+  @@map("bounty_ledger_entries")
+}
+
+model ConsentRecord {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  bountyId      String   @map("bounty_id") @db.Uuid
+  policyVersion String   @map("policy_version")
+  acceptedAt    DateTime @map("accepted_at") @db.Timestamptz(6)
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  bounty   Bounty           @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+  sessions SolvingSession[]
+
+  @@unique([userId, bountyId])
+  @@index([bountyId])
+  @@map("consent_records")
+}
+
+model SolvingSession {
+  id        String        @id @default(uuid()) @db.Uuid
+  bountyId  String        @map("bounty_id") @db.Uuid
+  solverId  String        @map("solver_id") @db.Uuid
+  consentId String        @map("consent_id") @db.Uuid
+  startedAt DateTime      @map("started_at") @db.Timestamptz(6)
+  status    SessionStatus @default(active)
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bounty   Bounty             @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+  solver   User               @relation(fields: [solverId], references: [id], onDelete: Restrict)
+  consent  ConsentRecord      @relation(fields: [consentId], references: [id], onDelete: Restrict)
+  attempts SubmissionAttempt[]
+
+  @@unique([bountyId, solverId])
+  @@index([solverId])
+  @@index([consentId])
+  @@map("solving_sessions")
+}
+
+model SubmissionAttempt {
+  id                  String               @id @default(uuid()) @db.Uuid
+  sessionId           String               @map("session_id") @db.Uuid
+  attemptNumber       Int                  @map("attempt_number")
+  submittedAnswer     String               @map("submitted_answer")
+  isCorrect           Boolean              @map("is_correct")
+  ineligibilityReason IneligibilityReason? @map("ineligibility_reason")
+  submittedAt         DateTime             @map("submitted_at") @db.Timestamptz(6)
+
+  session    SolvingSession    @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  allocation RewardAllocation?
+
+  @@unique([sessionId, attemptNumber])
+  @@map("submission_attempts")
+}
+
+model RewardAllocation {
+  id             String           @id @default(uuid()) @db.Uuid
+  bountyId       String           @map("bounty_id") @db.Uuid
+  solverId       String           @map("solver_id") @db.Uuid
+  attemptId      String           @unique @map("attempt_id") @db.Uuid
+  amountLamports BigInt           @map("amount_lamports")
+  status         AllocationStatus @default(reserved)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bounty  Bounty            @relation(fields: [bountyId], references: [id], onDelete: Restrict)
+  solver  User              @relation(fields: [solverId], references: [id], onDelete: Restrict)
+  attempt SubmissionAttempt @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+  payout  Payout?
+
+  @@unique([bountyId, solverId])
+  @@index([solverId])
+  @@map("reward_allocations")
+}
+
+model Payout {
+  id             String       @id @default(uuid()) @db.Uuid
+  allocationId   String       @unique @map("allocation_id") @db.Uuid
+  idempotencyKey String       @unique @map("idempotency_key")
+  status         PayoutStatus @default(pending)
+  sendCount      Int          @default(0) @map("send_count")
+  lastError      String?      @map("last_error")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  allocation        RewardAllocation    @relation(fields: [allocationId], references: [id], onDelete: Restrict)
+  ledgerEntries     BountyLedgerEntry[]
+  chainTransactions ChainTransaction[]
+
+  @@index([status])
+  @@map("payouts")
+}
+
+model ChainTransaction {
+  id                 String               @id @default(uuid()) @db.Uuid
+  signature          String               @unique
+  kind               ChainTransactionKind
+  amountLamports     BigInt               @map("amount_lamports")
+  sourceAddress      String               @map("source_address") @db.VarChar(44)
+  destinationAddress String               @map("destination_address") @db.VarChar(44)
+  commitment         String
+  payoutId           String?              @map("payout_id") @db.Uuid
+  confirmedAt        DateTime?            @map("confirmed_at") @db.Timestamptz(6)
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  payout        Payout?             @relation(fields: [payoutId], references: [id], onDelete: Restrict)
+  funding       BountyFunding?
+  ledgerEntries BountyLedgerEntry[]
+
+  @@index([payoutId])
+  @@map("chain_transactions")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id") @db.Uuid
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId])
+  @@map("audit_logs")
 }
