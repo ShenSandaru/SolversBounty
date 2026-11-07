@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: Phase 1 documentation is complete. Phase 2 has not started. No feature in this plan is implemented.
+Status: Phase 2 scaffold is complete. No product feature in this plan is implemented.
 
 Related: [PRD](../product/PRD.md), [requirements](../product/REQUIREMENTS.md), [progress](PROGRESS.md).
 
@@ -41,7 +41,7 @@ M5 UI can be built with fixture bounties, but a solver cannot complete a real se
 
 ### M1 — Monorepo
 
-Scaffold `apps/web`, `apps/api`, and `packages/shared` with pnpm and Turborepo. Add TypeScript strict mode, Tailwind, shadcn/ui, Nest, Prisma, and the test runners named in the testing strategy. No product rules beyond health checks. Do not claim AUTH or PAY requirements done.
+Scaffold `apps/web`, `apps/api`, `packages/shared`, and `packages/typescript-config` with pnpm and Turborepo. Add TypeScript strict mode, Tailwind, shadcn/ui, Nest, Prisma, and the test runners named in the testing strategy. No product rules beyond health checks. Do not claim AUTH or PAY requirements done.
 
 ### M2 — Authentication
 

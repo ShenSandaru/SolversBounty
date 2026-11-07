@@ -1,0 +1,58 @@
+{
+  "name": "@solversbounty/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "prisma generate && nest build",
+    "start": "node dist/main.js",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "prisma generate && node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.4.0",
+    "@nestjs/config": "12.1.1",
+    "@nestjs/core": "12.4.0",
+    "@nestjs/platform-express": "12.4.0",
+    "@nestjs/swagger": "12.1.1",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@solana/web3.js": "3.2.0",
+    "@solversbounty/shared": "workspace:*",
+    "dotenv": "18.0.9",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "12.0.12",
+    "@nestjs/testing": "12.4.0",
+    "@solversbounty/typescript-config": "workspace:*",
+    "@types/express": "5.0.6",
+    "@types/jest": "30.0.0",
+    "@types/node": "22.19.0",
+    "@types/pg": "8.23.1",
+    "@types/supertest": "7.2.1",
+    "eslint": "9.39.5",
+    "jest": "30.5.2",
+    "prisma": "7.10.1",
+    "supertest": "7.3.1",
+    "ts-jest": "29.4.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@solversbounty/shared$": "<rootDir>/../../../packages/shared/dist/index.js"
+    }
+  }
+}

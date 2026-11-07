@@ -1,0 +1,11 @@
+// Proposed schema only. Product models are intentionally absent until a later phase.
+// Do not add bounty, user, or payout models here yet.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

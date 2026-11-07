@@ -4,7 +4,7 @@ Authoritative instructions for humans and AI coding agents working in this repos
 
 Product behavior lives in [docs/product/PRD.md](docs/product/PRD.md) and [docs/product/REQUIREMENTS.md](docs/product/REQUIREMENTS.md). Architecture lives under [docs/architecture](docs/architecture/SYSTEM_ARCHITECTURE.md). Decisions that are already locked live in [docs/decisions](docs/decisions/README.md). This file wins on **how to work**. Those documents win on **what to build**. If they conflict, stop and report the conflict. Do not silently pick a side.
 
-Phase 1 is documentation. Do not start Phase 2, scaffold applications, or add dependencies unless the user explicitly asks.
+Phase 2 scaffold is in place: `apps/web`, `apps/api`, `packages/shared`, and `packages/typescript-config`. Product features are not started. Do not start Phase 3 unless the user explicitly asks. `apps/web/AGENTS.md` is a Next.js local note. This root file remains the product and repository authority.
 
 ## Project in one page
 
@@ -31,7 +31,7 @@ Confirmed decisions are IDs `CD-*`. Proposed decisions are IDs `PD-*` and stay l
 
 ## Architecture boundaries
 
-Intended processes, once Phase 2 exists:
+Processes:
 
 - `apps/web` renders UI, talks to Phantom, signs authentication messages, and calls the API. It may display server results. It must not decide correctness, eligibility, timestamps, balances, or payouts.
 - `apps/api` is the NestJS modular monolith. It owns authorization, validation, the ledger, verification, and payout orchestration.
@@ -113,7 +113,7 @@ Follow [TESTING_STRATEGY.md](docs/development/TESTING_STRATEGY.md).
 - Do not add a custom Solana program, email/password login, KYC, or a microservice split in the MVP.
 - Do not introduce a queue cluster, a second database, or a generic plugin system for the hackathon.
 - Do not expose the expected answer through a public route, a GraphQL field, a log, an error, a client bundle, or a test snapshot of a public DTO.
-- Do not start Phase 2 from a documentation task.
+- Do not start Phase 3, or a product feature, from a scaffold or documentation task.
 
 ## Definition of Done
 
@@ -129,4 +129,4 @@ A change is done when all of the following hold:
 
 ## Current phase
 
-Documentation foundation is complete. Application development has not started. The next action is a user decision on the open questions in the implementation plan, then an explicit request to scaffold Phase 2.
+The Phase 2 scaffold is complete. Product requirements remain `not_started`. The next action is a user decision on the open questions in the implementation plan, then an explicit request to start Phase 3.

@@ -4,7 +4,7 @@
 
 SolversBounty is a wallet-authenticated cognitive micro-task marketplace and human reasoning research platform. Creators publish predefined challenges, fund a fixed SOL reward pool on Solana Devnet, and study how people attempt those challenges. Solvers connect a wallet, submit answers, and receive the same micro-reward when the backend judges them eligible.
 
-**Document status:** Phase 1 documentation foundation. No application is implemented.
+**Document status:** Phase 2 scaffold. The web and API shells run. Product features are not implemented.
 
 The hackathon MVP uses a **backend-managed custodial Devnet treasury**. Wallet login and SOL transfers are on Solana. Custody of reward funds is not trustless escrow. See [ADR-002](docs/decisions/ADR-002-custodial-devnet-treasury.md).
 
@@ -35,52 +35,52 @@ Confirmed choices:
 | Database | PostgreSQL (local development, Neon for the shared hackathon database) and Prisma |
 | Blockchain | Solana Devnet and `@solana/web3.js` |
 | Authentication | Sign-In with Solana via wallet signature verification (Phantom) |
-| Tests | Vitest for the web app, Jest for the API (intended; not installed) |
+| Tests | Vitest for the web app, Jest for the API |
 
 Details and the proposal register: [Implementation plan](docs/development/IMPLEMENTATION_PLAN.md).
 
 ## Repository overview
 
-This repository currently contains documentation only.
+The repository contains the documentation foundation and the Phase 2 application scaffold. Product routes, models, and flows are not built.
 
 ```text
 .
 ├── AGENTS.md
 ├── README.md
-└── docs/
-    ├── architecture/
-    ├── decisions/
-    ├── development/
-    └── product/
-```
-
-Intended application layout for Phase 2. These directories do not exist yet:
-
-```text
-.
 ├── apps/
-│   ├── web/          Next.js frontend
-│   └── api/          NestJS API
+│   ├── api/          NestJS API shell
+│   └── web/          Next.js frontend shell
 ├── packages/
-│   └── shared/       Shared Zod contracts and types
+│   ├── shared/       Shared Zod contracts and constants
+│   └── typescript-config/
+├── docs/
+│   ├── architecture/
+│   ├── decisions/
+│   ├── development/
+│   └── product/
 ├── package.json
 ├── pnpm-workspace.yaml
 └── turbo.json
 ```
 
+`apps/web/AGENTS.md` is a Next.js local note. The root [AGENTS.md](AGENTS.md) remains the product and repository authority.
+
 ## Development workflow
 
-The commands below are the intended workflow **after Phase 2 scaffolds the monorepo**. They are not available today. There is no root `package.json`.
+Install and run from the repository root:
 
 ```bash
 pnpm install
 pnpm dev
-pnpm --filter api test
-pnpm --filter web test
+pnpm build
 pnpm lint
+pnpm test
+pnpm typecheck
 ```
 
-Until that scaffold exists, work in this repository is documentation. Read [AGENTS.md](AGENTS.md) before changing product behavior. Update [progress](docs/development/PROGRESS.md) when a milestone actually changes. Do not mark a requirement `implemented` until its acceptance criteria pass.
+`pnpm dev` starts the web app on port 3000 and the API on port 3001. Swagger is at `http://localhost:3001/docs`. `GET /health` is the only product-shaped route. Copy [.env.example](.env.example) when you need local environment files. Postgres is optional: the API starts without `DATABASE_URL`.
+
+Read [AGENTS.md](AGENTS.md) before changing product behavior. Update [progress](docs/development/PROGRESS.md) when a milestone actually changes. Do not mark a requirement `implemented` until its acceptance criteria pass.
 
 Local development is planned against PostgreSQL. The shared hackathon database is planned on Neon. Schema in the database design is proposed, not approved DDL.
 

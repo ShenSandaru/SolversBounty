@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+
+*.pem
+*.key
+
+apps/api/src/generated/
