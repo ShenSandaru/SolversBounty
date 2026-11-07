@@ -21,13 +21,21 @@ type Delegate = {
 };
 
 type PrismaLike = {
-  $transaction<T>(fn: (tx: PrismaLike) => Promise<T>): Promise<T>;
+  $transaction<T>(fn: (tx: PrismaLike) => Promise<T>, options?: { timeout: number }): Promise<T>;
   $queryRawUnsafe(query: string, ...values: unknown[]): Promise<unknown>;
   payout: Delegate;
   rewardAllocation: Delegate;
   bountyLedgerEntry: Delegate;
   chainTransaction: Delegate;
+  user: Delegate;
   bounty: { findUnique(args: unknown): Promise<unknown> };
+};
+
+type LockedPayout = {
+  snapshot: PayoutSnapshot;
+  allocationId: string;
+  chainIdFor(signature: string): string | null;
+  settledChainIds: ReadonlySet<string>;
 };
 
 @Injectable()
@@ -52,11 +60,11 @@ export class PrismaPayoutRepository implements PayoutStore {
   async recordSend(input: { id: string; signature: string; source: string; destination: string; amountLamports: bigint; now: Date }): Promise<RecordSendResult> {
     return this.client().$transaction(async (tx) => {
       await tx.$queryRawUnsafe("select id from payouts where id = $1::uuid for update", input.id);
-      const found = await tx.payout.findUnique({ where: { id: input.id }, include: payoutInclude() });
-      if (!isRecord(found)) {
+      const locked = await readLocked(tx, input.id);
+      if (!locked) {
         return "blocked";
       }
-      const current = snapshot(found);
+      const current = locked.snapshot;
       const terminal = current.signatures.length > 0 && current.signatures.every((item) => item.commitment === "failed");
       const open = current.status === "pending" ? current.signatures.length === 0 : current.status === "retryable" && terminal;
       if (!open || current.amountLamports !== input.amountLamports) {
@@ -81,11 +89,11 @@ export class PrismaPayoutRepository implements PayoutStore {
   async noteRetryable(id: string, signature: string): Promise<void> {
     await this.client().$transaction(async (tx) => {
       await tx.$queryRawUnsafe("select id from payouts where id = $1::uuid for update", id);
-      const found = await tx.payout.findUnique({ where: { id }, include: payoutInclude() });
-      if (!isRecord(found)) {
+      const locked = await readLocked(tx, id);
+      if (!locked) {
         return;
       }
-      const current = snapshot(found);
+      const current = locked.snapshot;
       const chain = current.signatures.find((item) => item.signature === signature);
       if (!chain || current.settled || (current.status !== "submitted" && current.status !== "retryable")) {
         return;
@@ -98,27 +106,25 @@ export class PrismaPayoutRepository implements PayoutStore {
   async settle(input: { id: string; signature: string; commitment: "confirmed" | "finalized"; now: Date }): Promise<SettleResult> {
     return this.client().$transaction(async (tx) => {
       await tx.$queryRawUnsafe("select id from payouts where id = $1::uuid for update", input.id);
-      const found = await tx.payout.findUnique({ where: { id: input.id }, include: payoutInclude() });
-      if (!isRecord(found) || !isRecord(found.allocation)) {
+      const locked = await readLocked(tx, input.id);
+      if (!locked) {
         return "blocked";
       }
-      const current = snapshot(found);
+      const current = locked.snapshot;
       if (current.status === "confirmed") {
         return "settled";
       }
-      const chain = Array.isArray(found.chainTransactions) ? found.chainTransactions.filter(isRecord).find((item) => item.signature === input.signature) : undefined;
-      if (!chain) {
+      const chainId = locked.chainIdFor(input.signature);
+      if (!chainId) {
         return "blocked";
       }
-      const entries = Array.isArray(found.ledgerEntries) ? found.ledgerEntries.filter(isRecord) : [];
-      const posted = entries.some((entry) => entry.entryType === "settle" && isRecord(entry.chainTransaction) && entry.chainTransaction.signature === input.signature);
-      if (!posted) {
+      if (!locked.settledChainIds.has(chainId)) {
         await tx.bountyLedgerEntry.create({
-          data: { bountyId: current.bountyId, entryType: "settle", amountLamports: current.amountLamports, payoutId: input.id, chainTransactionId: readString(chain.id) },
+          data: { bountyId: current.bountyId, entryType: "settle", amountLamports: current.amountLamports, payoutId: input.id, chainTransactionId: chainId },
         });
       }
       await tx.chainTransaction.update({ where: { signature: input.signature }, data: { commitment: input.commitment, confirmedAt: input.now } });
-      await tx.rewardAllocation.update({ where: { id: readString(found.allocation.id) }, data: { status: "paid" } });
+      await tx.rewardAllocation.update({ where: { id: locked.allocationId }, data: { status: "paid" } });
       await tx.payout.update({ where: { id: input.id }, data: { status: "confirmed", lastError: null } });
       return "settled";
     });
@@ -242,7 +248,49 @@ function adminView(value: Record<string, unknown>): AdminPayoutView {
 }
 
 function isPrismaLike(value: ConnectedClient): value is ConnectedClient & PrismaLike {
-  return "payout" in value && "rewardAllocation" in value && "bountyLedgerEntry" in value && "chainTransaction" in value && "bounty" in value && "$transaction" in value;
+  return "payout" in value && "rewardAllocation" in value && "bountyLedgerEntry" in value && "chainTransaction" in value && "user" in value && "bounty" in value && "$transaction" in value;
+}
+
+// One interactive transaction owns one Postgres connection. Included relations would
+// issue their queries together on that connection, so the locked read is one table at a time.
+async function readLocked(tx: PrismaLike, id: string): Promise<LockedPayout | null> {
+  const payout = await tx.payout.findUnique({ where: { id } });
+  if (!isRecord(payout)) {
+    return null;
+  }
+  const allocation = await tx.rewardAllocation.findUnique({ where: { id: readString(payout.allocationId) } });
+  if (!isRecord(allocation)) {
+    return null;
+  }
+  const solver = await tx.user.findUnique({ where: { id: readString(allocation.solverId) } });
+  const bounty = await tx.bounty.findUnique({ where: { id: readString(allocation.bountyId) } });
+  if (!isRecord(solver) || !isRecord(bounty)) {
+    return null;
+  }
+  const chainRows = await tx.chainTransaction.findMany({ where: { payoutId: id } });
+  const entryRows = await tx.bountyLedgerEntry.findMany({ where: { payoutId: id } });
+  const chains = Array.isArray(chainRows) ? chainRows.filter(isRecord) : [];
+  const entries = Array.isArray(entryRows) ? entryRows.filter(isRecord) : [];
+  const reserved = entries.filter((entry) => entry.entryType === "reserve").reduce((sum, entry) => sum + readBigint(entry.amountLamports), 0n);
+  const settledAmount = entries.filter((entry) => entry.entryType === "settle").reduce((sum, entry) => sum + readBigint(entry.amountLamports), 0n);
+  const chainIds = new Map(chains.map((chain) => [readString(chain.signature), readString(chain.id)]));
+  const settledChainIds = new Set(entries.filter((entry) => entry.entryType === "settle" && typeof entry.chainTransactionId === "string").map((entry) => readString(entry.chainTransactionId)));
+  return {
+    allocationId: readString(allocation.id),
+    chainIdFor: (signature: string) => chainIds.get(signature) ?? null,
+    settledChainIds,
+    snapshot: {
+      id: readString(payout.id),
+      bountyId: readString(bounty.id),
+      amountLamports: readBigint(allocation.amountLamports),
+      solverWallet: readString(solver.walletAddress),
+      status: readStatus(payout.status),
+      sendCount: readInt(payout.sendCount),
+      signatures: chains.map((chain) => ({ signature: readString(chain.signature), createdAt: readDate(chain.createdAt), commitment: readString(chain.commitment) })),
+      reservedLamports: reserved - settledAmount,
+      settled: entries.some((entry) => entry.entryType === "settle"),
+    },
+  };
 }
 
 function readStatus(value: unknown): PayoutStatusName {

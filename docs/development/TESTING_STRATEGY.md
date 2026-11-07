@@ -1,8 +1,10 @@
 # Testing strategy
 
-Status: the strategy is accepted as the plan for later milestones. Vitest and Jest are installed. API infrastructure tests cover configuration, database lifecycle, health, validation, errors, and module startup. They do not use a database. The product test names below are specifications, not results. Integration tests that need PostgreSQL stay gated by a dedicated test `DATABASE_URL` and have not been run.
+Status: the strategy is accepted as the plan for later milestones. Vitest and Jest are installed. API infrastructure tests cover configuration, database lifecycle, health, validation, errors, and module startup. They do not use a database. The product test names below are specifications, not results. Auth and bounty PostgreSQL specs stay gated and are not part of the default command. The payout concurrency spec runs against the disposable local database when `PAYOUT_INTEGRATION_DATABASE_URL` is set.
 
 Related: [requirements](../product/REQUIREMENTS.md), [coding standards](CODING_STANDARDS.md), [blockchain design](../architecture/BLOCKCHAIN_DESIGN.md).
+
+Payout concurrency tests live in `apps/api/src/modules/rewards/payout.postgres.spec.ts`. They start only when `PAYOUT_INTEGRATION_DATABASE_URL` names the disposable database from `apps/api/docker-compose.payout-test.yml`: host `127.0.0.1`, port `55432`, database `sbpayout`. The spec rejects a Neon host, any other host, and any other database name. Apply the existing Prisma migrations to that container only. The Solana gateway in that spec is mocked. Do not point the variable at Neon.
 
 ## Tools
 
@@ -10,7 +12,7 @@ Related: [requirements](../product/REQUIREMENTS.md), [coding standards](CODING_S
 | --- | --- | --- |
 | Web unit and component | Vitest | Default `web` test script, once the app exists |
 | API unit | Jest | Default `api` test script |
-| API integration | Jest plus a Prisma test database | Same API test command, gated by `DATABASE_URL` pointing at an empty test database |
+| API integration | Jest plus a Prisma test database | Same API test command. Auth and bounty specs stay gated by their own URLs. Payout concurrency uses `PAYOUT_INTEGRATION_DATABASE_URL` and refuses Neon |
 | Chain | Fake `SolanaGateway` in default tests | Always in CI |
 | Devnet | Opt-in test or the manual demo | Only when `SOLANA_INTEGRATION=1` and the operator expects to spend Devnet SOL |
 | Browser demo path | Playwright | P1, and only after the API payment tests exist |

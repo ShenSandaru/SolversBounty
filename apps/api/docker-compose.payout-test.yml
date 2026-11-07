@@ -1,0 +1,23 @@
+# Disposable Postgres for payout concurrency tests. Localhost only.
+# This is not the Neon development database. Do not put a Neon URL here.
+services:
+  payout-postgres:
+    image: postgres:16
+    container_name: solversbounty-payout-pg-test
+    environment:
+      POSTGRES_USER: sbpayout
+      POSTGRES_PASSWORD: sbpayout
+      POSTGRES_DB: sbpayout
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - solversbounty_payout_concurrency_test:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sbpayout -d sbpayout"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  solversbounty_payout_concurrency_test:
+    name: solversbounty_payout_concurrency_test
